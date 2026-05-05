@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-ink: #1a1a1a;
+  --color-inkSoft: #3d3d3a;
+  --color-inkFaint: #888780;
+  --color-paper: #060816;
+  --color-cyanotype: #060816;
+  --color-sepia: #3d2817;
+
+  --font-serif: var(--font-lora), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+}
+
+body {
+  background-color: #060816;
+  color: #ffffff;
+  font-family: var(--font-serif);
+}
+
+* {
+  box-sizing: border-box;
+}
