@@ -4,7 +4,6 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 
 const pageMeta = {
-  latest: { title: 'Latest Transactions', icon: '◔' },
   benefits: { title: 'Benefits', icon: '✦' },
   progress: { title: 'Progress', icon: '◌' },
   rewards: { title: 'Rewards', icon: '◎' },
@@ -68,9 +67,9 @@ type Card = {
 type ScanStep = 'camera' | 'confirm' | 'enrich' | 'success';
 type Screen = 'wallet' | 'opportunities' | 'use-now';
 type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
-type WalletPage = 'latest' | 'benefits' | 'progress' | 'rewards';
+type WalletPage = 'benefits' | 'progress' | 'rewards';
 
-const walletPages: WalletPage[] = ['latest', 'benefits', 'progress', 'rewards'];
+const walletPages: WalletPage[] = ['benefits', 'progress', 'rewards'];
 
 const seedCards: Card[] = [
   {
@@ -394,14 +393,14 @@ export default function WalletPrototype() {
 
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-170px)] flex-col justify-between">
-              <div className="relative h-[430px] overflow-hidden rounded-[40px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-3 pb-3 pt-5 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.48)]">
+              <div className="relative h-[392px] overflow-hidden rounded-[40px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-3 pb-3 pt-4 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.48)]">
                 {cards.map((card, index) => {
                   const isSelected = card.id === selectedId;
                   const selectedIndex = cards.findIndex((c) => c.id === selectedId);
                   const relativeIndex = index - selectedIndex;
                   const distance = Math.abs(relativeIndex);
-                  const top = isSelected ? 10 : 46 + distance * 21;
-                  const scale = isSelected ? 1 : 0.982 - Math.min(distance * 0.024, 0.085);
+                  const top = isSelected ? 8 : 34 + distance * 18;
+                  const scale = isSelected ? 1 : 0.986 - Math.min(distance * 0.02, 0.07);
                   const opacity = isSelected ? 1 : 0.92 - Math.min(distance * 0.11, 0.26);
                   const zIndex = isSelected ? 50 : 30 - distance;
 
@@ -416,7 +415,7 @@ export default function WalletPrototype() {
                       style={{ zIndex, color: card.accent }}
                       animate={{
                         top,
-                        height: isSelected ? 232 : 102,
+                        height: isSelected ? 206 : 94,
                         scale,
                         opacity,
                         y: isSelected ? 0 : distance * 2,
@@ -432,7 +431,7 @@ export default function WalletPrototype() {
                         <div className="flex items-start justify-between">
                           <div>
                             <p className="text-[11px] uppercase tracking-[0.28em] text-white/65">{card.issuer}</p>
-                            <h2 className={`${isSelected ? 'mt-3 text-[30px]' : 'mt-2 text-[20px]'} font-semibold tracking-tight`}>
+                            <h2 className={`${isSelected ? 'mt-3 text-[28px]' : 'mt-2 text-[19px]'} font-semibold tracking-tight`}>
                               {card.name}
                             </h2>
                           </div>
@@ -446,15 +445,16 @@ export default function WalletPrototype() {
                               initial={{ opacity: 0, y: 16 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: 12 }}
-                              className="grid gap-3 rounded-[26px] border border-white/10 bg-black/18 p-4 backdrop-blur-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                              className="grid gap-2 rounded-[24px] border border-white/10 bg-black/18 p-3.5 backdrop-blur-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                             >
                               <div>
                                 <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
-                                <p className="mt-2 text-[32px] font-semibold tracking-[-0.03em]">{card.pointsValue}</p>
-                                <p className="mt-1 text-[13px] text-white/58">{card.pointsLabel}</p>
+                                <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em]">{card.pointsValue}</p>
+                                <p className="mt-1 text-[12px] text-white/58">{card.pointsLabel}</p>
                               </div>
-                              <div className="rounded-[22px] bg-white/10 p-3.5 text-[13px] leading-6 text-white/88">
-                                <span className="font-medium">Use now:</span> {card.recommendation}
+                              <div className="rounded-[20px] bg-white/10 p-3 text-[12px] leading-5 text-white/88">
+                                <span className="font-medium">Use now:</span>
+                                <div className="mt-1 max-h-[2.5rem] overflow-hidden">{card.recommendation}</div>
                               </div>
                             </motion.div>
                           )}
@@ -474,7 +474,7 @@ export default function WalletPrototype() {
                   if (info.offset.y < -50) setSheetExpanded(true);
                   if (info.offset.y > 50) setSheetExpanded(false);
                 }}
-                animate={{ height: sheetExpanded ? 452 : 356, y: 0 }}
+                animate={{ height: sheetExpanded ? 430 : 316, y: 0 }}
                 className="mt-3 overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,20,38,0.96),rgba(10,15,30,0.92))] p-4 backdrop-blur-2xl shadow-[0_-18px_50px_rgba(0,0,0,0.32)]"
               >
                 <button
@@ -488,13 +488,13 @@ export default function WalletPrototype() {
                       <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
-                        <h3 className="text-[28px] font-semibold tracking-[-0.03em] text-white">
+                        <h3 className="text-[25px] font-semibold tracking-[-0.03em] text-white">
                           {pageMeta[walletPages[walletPageIndex]].title}
                         </h3>
                       </div>
                     </div>
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
-                      {sheetExpanded ? 'Expanded' : 'Swipe up'}
+                      {sheetExpanded ? 'Details' : 'Swipe up'}
                     </div>
                   </div>
                 </button>
@@ -508,25 +508,8 @@ export default function WalletPrototype() {
                     if (info.offset.x > 60) shiftWalletPage(-1);
                   }}
                   animate={{ x: `${walletPageIndex * -100}%` }}
-                  className="flex h-[258px] cursor-grab active:cursor-grabbing"
+                  className="flex h-[210px] cursor-grab active:cursor-grabbing"
                 >
-                  <div className="w-full shrink-0 pr-2">
-                    <div className="space-y-3">
-                      {selectedCard.transactions.map((transaction) => (
-                        <motion.div layout key={transaction.id} className="flex items-center justify-between rounded-[24px] border border-white/8 bg-white/[0.04] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.05] text-sm text-white/70">•</div>
-                            <div>
-                              <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{transaction.merchant}</p>
-                              <p className="mt-1 text-[13px] text-white/55">{transaction.date} · {transaction.category}</p>
-                            </div>
-                          </div>
-                          <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{transaction.amount}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="w-full shrink-0 px-1">
                     <div className="space-y-3">
                       {selectedCard.benefits.map((benefit) => (
