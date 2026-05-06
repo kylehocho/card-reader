@@ -192,6 +192,64 @@ const seedCards: Card[] = [
       { id: 'reserve-lounge', title: 'Priority Pass access', status: 'available', detail: 'Available for your next airport visit', progress: 100 },
     ],
   },
+  {
+    id: 'capital-one-venture-x',
+    issuer: 'Capital One',
+    name: 'Venture X',
+    last4: '5521',
+    gradient: 'from-[#4b5563] via-[#1d2733] to-[#090b11]',
+    accent: '#f4f7fb',
+    pointsLabel: 'Capital One Miles',
+    pointsValue: '184,900 mi',
+    recommendation: 'Use for flights, hotels, and big travel purchases when you want a clean 2x floor plus travel portal value.',
+    spendSummary: '$95 of your $300 travel credit remains.',
+    categories: ['Travel', 'Lounges', 'Everyday spend'],
+    alerts: ['Travel credit nearly finished', 'Anniversary miles post next month'],
+    rewardReset: 'Travel credit renews each account anniversary year.',
+    annualFeeMonth: 'August',
+    monthlyCreditsUsed: 2,
+    monthlyCreditsTotal: 3,
+    nextResetLabel: '$95 travel credit still available',
+    transactions: [
+      { id: 'vx1', merchant: 'Capital One Travel', amount: '$205.00', date: 'Today', category: 'Travel portal' },
+      { id: 'vx2', merchant: 'Airbnb', amount: '$314.80', date: 'May 2', category: 'Travel' },
+      { id: 'vx3', merchant: 'Coffee Dose', amount: '$18.45', date: 'May 1', category: 'Dining' },
+    ],
+    benefits: [
+      { id: 'venture-credit', title: 'Annual travel credit', status: 'in-progress', detail: '$205 of $300 used this year', progress: 68 },
+      { id: 'venture-lounge', title: 'Priority Pass + Plaza Premium', status: 'available', detail: 'Ready for your next airport visit', progress: 100 },
+      { id: 'venture-anniversary', title: 'Anniversary miles', status: 'expiring', detail: 'Posts in 24 days at renewal', progress: 76 },
+    ],
+  },
+  {
+    id: 'citi-strata-premier',
+    issuer: 'Citi',
+    name: 'Strata Premier',
+    last4: '8842',
+    gradient: 'from-[#535862] via-[#20252d] to-[#090b10]',
+    accent: '#eef2f8',
+    pointsLabel: 'ThankYou Points',
+    pointsValue: '72,640 pts',
+    recommendation: 'Use for restaurants, groceries, gas, and airfare when you want broad category coverage.',
+    spendSummary: '$318 remains to trigger your next statement credit milestone.',
+    categories: ['Dining', 'Groceries', 'Gas'],
+    alerts: ['Hotel benefit still untouched this year', 'Bonus category spend is trending up'],
+    rewardReset: 'Hotel savings benefit refreshes annually.',
+    annualFeeMonth: 'November',
+    monthlyCreditsUsed: 0,
+    monthlyCreditsTotal: 2,
+    nextResetLabel: 'No monthly credits used yet',
+    transactions: [
+      { id: 'ct1', merchant: 'Whole Foods', amount: '$96.40', date: 'Today', category: 'Groceries' },
+      { id: 'ct2', merchant: 'Chevron', amount: '$61.22', date: 'Yesterday', category: 'Gas' },
+      { id: 'ct3', merchant: 'Sugarfish', amount: '$88.30', date: 'Apr 30', category: 'Dining' },
+    ],
+    benefits: [
+      { id: 'citi-hotel', title: '$100 hotel benefit', status: 'available', detail: 'Still unused for this cardmember year', progress: 0 },
+      { id: 'citi-bonus', title: 'Category bonus momentum', status: 'in-progress', detail: 'Dining and grocery spend pacing ahead of last month', progress: 61 },
+      { id: 'citi-thankyou', title: 'ThankYou transfer value', status: 'available', detail: 'Ready for your next flight redemption', progress: 100 },
+    ],
+  },
 ];
 
 const seedNotifications: NotificationItem[] = [
@@ -282,6 +340,7 @@ export default function WalletPrototype() {
   const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999' });
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [walletPageIndex, setWalletPageIndex] = useState(0);
+  const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
 
   const selectedCard = useMemo(() => cards.find((card) => card.id === selectedId) ?? cards[0], [cards, selectedId]);
   const selectedNotification = useMemo(
@@ -296,8 +355,13 @@ export default function WalletPrototype() {
     () => filteredRecommendations.find((r) => r.id === selectedRecommendationId) ?? filteredRecommendations[0],
     [filteredRecommendations, selectedRecommendationId],
   );
+  const walletStackItems = useMemo(
+    () => [...cards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' as const }],
+    [cards, selectedId],
+  );
 
   function openScanner() {
+    setWalletSelectionExpanded(false);
     setShowScanner(true);
     setScanStep('camera');
   }
@@ -305,6 +369,7 @@ export default function WalletPrototype() {
   function selectCard(cardId: string) {
     setSelectedId(cardId);
     setWalletPageIndex(0);
+    setWalletSelectionExpanded(false);
   }
 
   function shiftWalletPage(direction: 1 | -1) {
@@ -500,13 +565,13 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 mt-3 px-2 pb-2 pt-0">
-                <div className="relative h-[240px] overflow-hidden rounded-[30px]">
-                  {[...cards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' }].map((card, index) => {
-                    const top = 18 + index * 18;
-                    const scale = 1 - index * 0.024;
-                    const opacity = 1 - index * 0.05;
-                    const zIndex = 20 - index;
+                <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
+                  {walletStackItems.map((card, index) => {
                     const isAddCard = card.id === 'add-card';
+                    const top = walletSelectionExpanded ? 12 + index * 62 : 18 + index * 18;
+                    const scale = walletSelectionExpanded ? 1 : 1 - index * 0.024;
+                    const opacity = walletSelectionExpanded ? 1 : 1 - index * 0.05;
+                    const zIndex = walletSelectionExpanded ? walletStackItems.length - index : 20 - index;
                     const cardClassName = isAddCard
                       ? 'absolute inset-x-0 rounded-[30px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]'
                       : `absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${(card as Card).gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`;
@@ -515,24 +580,48 @@ export default function WalletPrototype() {
                         key={card.id}
                         layout
                         type="button"
-                        onClick={() => (isAddCard ? openScanner() : selectCard(card.id))}
-                        whileTap={{ scale: scale - 0.012 }}
+                        onClick={() => {
+                          if (!walletSelectionExpanded) {
+                            setWalletSelectionExpanded(true);
+                            return;
+                          }
+                          if (isAddCard) {
+                            openScanner();
+                            return;
+                          }
+                          selectCard(card.id);
+                        }}
+                        whileTap={{ scale: walletSelectionExpanded ? 0.988 : scale - 0.012 }}
                         className={cardClassName}
                         style={{ top, zIndex }}
-                        animate={{ scale, opacity, y: index * 1.5 }}
+                        animate={{
+                          scale,
+                          opacity,
+                          y: walletSelectionExpanded ? 0 : index * 1.5,
+                        }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
                       >
                         {!isAddCard && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />}
                         <div className={`relative flex items-start justify-between ${isAddCard ? 'text-white/92' : 'text-white'}`}>
                           <div>
-                            <p className={`text-[10px] uppercase tracking-[0.24em] ${isAddCard ? 'text-white/70' : 'text-white/70'}`}>{card.issuer}</p>
+                            <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">{card.issuer}</p>
                             <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
                           </div>
-                          <p className={`mt-1 text-xs ${isAddCard ? 'text-white/74' : 'text-white/74'}`}>{isAddCard ? 'Scan or enter' : `•••• ${card.last4}`}</p>
+                          <p className="mt-1 text-xs text-white/74">{isAddCard ? 'Scan or enter' : `•••• ${card.last4}`}</p>
                         </div>
                       </motion.button>
                     );
                   })}
                 </div>
+                {walletSelectionExpanded && (
+                  <button
+                    type="button"
+                    onClick={() => setWalletSelectionExpanded(false)}
+                    className="mt-3 w-full rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/74 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Close wallet stack
+                  </button>
+                )}
               </div>
             </section>
           )}
