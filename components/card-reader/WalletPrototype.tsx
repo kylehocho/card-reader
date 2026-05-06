@@ -676,14 +676,14 @@ export default function WalletPrototype() {
                   </motion.div>
               </div>
 
-              <div className={`relative z-10 px-2 pb-2 pt-0 transition-all duration-300 ${walletSelectionExpanded ? '-mt-[118px]' : 'mt-3'}`}>
+              <div className="relative z-10 mt-3 px-2 pb-2 pt-0">
                 <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
                   {walletStackItems.map((card, index) => {
                     const isAddCard = card.id === 'add-card';
                     const stackHeight = walletSelectionExpanded ? 430 : 250;
                     const cardHeight = 112;
-                    const spread = walletSelectionExpanded ? 64 : 18;
-                    const bottomInset = walletSelectionExpanded ? 12 : 22;
+                    const spread = walletSelectionExpanded ? 58 : 18;
+                    const bottomInset = walletSelectionExpanded ? 16 : 22;
                     const top = stackHeight - cardHeight - bottomInset - index * spread;
                     const scale = walletSelectionExpanded ? 1 : 1 - index * 0.024;
                     const opacity = walletSelectionExpanded ? 1 : 1 - index * 0.05;
