@@ -680,7 +680,11 @@ export default function WalletPrototype() {
                 <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
                   {walletStackItems.map((card, index) => {
                     const isAddCard = card.id === 'add-card';
-                    const top = walletSelectionExpanded ? 12 + index * 62 : 18 + index * 18;
+                    const stackHeight = walletSelectionExpanded ? 430 : 250;
+                    const cardHeight = 112;
+                    const spread = walletSelectionExpanded ? 58 : 18;
+                    const bottomInset = walletSelectionExpanded ? 16 : 22;
+                    const top = stackHeight - cardHeight - bottomInset - index * spread;
                     const scale = walletSelectionExpanded ? 1 : 1 - index * 0.024;
                     const opacity = walletSelectionExpanded ? 1 : 1 - index * 0.05;
                     const zIndex = walletSelectionExpanded ? walletStackItems.length - index : 20 - index;
