@@ -418,7 +418,23 @@ export default function WalletPrototype() {
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-8 pt-6">
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-120px)] flex-col gap-0">
-              <div className="relative z-20 px-1 pt-3">
+              <div className="mb-3 flex items-center justify-between px-2">
+                <button
+                  type="button"
+                  aria-label="Wallet menu"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-[20px] text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                >
+                  ⋯
+                </button>
+                <button
+                  type="button"
+                  aria-label="Add pass"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-[22px] text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                >
+                  +
+                </button>
+              </div>
+              <div className="relative z-20 px-1 pt-1">
                 <motion.div
                   layout
                   className="relative mx-auto w-full max-w-[360px]"
