@@ -489,12 +489,12 @@ export default function WalletPrototype() {
                   </motion.div>
               </div>
 
-              <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
-                <div className="relative h-[268px] overflow-hidden rounded-[30px]">
+              <div className="relative z-10 mt-3 px-2 pb-2 pt-0">
+                <div className="relative h-[240px] overflow-hidden rounded-[30px]">
                   {[...cards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' }].map((card, index) => {
-                    const top = 22 + index * 22;
-                    const scale = 1 - index * 0.026;
-                    const opacity = 1 - index * 0.055;
+                    const top = 18 + index * 18;
+                    const scale = 1 - index * 0.024;
+                    const opacity = 1 - index * 0.05;
                     const zIndex = 20 - index;
                     const isAddCard = card.id === 'add-card';
                     const cardClassName = isAddCard
