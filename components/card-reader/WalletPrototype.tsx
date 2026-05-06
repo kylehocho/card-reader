@@ -374,44 +374,44 @@ export default function WalletPrototype() {
 
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-170px)] flex-col gap-0">
-              <div className="relative z-20 px-1 pt-2">
+              <div className="relative z-20 px-1 pt-3">
                 <motion.div
                   layout
                   className="relative mx-auto w-full max-w-[360px]"
                 >
                   <motion.div
                     layout
-                    className={`relative overflow-hidden rounded-[34px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_70px_rgba(0,0,0,0.34)]`}
+                    className={`relative aspect-[1.586/1] overflow-hidden rounded-[28px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_70px_rgba(0,0,0,0.34)]`}
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
                     <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
 
-                    <div className="relative text-white">
+                    <div className="relative flex h-full flex-col justify-between text-white">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-[11px] uppercase tracking-[0.28em] text-white/65">{selectedCard.issuer}</p>
-                          <h2 className="mt-3 text-[29px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h2>
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/65">{selectedCard.issuer}</p>
+                          <h2 className="mt-2 text-[27px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h2>
                         </div>
                         <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {selectedCard.last4}</div>
                       </div>
 
-                      <div className="mt-10">
+                      <div>
                         <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
-                        <p className="mt-2 text-[30px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
-                        <p className="mt-1 text-[12px] text-white/58">{selectedCard.pointsLabel}</p>
-                      </div>
-
-                      <div className="mt-5 rounded-[22px] bg-white/10 p-3 text-[12px] leading-5 text-white/88">
-                        <span className="font-medium">Use now:</span>
-                        <div className="mt-1">{selectedCard.recommendation}</div>
+                        <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                          <p className="text-[12px] text-white/60">{selectedCard.pointsLabel}</p>
+                          <div className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white/78">
+                            Active
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 </motion.div>
               </div>
 
-              <div className="relative z-10 -mt-6 px-2">
-                <div className="rounded-[32px] border border-white/10 bg-[#0d1224]/55 px-4 pb-4 pt-10 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.24)]">
+              <div className="relative z-10 -mt-8 px-2">
+                <div className="rounded-[32px] border border-white/10 bg-[#0d1224]/55 px-4 pb-4 pt-12 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.24)]">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
