@@ -64,7 +64,7 @@ type Card = {
   transactions: Transaction[];
 };
 
-type ScanStep = 'choose' | 'camera' | 'confirm' | 'enrich' | 'success';
+type ScanStep = 'camera' | 'manual' | 'success';
 type Screen = 'wallet' | 'opportunities' | 'use-now';
 type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
 type WalletPage = 'benefits' | 'progress' | 'rewards';
@@ -271,7 +271,7 @@ export default function WalletPrototype() {
   const [recommendations] = useState(seedRecommendations);
   const [selectedId, setSelectedId] = useState(seedCards[0].id);
   const [showScanner, setShowScanner] = useState(false);
-  const [scanStep, setScanStep] = useState<ScanStep>('choose');
+  const [scanStep, setScanStep] = useState<ScanStep>('camera');
   const [screen, setScreen] = useState<Screen>('wallet');
   const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(notifications[0].id);
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
@@ -295,7 +295,7 @@ export default function WalletPrototype() {
 
   function openScanner() {
     setShowScanner(true);
-    setScanStep('choose');
+    setScanStep('camera');
   }
 
   function selectCard(cardId: string) {
@@ -677,10 +677,8 @@ export default function WalletPrototype() {
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-white/50">Add a card</p>
                   <h2 className="mt-2 text-2xl font-semibold text-white">
-                    {scanStep === 'choose' && 'Add a new card'}
                     {scanStep === 'camera' && 'Scan your card'}
-                    {scanStep === 'confirm' && 'Confirm card details'}
-                    {scanStep === 'enrich' && 'Complete setup'}
+                    {scanStep === 'manual' && 'Enter card details'}
                     {scanStep === 'success' && 'Card added'}
                   </h2>
                 </div>
@@ -691,26 +689,18 @@ export default function WalletPrototype() {
                 )}
               </div>
 
-              <div className="mt-5 flex gap-2 rounded-full bg-[#8d949f]/24 p-1 text-xs">
-                {(['choose', 'camera', 'confirm', 'enrich'] as const).map((step) => (
-                  <div key={step} className={`flex-1 rounded-full px-3 py-2 text-center capitalize transition ${scanStep === step ? 'bg-white text-[#111317]' : 'text-white/50'}`}>
-                    {step === 'choose' ? 'method' : step}
-                  </div>
-                ))}
-              </div>
-
-              {scanStep === 'choose' && (
-                <div className="mt-5 grid gap-3">
-                  <button onClick={() => setScanStep('camera')} className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4 text-left transition hover:bg-[#8d949f]/28">
-                    <p className="text-xs uppercase tracking-[0.22em] text-white/50">Option 1</p>
-                    <p className="mt-2 text-lg font-semibold text-white">Use camera</p>
-                    <p className="mt-1 text-sm text-white/72">Scan the front of the card and prefill details automatically.</p>
-                  </button>
-                  <button onClick={() => setScanStep('confirm')} className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4 text-left transition hover:bg-[#8d949f]/28">
-                    <p className="text-xs uppercase tracking-[0.22em] text-white/50">Option 2</p>
-                    <p className="mt-2 text-lg font-semibold text-white">Manual entry</p>
-                    <p className="mt-1 text-sm text-white/72">Type issuer, product name, and last four yourself.</p>
-                  </button>
+              {scanStep !== 'success' && (
+                <div className="mt-5 flex gap-2 rounded-full bg-[#8d949f]/24 p-1 text-xs">
+                  {(['camera', 'manual'] as const).map((step) => (
+                    <button
+                      key={step}
+                      type="button"
+                      onClick={() => setScanStep(step)}
+                      className={`flex-1 rounded-full px-3 py-2 text-center capitalize transition ${scanStep === step ? 'bg-white text-[#111317]' : 'text-white/50'}`}
+                    >
+                      {step}
+                    </button>
+                  ))}
                 </div>
               )}
 
@@ -724,13 +714,13 @@ export default function WalletPrototype() {
                     <div className="mt-6 rounded-2xl bg-emerald-400/10 p-3 text-sm text-emerald-200/85">Detected: premium Amex profile + card ending in 9999</div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <button onClick={() => setScanStep('confirm')} className="rounded-full border border-white/12 px-4 py-3 text-sm text-white/80 transition hover:bg-[#8d949f]/28">Manual entry</button>
-                    <button onClick={() => setScanStep('confirm')} className="rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Use detection</button>
+                    <button onClick={() => setScanStep('manual')} className="rounded-full border border-white/12 px-4 py-3 text-sm text-white/80 transition hover:bg-[#8d949f]/28">Manual entry</button>
+                    <button onClick={finishDemoAdd} className="rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Use detection</button>
                   </div>
                 </div>
               )}
 
-              {scanStep === 'confirm' && (
+              {scanStep === 'manual' && (
                 <div className="mt-5 space-y-3">
                   <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4">
                     <label className="text-xs uppercase tracking-[0.22em] text-white/50">Issuer</label>
@@ -744,21 +734,12 @@ export default function WalletPrototype() {
                     <label className="text-xs uppercase tracking-[0.22em] text-white/50">Last four</label>
                     <input value={draftCard.last4} onChange={(e) => setDraftCard((d) => ({ ...d, last4: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-[#8d949f]/24 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                   </div>
-                  <button onClick={() => setScanStep('enrich')} className="w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Confirm card</button>
-                </div>
-              )}
-
-              {scanStep === 'enrich' && (
-                <div className="mt-5 space-y-3">
-                  <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4 text-sm leading-6 text-white/80">
-                    Prototype enrichment attaches reward program, likely category bonuses, annual fee month, and tracked benefit states.
-                  </div>
                   <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4">
                     <p className="text-xs uppercase tracking-[0.22em] text-white/50">Preview</p>
                     <p className="mt-2 text-lg font-medium text-white">{draftCard.issuer} {draftCard.name}</p>
                     <p className="mt-1 text-sm text-white/74">Will be added to your wallet stack as •••• {draftCard.last4}</p>
                   </div>
-                  <button onClick={finishDemoAdd} className="w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Finish setup</button>
+                  <button onClick={finishDemoAdd} className="w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Add card</button>
                 </div>
               )}
 
