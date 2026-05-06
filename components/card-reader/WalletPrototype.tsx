@@ -449,9 +449,9 @@ export default function WalletPrototype() {
                             <p className="text-[11px] uppercase tracking-[0.24em] text-white/50">Available now</p>
                             <p className="text-xs text-white/70">{selectedCard.benefits.length} benefits</p>
                           </div>
-                          <div className="space-y-3">
+                          <div className="overflow-hidden rounded-[20px] bg-[#8d949f]/18 divide-y divide-white/10">
                             {selectedCard.benefits.map((benefit) => (
-                              <motion.div layout key={benefit.id} className="rounded-[20px] border border-white/12 bg-[#8d949f]/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                              <motion.div layout key={benefit.id} className="p-4">
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
@@ -473,43 +473,43 @@ export default function WalletPrototype() {
                       )}
 
                       {walletPages[walletPageIndex] === 'progress' && (
-                        <div>
-                          <div className="rounded-[20px] border border-white/12 bg-[#8d949f]/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="overflow-hidden rounded-[20px] bg-[#8d949f]/18 divide-y divide-white/10">
+                          <div className="p-4">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Next unlock</p>
                             <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
                           </div>
-                          <div className="mt-3 grid grid-cols-2 gap-3">
-                            <div className="rounded-[20px] border border-white/12 bg-[#8d949f]/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <div className="grid grid-cols-2 divide-x divide-white/10">
+                            <div className="p-4">
                               <p className="text-[10px] uppercase tracking-[0.28em] text-white/48">Monthly credits</p>
                               <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
                               <p className="mt-1 text-sm text-white/74">Used this cycle</p>
                             </div>
-                            <div className="rounded-[20px] border border-white/12 bg-[#8d949f]/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <div className="p-4">
                               <p className="text-[10px] uppercase tracking-[0.28em] text-white/48">Next reset</p>
                               <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
                             </div>
                           </div>
-                          <div className="mt-3 flex gap-2">
-                            <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/12 bg-[#8d949f]/28 px-4 py-3 text-sm text-white/90 transition hover:bg-white/[0.08]">Mark perk used</button>
-                            <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/12 bg-[#8d949f]/28 px-4 py-3 text-sm text-white/90 transition hover:bg-white/[0.08]">Simulate reset</button>
+                          <div className="flex gap-2 p-4">
+                            <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/[0.08]">Mark perk used</button>
+                            <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/[0.08]">Simulate reset</button>
                           </div>
                         </div>
                       )}
 
                       {walletPages[walletPageIndex] === 'rewards' && (
-                        <div>
-                          <div className="rounded-[20px] border border-white/12 bg-[#8d949f]/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="overflow-hidden rounded-[20px] bg-[#8d949f]/18 divide-y divide-white/10">
+                          <div className="p-4">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current total</p>
                             <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
                             <p className="mt-1 text-[13px] text-white/70">{selectedCard.pointsLabel}</p>
                           </div>
-                          <div className="mt-3 rounded-[20px] border border-white/12 bg-[#8d949f]/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <div className="p-4">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-white/48">Membership year</p>
                             <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
                             <p className="mt-3 text-sm leading-6 text-white/72">{selectedCard.rewardReset}</p>
                             <div className="mt-4 flex flex-wrap gap-2">
                               {selectedCard.categories.map((category) => (
-                                <span key={category} className="rounded-full border border-white/12 bg-[#8d949f]/28 px-3 py-1 text-xs text-white/92">
+                                <span key={category} className="rounded-full border border-white/12 bg-white/5 px-3 py-1 text-xs text-white/92">
                                   {category}
                                 </span>
                               ))}
