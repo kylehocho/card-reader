@@ -345,15 +345,10 @@ export default function WalletPrototype() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     allowNotifications: true,
-    timeSensitive: true,
     paymentDue: true,
-    statementReady: true,
     benefitExpiring: true,
     spendMilestones: false,
-    sounds: true,
-    badges: true,
   });
-  const [bannerStyle, setBannerStyle] = useState<'temporary' | 'persistent'>('persistent');
 
   const selectedCard = useMemo(() => cards.find((card) => card.id === selectedId) ?? cards[0], [cards, selectedId]);
   const selectedNotification = useMemo(
@@ -827,42 +822,9 @@ export default function WalletPrototype() {
               <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
                 {[
                   ['Allow Notifications', 'allowNotifications'],
-                  ['Time Sensitive Notifications', 'timeSensitive'],
                   ['Notify Me When Payment Is Due', 'paymentDue'],
-                ].map(([label, key], index) => (
-                  <div key={key}>
-                    <div className="flex items-center justify-between px-4 py-3.5">
-                      <div>
-                        <p className="text-[16px] tracking-[-0.01em] text-white">{label}</p>
-                      </div>
-                      <button
-                        type="button"
-                        aria-pressed={notificationSettings[key as keyof typeof notificationSettings]}
-                        onClick={() =>
-                          setNotificationSettings((prev) => ({
-                            ...prev,
-                            [key]: !prev[key as keyof typeof prev],
-                          }))
-                        }
-                        className={`relative h-8 w-13 rounded-full p-1 transition ${notificationSettings[key as keyof typeof notificationSettings] ? 'bg-[#34c759]' : 'bg-white/15'}`}
-                      >
-                        <span
-                          className={`block h-6 w-6 rounded-full bg-white shadow transition ${notificationSettings[key as keyof typeof notificationSettings] ? 'translate-x-5' : 'translate-x-0'}`}
-                        />
-                      </button>
-                    </div>
-                    {index < 2 && <div className="mx-4 h-px bg-white/10" />}
-                  </div>
-                ))}
-              </div>
-
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
-                {[
-                  ['Statement Ready', 'statementReady'],
                   ['Benefit Expiring', 'benefitExpiring'],
                   ['Spend Milestones', 'spendMilestones'],
-                  ['Sounds', 'sounds'],
-                  ['Badges', 'badges'],
                 ].map(([label, key], index, arr) => (
                   <div key={key}>
                     <div className="flex items-center justify-between px-4 py-3.5">
@@ -888,23 +850,6 @@ export default function WalletPrototype() {
                 ))}
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-3.5 backdrop-blur-2xl">
-                <div className="flex items-center justify-between">
-                  <p className="text-[16px] tracking-[-0.01em] text-white">Banner Style</p>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 rounded-[18px] bg-black/20 p-1">
-                  {(['temporary', 'persistent'] as const).map((style) => (
-                    <button
-                      key={style}
-                      type="button"
-                      onClick={() => setBannerStyle(style)}
-                      className={`rounded-[14px] px-3 py-2 text-sm font-medium capitalize transition ${bannerStyle === style ? 'bg-white text-[#111317]' : 'text-white/72'}`}
-                    >
-                      {style}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </section>
           )}
 
