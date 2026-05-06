@@ -799,72 +799,83 @@ export default function WalletPrototype() {
         </div>
 
         {showScanner && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 p-4 backdrop-blur-md">
-            <motion.div layout className="max-h-[78vh] w-full max-w-sm overflow-y-auto rounded-[30px] border border-white/12 bg-[#09101e]/95 p-4 shadow-[0_40px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/78 p-4 backdrop-blur-md">
+            <motion.div layout className="max-h-[78vh] w-full max-w-sm overflow-y-auto rounded-[30px] bg-black p-4 shadow-[0_40px_90px_rgba(0,0,0,0.55)]">
               <div className="mt-1 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/50">Add a card</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-white">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Add a card</p>
+                  <h2 className="mt-2 text-[27px] font-semibold tracking-[-0.03em] text-white">
                     {scanStep === 'camera' && 'Scan your card'}
                     {scanStep === 'manual' && 'Enter card details'}
                     {scanStep === 'success' && 'Card added'}
                   </h2>
                 </div>
                 {scanStep !== 'success' && (
-                  <button type="button" onClick={() => setShowScanner(false)} className="shrink-0 rounded-full border border-white/12 bg-white/5 px-3 py-1.5 text-sm text-white/80 transition hover:bg-white/10 hover:text-white">
+                  <button type="button" onClick={() => setShowScanner(false)} className="shrink-0 rounded-full border border-white/15 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">
                     Close
                   </button>
                 )}
               </div>
 
               {scanStep !== 'success' && (
-                <div className="mt-5 flex gap-2 rounded-full bg-[#8d949f]/24 p-1 text-xs">
-                  {(['camera', 'manual'] as const).map((step) => (
-                    <button
-                      key={step}
-                      type="button"
-                      onClick={() => setScanStep(step)}
-                      className={`flex-1 rounded-full px-3 py-2 text-center capitalize transition ${scanStep === step ? 'bg-white text-[#111317]' : 'text-white/50'}`}
-                    >
-                      {step}
-                    </button>
-                  ))}
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setScanStep('camera')}
+                    className={`relative overflow-hidden rounded-[28px] px-4 pb-4 pt-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)] ${scanStep === 'camera' ? 'ring-2 ring-white/25' : ''}`}
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),linear-gradient(135deg,#4d5563_0%,#1f2631_58%,#05070c_100%)]" />
+                    <div className="relative text-white">
+                      <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">Camera</p>
+                      <p className="mt-5 text-[20px] font-semibold tracking-[-0.02em]">Scan Card</p>
+                      <p className="mt-1 text-xs text-white/74">Use detection</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScanStep('manual')}
+                    className={`relative overflow-hidden rounded-[28px] px-4 pb-4 pt-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)] ${scanStep === 'manual' ? 'ring-2 ring-white/25' : ''}`}
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),linear-gradient(135deg,#535862_0%,#20252d_58%,#090b10_100%)]" />
+                    <div className="relative text-white">
+                      <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">Manual</p>
+                      <p className="mt-5 text-[20px] font-semibold tracking-[-0.02em]">Enter Details</p>
+                      <p className="mt-1 text-xs text-white/74">Type it in</p>
+                    </div>
+                  </button>
                 </div>
               )}
 
               {scanStep === 'camera' && (
-                <div className="mt-5 rounded-[30px] border border-dashed border-white/15 bg-[#8d949f]/20 p-4">
-                  <div className="aspect-[0.68] rounded-[26px] border border-white/12 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_30%),linear-gradient(180deg,#0f172d_0%,#05070e_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                    <p className="text-sm text-white/72">Camera view</p>
-                    <div className="mt-6 rounded-[24px] border-2 border-white/28 p-5 text-center text-sm leading-6 text-white/72">
+                <div className="mt-5 rounded-[30px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4" style={appleInfoFontStyle}>
+                  <div className="aspect-[0.68] rounded-[26px] border border-white/12 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_30%),linear-gradient(180deg,#1c2230_0%,#070a0f_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Camera view</p>
+                    <div className="mt-6 rounded-[24px] border-2 border-white/24 p-5 text-center text-sm leading-6 text-white/72">
                       Frame the front of your card here. We’ll detect issuer, last four, and likely product name.
                     </div>
-                    <div className="mt-6 rounded-2xl bg-emerald-400/10 p-3 text-sm text-emerald-200/85">Detected: premium Amex profile + card ending in 9999</div>
+                    <div className="mt-6 rounded-2xl bg-white/10 px-3 py-2 text-sm text-white/78">Detected: premium Amex profile + card ending in 9999</div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <button onClick={() => setScanStep('manual')} className="rounded-full border border-white/12 px-4 py-3 text-sm text-white/80 transition hover:bg-[#8d949f]/28">Manual entry</button>
-                    <button onClick={finishDemoAdd} className="rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Use detection</button>
-                  </div>
+                  <button onClick={finishDemoAdd} className="mt-4 w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Use detection</button>
                 </div>
               )}
 
               {scanStep === 'manual' && (
-                <div className="mt-5 space-y-3">
-                  <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4">
-                    <label className="text-xs uppercase tracking-[0.22em] text-white/50">Issuer</label>
-                    <input value={draftCard.issuer} onChange={(e) => setDraftCard((d) => ({ ...d, issuer: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-[#8d949f]/24 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                <div className="mt-5 space-y-3" style={appleInfoFontStyle}>
+                  <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                    <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Issuer</label>
+                    <input value={draftCard.issuer} onChange={(e) => setDraftCard((d) => ({ ...d, issuer: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                   </div>
-                  <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4">
-                    <label className="text-xs uppercase tracking-[0.22em] text-white/50">Product name</label>
-                    <input value={draftCard.name} onChange={(e) => setDraftCard((d) => ({ ...d, name: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-[#8d949f]/24 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                  <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                    <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Product name</label>
+                    <input value={draftCard.name} onChange={(e) => setDraftCard((d) => ({ ...d, name: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                   </div>
-                  <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4">
-                    <label className="text-xs uppercase tracking-[0.22em] text-white/50">Last four</label>
-                    <input value={draftCard.last4} onChange={(e) => setDraftCard((d) => ({ ...d, last4: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-[#8d949f]/24 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                  <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                    <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Last four</label>
+                    <input value={draftCard.last4} onChange={(e) => setDraftCard((d) => ({ ...d, last4: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                   </div>
-                  <div className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-white/50">Preview</p>
-                    <p className="mt-2 text-lg font-medium text-white">{draftCard.issuer} {draftCard.name}</p>
+                  <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Preview</p>
+                    <p className="mt-2 text-[20px] font-semibold tracking-[-0.02em] text-white">{draftCard.issuer} {draftCard.name}</p>
                     <p className="mt-1 text-sm text-white/74">Will be added to your wallet stack as •••• {draftCard.last4}</p>
                   </div>
                   <button onClick={finishDemoAdd} className="w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Add card</button>
