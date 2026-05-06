@@ -613,15 +613,6 @@ export default function WalletPrototype() {
                     );
                   })}
                 </div>
-                {walletSelectionExpanded && (
-                  <button
-                    type="button"
-                    onClick={() => setWalletSelectionExpanded(false)}
-                    className="mt-3 w-full rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/74 transition hover:bg-white/10 hover:text-white"
-                  >
-                    Close wallet stack
-                  </button>
-                )}
               </div>
             </section>
           )}
