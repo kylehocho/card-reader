@@ -422,33 +422,32 @@ export default function WalletPrototype() {
                 <button
                   type="button"
                   aria-label="Wallet options"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-[#1c1c1e] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                 >
-                  <svg width="19" height="19" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <circle cx="5" cy="10" r="1.6" fill="currentColor" />
-                    <circle cx="10" cy="10" r="1.6" fill="currentColor" />
-                    <circle cx="15" cy="10" r="1.6" fill="currentColor" />
+                  <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="5" cy="10" r="1.35" fill="currentColor" />
+                    <circle cx="10" cy="10" r="1.35" fill="currentColor" />
+                    <circle cx="15" cy="10" r="1.35" fill="currentColor" />
                   </svg>
                 </button>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
-                    aria-label="Share or send"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-[#1c1c1e] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    aria-label="Add pass"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   >
-                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <path d="M10 4.25v8.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                      <path d="M6.75 7.5 10 4.25 13.25 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M5.5 10.75v3a1.75 1.75 0 0 0 1.75 1.75h5.5a1.75 1.75 0 0 0 1.75-1.75v-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M10 4.7v10.6M4.7 10h10.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
                     </svg>
                   </button>
                   <button
                     type="button"
-                    aria-label="Add pass"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-[#1c1c1e] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    aria-label="Profile or passes"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   >
                     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <path d="M10 4.25v11.5M4.25 10h11.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      <circle cx="10" cy="7.1" r="2.6" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M5.9 15.2c.9-2 2.4-3 4.1-3s3.2 1 4.1 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                   </button>
                 </div>
