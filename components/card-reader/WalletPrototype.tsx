@@ -457,27 +457,30 @@ export default function WalletPrototype() {
                   </button>
 
                   {showProfileMenu && (
-                    <div className="absolute right-0 top-12 z-40 w-[196px] overflow-hidden rounded-[24px] border border-white/6 bg-black/95 shadow-[0_18px_40px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                    <div
+                      className="absolute right-0 top-12 z-40 w-[196px] overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] shadow-[0_18px_40px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl"
+                      style={appleInfoFontStyle}
+                    >
                       <button
                         type="button"
                         onClick={() => setShowProfileMenu(false)}
-                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.04]"
+                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
                       >
                         Profile
                       </button>
-                      <div className="mx-4 h-px bg-white/8" />
+                      <div className="mx-4 h-px bg-white/10" />
                       <button
                         type="button"
                         onClick={() => setShowProfileMenu(false)}
-                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.04]"
+                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
                       >
                         Card details
                       </button>
-                      <div className="mx-4 h-px bg-white/8" />
+                      <div className="mx-4 h-px bg-white/10" />
                       <button
                         type="button"
                         onClick={() => setShowProfileMenu(false)}
-                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.04]"
+                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
                       >
                         Notifications
                       </button>
