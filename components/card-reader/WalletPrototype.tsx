@@ -249,7 +249,6 @@ export default function WalletPrototype() {
   const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999' });
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [walletPageIndex, setWalletPageIndex] = useState(0);
-  const [sheetExpanded, setSheetExpanded] = useState(false);
 
   const selectedCard = useMemo(() => cards.find((card) => card.id === selectedId) ?? cards[0], [cards, selectedId]);
   const selectedNotification = useMemo(
@@ -391,211 +390,169 @@ export default function WalletPrototype() {
           </div>
 
           {screen === 'wallet' && (
-            <section className="flex min-h-[calc(100vh-170px)] flex-col justify-between">
-              <div className="relative h-[392px] overflow-hidden rounded-[40px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-3 pb-3 pt-4 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.48)]">
-                {cards.map((card, index) => {
-                  const isSelected = card.id === selectedId;
-                  const selectedIndex = cards.findIndex((c) => c.id === selectedId);
-                  const relativeIndex = index - selectedIndex;
-                  const distance = Math.abs(relativeIndex);
-                  const top = isSelected ? 8 : 34 + distance * 18;
-                  const scale = isSelected ? 1 : 0.986 - Math.min(distance * 0.02, 0.07);
-                  const opacity = isSelected ? 1 : 0.92 - Math.min(distance * 0.11, 0.26);
-                  const zIndex = isSelected ? 50 : 30 - distance;
-
-                  return (
-                    <motion.button
-                      key={card.id}
-                      layout
-                      type="button"
-                      onClick={() => selectCard(card.id)}
-                      whileTap={{ scale: isSelected ? 0.992 : scale - 0.01 }}
-                      className={`absolute left-3 right-3 overflow-hidden rounded-[32px] bg-gradient-to-br ${card.gradient} text-left`}
-                      style={{ zIndex, color: card.accent }}
-                      animate={{
-                        top,
-                        height: isSelected ? 206 : 94,
-                        scale,
-                        opacity,
-                        y: isSelected ? 0 : distance * 2,
-                        filter: `blur(${isSelected ? 0 : Math.min(distance * 0.8, 2)}px)`,
-                        boxShadow: isSelected
-                          ? 'inset 0 1px 0 rgba(255,255,255,0.15), 0 30px 55px rgba(0,0,0,0.34)'
-                          : 'inset 0 1px 0 rgba(255,255,255,0.10), 0 14px 28px rgba(0,0,0,0.22)',
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
-                      <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
-                      <div className="relative flex h-full flex-col justify-between px-5 pb-5 pt-5 text-white">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-[11px] uppercase tracking-[0.28em] text-white/65">{card.issuer}</p>
-                            <h2 className={`${isSelected ? 'mt-3 text-[28px]' : 'mt-2 text-[19px]'} font-semibold tracking-tight`}>
-                              {card.name}
-                            </h2>
-                          </div>
-                          <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {card.last4}</div>
-                        </div>
-
-                        <AnimatePresence initial={false}>
-                          {isSelected && (
-                            <motion.div
-                              key="selected-content"
-                              initial={{ opacity: 0, y: 16 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 12 }}
-                              className="grid gap-2 rounded-[24px] border border-white/10 bg-black/18 p-3.5 backdrop-blur-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                            >
-                              <div>
-                                <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
-                                <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em]">{card.pointsValue}</p>
-                                <p className="mt-1 text-[12px] text-white/58">{card.pointsLabel}</p>
-                              </div>
-                              <div className="rounded-[20px] bg-white/10 p-3 text-[12px] leading-5 text-white/88">
-                                <span className="font-medium">Use now:</span>
-                                <div className="mt-1 max-h-[2.5rem] overflow-hidden">{card.recommendation}</div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
+            <section className="flex min-h-[calc(100vh-170px)] flex-col gap-4">
               <motion.div
                 layout
-                drag="y"
-                dragConstraints={{ top: 0, bottom: 0 }}
-                dragElastic={0.08}
-                onDragEnd={(_, info) => {
-                  if (info.offset.y < -50) setSheetExpanded(true);
-                  if (info.offset.y > 50) setSheetExpanded(false);
-                }}
-                animate={{ height: sheetExpanded ? 430 : 316, y: 0 }}
-                className="mt-3 overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,20,38,0.96),rgba(10,15,30,0.92))] p-4 backdrop-blur-2xl shadow-[0_-18px_50px_rgba(0,0,0,0.32)]"
+                className={`relative overflow-hidden rounded-[38px] bg-gradient-to-br ${selectedCard.gradient} p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.34)]`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSheetExpanded((v) => !v)}
-                  className="block w-full"
-                >
-                  <div className="mx-auto mb-4 h-1.5 w-16 rounded-full bg-white/15 shadow-[0_1px_0_rgba(255,255,255,0.08)]" />
-                  <div className="mb-4 flex items-center justify-between text-left">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
+                <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
+
+                <div className="relative text-white">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
-                        <h3 className="text-[25px] font-semibold tracking-[-0.03em] text-white">
-                          {pageMeta[walletPages[walletPageIndex]].title}
-                        </h3>
-                      </div>
+                      <p className="text-[11px] uppercase tracking-[0.28em] text-white/65">{selectedCard.issuer}</p>
+                      <h2 className="mt-3 text-[29px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h2>
                     </div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
-                      {sheetExpanded ? 'Details' : 'Swipe up'}
-                    </div>
+                    <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {selectedCard.last4}</div>
                   </div>
-                </button>
 
-                <motion.div
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.12}
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x < -60) shiftWalletPage(1);
-                    if (info.offset.x > 60) shiftWalletPage(-1);
-                  }}
-                  animate={{ x: `${walletPageIndex * -100}%` }}
-                  className="flex h-[210px] cursor-grab active:cursor-grabbing"
-                >
-                  <div className="w-full shrink-0 px-1">
-                    <div className="space-y-3">
-                      {selectedCard.benefits.map((benefit) => (
-                        <motion.div layout key={benefit.id} className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
-                              <p className="mt-1 text-[13px] leading-5 text-white/60">{benefit.detail}</p>
-                            </div>
-                            <span className={`rounded-full border px-2.5 py-1 text-[11px] capitalize ${statusTone(benefit.status)}`}>
-                              {benefit.status}
-                            </span>
-                          </div>
-                          {typeof benefit.progress === 'number' && (
-                            <div className="mt-3 h-2 rounded-full bg-white/8">
-                              <motion.div className="h-2 rounded-full bg-white" animate={{ width: `${Math.max(benefit.progress, 6)}%` }} />
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
+                  <div className="mt-8 rounded-[28px] border border-white/10 bg-black/18 p-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
+                      <p className="mt-2 text-[30px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
+                      <p className="mt-1 text-[12px] text-white/58">{selectedCard.pointsLabel}</p>
+                    </div>
+                    <div className="mt-4 rounded-[22px] bg-white/10 p-3 text-[12px] leading-5 text-white/88">
+                      <span className="font-medium">Use now:</span>
+                      <div className="mt-1">{selectedCard.recommendation}</div>
                     </div>
                   </div>
 
-                  <div className="w-full shrink-0 px-1">
-                    <div className="rounded-[24px] border border-emerald-400/10 bg-emerald-400/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/70">Next unlock</p>
-                      <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      <div className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Monthly credits</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
-                        <p className="mt-1 text-sm text-white/60">Used this cycle</p>
+                  <div className="mt-4 rounded-[30px] border border-white/10 bg-[#0d1224]/55 p-4 backdrop-blur-2xl">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
+                          <h3 className="text-[23px] font-semibold tracking-[-0.03em] text-white">
+                            {pageMeta[walletPages[walletPageIndex]].title}
+                          </h3>
+                        </div>
                       </div>
-                      <div className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Next reset</p>
-                        <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex gap-2">
-                      <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Mark perk used</button>
-                      <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Simulate reset</button>
-                    </div>
-                  </div>
-
-                  <div className="w-full shrink-0 pl-1">
-                    <div className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Current total</p>
-                      <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
-                      <p className="mt-1 text-[13px] text-white/62">{selectedCard.pointsLabel}</p>
-                    </div>
-                    <div className="mt-3 rounded-[24px] border border-white/8 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Membership year</p>
-                      <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
-                      <p className="mt-3 text-sm leading-6 text-white/65">{selectedCard.rewardReset}</p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {selectedCard.categories.map((category) => (
-                          <span key={category} className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/75">
-                            {category}
-                          </span>
+                      <div className="flex items-center gap-2">
+                        {walletPages.map((page, index) => (
+                          <button
+                            key={page}
+                            type="button"
+                            onClick={() => setWalletPageIndex(index)}
+                            className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
+                            aria-label={page}
+                          />
                         ))}
                       </div>
                     </div>
-                  </div>
-                </motion.div>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {walletPages.map((page, index) => (
-                      <button
-                        key={page}
-                        type="button"
-                        onClick={() => setWalletPageIndex(index)}
-                        className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
-                        aria-label={page}
-                      />
-                    ))}
+                    <motion.div
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={0.12}
+                      onDragEnd={(_, info) => {
+                        if (info.offset.x < -60) shiftWalletPage(1);
+                        if (info.offset.x > 60) shiftWalletPage(-1);
+                      }}
+                      animate={{ x: `${walletPageIndex * -100}%` }}
+                      className="flex min-h-[220px] cursor-grab active:cursor-grabbing"
+                    >
+                      <div className="w-full shrink-0 px-1">
+                        <div className="space-y-3">
+                          {selectedCard.benefits.map((benefit) => (
+                            <motion.div layout key={benefit.id} className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
+                                  <p className="mt-1 text-[13px] leading-5 text-white/60">{benefit.detail}</p>
+                                </div>
+                                <span className={`rounded-full border px-2.5 py-1 text-[11px] capitalize ${statusTone(benefit.status)}`}>
+                                  {benefit.status}
+                                </span>
+                              </div>
+                              {typeof benefit.progress === 'number' && (
+                                <div className="mt-3 h-2 rounded-full bg-white/8">
+                                  <motion.div className="h-2 rounded-full bg-white" animate={{ width: `${Math.max(benefit.progress, 6)}%` }} />
+                                </div>
+                              )}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="w-full shrink-0 px-1">
+                        <div className="rounded-[24px] border border-emerald-400/10 bg-emerald-400/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/70">Next unlock</p>
+                          <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Monthly credits</p>
+                            <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
+                            <p className="mt-1 text-sm text-white/60">Used this cycle</p>
+                          </div>
+                          <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Next reset</p>
+                            <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Mark perk used</button>
+                          <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Simulate reset</button>
+                        </div>
+                      </div>
+
+                      <div className="w-full shrink-0 pl-1">
+                        <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Current total</p>
+                          <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
+                          <p className="mt-1 text-[13px] text-white/62">{selectedCard.pointsLabel}</p>
+                        </div>
+                        <div className="mt-3 rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Membership year</p>
+                          <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
+                          <p className="mt-3 text-sm leading-6 text-white/65">{selectedCard.rewardReset}</p>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {selectedCard.categories.map((category) => (
+                              <span key={category} className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/75">
+                                {category}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
+                </div>
+              </motion.div>
+
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/40">Wallet</p>
                   <button
                     type="button"
                     onClick={openScanner}
-                    className="rounded-full border border-dashed border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/[0.08]"
+                    className="rounded-full border border-dashed border-white/15 bg-white/[0.04] px-4 py-2 text-sm text-white/80 transition hover:bg-white/[0.08]"
                   >
                     + Add card
                   </button>
                 </div>
-              </motion.div>
+                <div className="flex gap-3 overflow-x-auto pb-1">
+                  {cards
+                    .filter((card) => card.id !== selectedId)
+                    .map((card) => (
+                      <motion.button
+                        key={card.id}
+                        layout
+                        type="button"
+                        onClick={() => selectCard(card.id)}
+                        whileTap={{ scale: 0.98 }}
+                        className={`min-w-[152px] rounded-[26px] bg-gradient-to-br ${card.gradient} px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`}
+                      >
+                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/65">{card.issuer}</p>
+                        <p className="mt-5 text-[19px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
+                        <p className="mt-2 text-xs text-white/72">•••• {card.last4}</p>
+                      </motion.button>
+                    ))}
+                </div>
+              </div>
             </section>
           )}
 
