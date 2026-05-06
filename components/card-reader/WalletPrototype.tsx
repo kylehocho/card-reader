@@ -64,7 +64,7 @@ type Card = {
   transactions: Transaction[];
 };
 
-type ScanStep = 'camera' | 'confirm' | 'enrich' | 'success';
+type ScanStep = 'choose' | 'camera' | 'confirm' | 'enrich' | 'success';
 type Screen = 'wallet' | 'opportunities' | 'use-now';
 type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
 type WalletPage = 'benefits' | 'progress' | 'rewards';
@@ -271,7 +271,7 @@ export default function WalletPrototype() {
   const [recommendations] = useState(seedRecommendations);
   const [selectedId, setSelectedId] = useState(seedCards[0].id);
   const [showScanner, setShowScanner] = useState(false);
-  const [scanStep, setScanStep] = useState<ScanStep>('camera');
+  const [scanStep, setScanStep] = useState<ScanStep>('choose');
   const [screen, setScreen] = useState<Screen>('wallet');
   const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(notifications[0].id);
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
@@ -295,7 +295,7 @@ export default function WalletPrototype() {
 
   function openScanner() {
     setShowScanner(true);
-    setScanStep('camera');
+    setScanStep('choose');
   }
 
   function selectCard(cardId: string) {
@@ -545,53 +545,39 @@ export default function WalletPrototype() {
                   <p className="text-[10px] uppercase tracking-[0.24em] text-white/46">Available cards</p>
                   <p className="text-[11px] text-white/58">Tap to select</p>
                 </div>
-                <div className="relative h-[252px] overflow-hidden rounded-[30px]">
-                  {cards
-                    .filter((card) => card.id !== selectedId)
-                    .map((card, index) => {
-                      const top = 18 + index * 30;
-                      const scale = 1 - index * 0.036;
-                      const opacity = 1 - index * 0.08;
-                      const zIndex = 20 - index;
-                      return (
-                        <motion.button
-                          key={card.id}
-                          layout
-                          type="button"
-                          onClick={() => selectCard(card.id)}
-                          whileTap={{ scale: scale - 0.012 }}
-                          className={`absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${card.gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`}
-                          style={{ top, zIndex }}
-                          animate={{ scale, opacity, y: index * 2 }}
-                        >
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />
-                          <div className="relative flex items-start justify-between text-white">
-                            <div>
-                              <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">{card.issuer}</p>
-                              <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em]">{card.name}</p>
-                            </div>
-                            <p className="mt-1 text-xs text-white/74">•••• {card.last4}</p>
+                <div className="relative h-[268px] overflow-hidden rounded-[30px]">
+                  {[...cards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' }].map((card, index) => {
+                    const top = 22 + index * 22;
+                    const scale = 1 - index * 0.026;
+                    const opacity = 1 - index * 0.055;
+                    const zIndex = 20 - index;
+                    const isAddCard = card.id === 'add-card';
+                    const cardClassName = isAddCard
+                      ? 'absolute inset-x-0 rounded-[30px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]'
+                      : `absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${(card as Card).gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`;
+                    return (
+                      <motion.button
+                        key={card.id}
+                        layout
+                        type="button"
+                        onClick={() => (isAddCard ? openScanner() : selectCard(card.id))}
+                        whileTap={{ scale: scale - 0.012 }}
+                        className={cardClassName}
+                        style={{ top, zIndex }}
+                        animate={{ scale, opacity, y: index * 1.5 }}
+                      >
+                        {!isAddCard && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />}
+                        <div className={`relative flex items-start justify-between ${isAddCard ? 'text-white/92' : 'text-white'}`}>
+                          <div>
+                            <p className={`text-[10px] uppercase tracking-[0.24em] ${isAddCard ? 'text-white/70' : 'text-white/70'}`}>{card.issuer}</p>
+                            <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
                           </div>
-                        </motion.button>
-                      );
-                    })}
+                          <p className={`mt-1 text-xs ${isAddCard ? 'text-white/74' : 'text-white/74'}`}>{isAddCard ? 'Scan or enter' : `•••• ${card.last4}`}</p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
                 </div>
-
-                <motion.button
-                  layout
-                  type="button"
-                  onClick={openScanner}
-                  whileTap={{ scale: 0.985 }}
-                  className="mt-3 w-full rounded-[26px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]"
-                >
-                  <div className="flex items-center justify-between text-white/92">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">Add another card</p>
-                      <p className="mt-2 text-[18px] font-semibold tracking-[-0.02em] text-white">Scan Card</p>
-                    </div>
-                    <p className="text-xs text-white/74">Open camera</p>
-                  </div>
-                </motion.button>
               </div>
             </section>
           )}
@@ -691,6 +677,7 @@ export default function WalletPrototype() {
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-white/50">Add a card</p>
                   <h2 className="mt-2 text-2xl font-semibold text-white">
+                    {scanStep === 'choose' && 'Add a new card'}
                     {scanStep === 'camera' && 'Scan your card'}
                     {scanStep === 'confirm' && 'Confirm card details'}
                     {scanStep === 'enrich' && 'Complete setup'}
@@ -705,12 +692,27 @@ export default function WalletPrototype() {
               </div>
 
               <div className="mt-5 flex gap-2 rounded-full bg-[#8d949f]/24 p-1 text-xs">
-                {(['camera', 'confirm', 'enrich'] as const).map((step) => (
+                {(['choose', 'camera', 'confirm', 'enrich'] as const).map((step) => (
                   <div key={step} className={`flex-1 rounded-full px-3 py-2 text-center capitalize transition ${scanStep === step ? 'bg-white text-[#111317]' : 'text-white/50'}`}>
-                    {step}
+                    {step === 'choose' ? 'method' : step}
                   </div>
                 ))}
               </div>
+
+              {scanStep === 'choose' && (
+                <div className="mt-5 grid gap-3">
+                  <button onClick={() => setScanStep('camera')} className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4 text-left transition hover:bg-[#8d949f]/28">
+                    <p className="text-xs uppercase tracking-[0.22em] text-white/50">Option 1</p>
+                    <p className="mt-2 text-lg font-semibold text-white">Use camera</p>
+                    <p className="mt-1 text-sm text-white/72">Scan the front of the card and prefill details automatically.</p>
+                  </button>
+                  <button onClick={() => setScanStep('confirm')} className="rounded-[28px] border border-white/12 bg-[#8d949f]/20 p-4 text-left transition hover:bg-[#8d949f]/28">
+                    <p className="text-xs uppercase tracking-[0.22em] text-white/50">Option 2</p>
+                    <p className="mt-2 text-lg font-semibold text-white">Manual entry</p>
+                    <p className="mt-1 text-sm text-white/72">Type issuer, product name, and last four yourself.</p>
+                  </button>
+                </div>
+              )}
 
               {scanStep === 'camera' && (
                 <div className="mt-5 rounded-[30px] border border-dashed border-white/15 bg-[#8d949f]/20 p-4">
@@ -722,7 +724,7 @@ export default function WalletPrototype() {
                     <div className="mt-6 rounded-2xl bg-emerald-400/10 p-3 text-sm text-emerald-200/85">Detected: premium Amex profile + card ending in 9999</div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <button className="rounded-full border border-white/12 px-4 py-3 text-sm text-white/80 transition hover:bg-[#8d949f]/28">Manual entry</button>
+                    <button onClick={() => setScanStep('confirm')} className="rounded-full border border-white/12 px-4 py-3 text-sm text-white/80 transition hover:bg-[#8d949f]/28">Manual entry</button>
                     <button onClick={() => setScanStep('confirm')} className="rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Use detection</button>
                   </div>
                 </div>
