@@ -530,7 +530,7 @@ export default function WalletPrototype() {
                 <div className="mb-3 px-2">
                   <p className="text-[10px] uppercase tracking-[0.28em] text-white/32">Wallet</p>
                 </div>
-                <div className="relative h-[170px] overflow-hidden">
+                <div className="relative h-[234px] overflow-hidden">
                   {cards
                     .filter((card) => card.id !== selectedId)
                     .map((card, index) => {
@@ -560,6 +560,23 @@ export default function WalletPrototype() {
                         </motion.button>
                       );
                     })}
+
+                  <motion.button
+                    layout
+                    type="button"
+                    onClick={openScanner}
+                    whileTap={{ scale: 0.985 }}
+                    className="absolute inset-x-0 top-[92px] rounded-[30px] border border-dashed border-white/18 bg-white/[0.04] px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]"
+                    style={{ zIndex: 5 }}
+                  >
+                    <div className="flex items-start justify-between text-white/82">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/55">Wallet</p>
+                        <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">Add Card</p>
+                      </div>
+                      <p className="mt-1 text-xs text-white/60">Scan</p>
+                    </div>
+                  </motion.button>
                 </div>
               </div>
             </section>
