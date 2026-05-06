@@ -365,15 +365,8 @@ export default function WalletPrototype() {
     <MotionConfig transition={{ type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1b2345_0%,#0b1021_28%,#02040b_100%)] text-white">
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-8 pt-6">
-          <header className="mb-5 flex items-center justify-between">
-            <div>
-              <h1 className="text-[32px] font-semibold tracking-[-0.04em] text-white">Card Reader</h1>
-            </div>
-            <div className="rounded-full border border-white/12 bg-[#8d949f]/24 px-3 py-1 text-[11px] text-white/74">v0.6</div>
-          </header>
-
           {screen === 'wallet' && (
-            <section className="flex min-h-[calc(100vh-170px)] flex-col gap-0">
+            <section className="flex min-h-[calc(100vh-120px)] flex-col gap-0">
               <div className="relative z-20 px-1 pt-3">
                 <motion.div
                   layout
