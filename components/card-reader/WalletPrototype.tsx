@@ -670,10 +670,9 @@ export default function WalletPrototype() {
         </div>
 
         {showScanner && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/72 p-3 backdrop-blur-md">
-            <motion.div layout className="w-full max-w-md rounded-[34px] border border-white/12 bg-[#09101e]/95 p-5 shadow-[0_40px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-              <div className="mx-auto h-1.5 w-16 rounded-full bg-white/15" />
-              <div className="mt-5 flex items-start justify-between gap-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 p-4 backdrop-blur-md">
+            <motion.div layout className="max-h-[78vh] w-full max-w-sm overflow-y-auto rounded-[30px] border border-white/12 bg-[#09101e]/95 p-4 shadow-[0_40px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+              <div className="mt-1 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-white/50">Add a card</p>
                   <h2 className="mt-2 text-2xl font-semibold text-white">
@@ -683,7 +682,7 @@ export default function WalletPrototype() {
                   </h2>
                 </div>
                 {scanStep !== 'success' && (
-                  <button type="button" onClick={() => setShowScanner(false)} className="rounded-full border border-white/12 px-3 py-1 text-sm text-white/74 transition hover:text-white/90">
+                  <button type="button" onClick={() => setShowScanner(false)} className="shrink-0 rounded-full border border-white/12 bg-white/5 px-3 py-1.5 text-sm text-white/80 transition hover:bg-white/10 hover:text-white">
                     Close
                   </button>
                 )}
