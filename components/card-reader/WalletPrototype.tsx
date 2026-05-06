@@ -410,9 +410,8 @@ export default function WalletPrototype() {
                 </motion.div>
               </div>
 
-              <div className="relative z-10 -mt-8 px-2">
-                <div className="rounded-[32px] bg-[#6f7782]/20 px-4 pb-4 pt-12 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.20)]">
-                  <div className="rounded-[18px] border border-white/12 bg-[#8d949f]/28 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <div className="relative z-10 -mt-8 px-2 pt-12">
+                <div className="rounded-[18px] border border-white/12 bg-[#8d949f]/28 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-white/92">
                         <span className="text-sm text-white/70">{pageMeta[walletPages[walletPageIndex]].icon}</span>
@@ -442,7 +441,7 @@ export default function WalletPrototype() {
                     }}
                     className="mt-3 cursor-grab active:cursor-grabbing"
                   >
-                    <div className="min-h-[252px] rounded-[26px] bg-[#8d949f]/28 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <div className="min-h-[252px] rounded-[26px] border border-white/12 bg-[#8d949f]/28 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                       {walletPages[walletPageIndex] === 'benefits' && (
                         <div>
                           <div className="mb-1 flex items-center justify-between px-1 pb-3">
@@ -519,7 +518,6 @@ export default function WalletPrototype() {
                       )}
                     </div>
                   </motion.div>
-                </div>
               </div>
 
               <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
