@@ -332,7 +332,7 @@ export default function WalletPrototype() {
   const [cards, setCards] = useState(seedCards);
   const [notifications] = useState(seedNotifications);
   const [recommendations] = useState(seedRecommendations);
-  const [selectedId, setSelectedId] = useState(seedCards[0].id);
+  const [selectedId, setSelectedId] = useState('chase-sapphire-reserve');
   const [showScanner, setShowScanner] = useState(false);
   const [scanStep, setScanStep] = useState<ScanStep>('camera');
   const [screen, setScreen] = useState<Screen>('wallet');
