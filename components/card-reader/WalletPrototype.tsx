@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { MotionConfig, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 
 const pageMeta = {
