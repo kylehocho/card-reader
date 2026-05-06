@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 const pageMeta = {
   benefits: { title: 'Benefits', icon: '✦' },
   rewards: { title: 'Rewards', icon: '◎' },
-  progress: { title: 'Progress', icon: '◌' },
+  progress: { title: 'Stats', icon: '◌' },
   recommendations: { title: 'Recommendations', icon: '→' },
 } as const;
 
