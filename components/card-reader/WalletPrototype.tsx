@@ -810,7 +810,7 @@ export default function WalletPrototype() {
 
           {screen === 'card-details' && (
             <section className="space-y-4" style={appleInfoFontStyle}>
-              <div className="mb-1 flex items-center justify-between px-1">
+              <div className="mb-3 flex items-center justify-between px-1">
                 <button
                   type="button"
                   onClick={() => setScreen('wallet')}
@@ -822,17 +822,34 @@ export default function WalletPrototype() {
                 <div className="w-[56px]" />
               </div>
 
-              <div className={`relative overflow-hidden rounded-[28px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_24px_60px_rgba(0,0,0,0.28)]`}>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
-                <div className="relative text-white">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/72">{selectedCard.issuer}</p>
-                  <h3 className="mt-2 text-[27px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h3>
-                  <div className="mt-8 flex items-end justify-between">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-white/58">Card Number</p>
-                      <p className="mt-2 text-[18px] tracking-[0.18em] text-white/92">•••• •••• •••• {selectedCard.last4}</p>
+              <div className="relative z-20 px-1 pt-1">
+                <div className="relative mx-auto w-full max-w-[360px]">
+                  <div
+                    className={`relative aspect-[1.586/1] overflow-hidden rounded-[28px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_70px_rgba(0,0,0,0.34)]`}
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
+                    <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
+
+                    <div className="relative flex h-full flex-col justify-between text-white">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/72">{selectedCard.issuer}</p>
+                          <h3 className="mt-2 text-[27px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h3>
+                        </div>
+                        <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {selectedCard.last4}</div>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
+                        <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                          <p className="text-[12px] text-white/74">{selectedCard.pointsLabel}</p>
+                          <div className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white/84">
+                            Active
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-white/72">Default card</p>
                   </div>
                 </div>
               </div>
