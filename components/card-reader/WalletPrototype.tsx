@@ -366,10 +366,9 @@ export default function WalletPrototype() {
     <MotionConfig transition={{ type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1b2345_0%,#0b1021_28%,#02040b_100%)] text-white">
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-8 pt-6">
-          <header className="mb-5 flex items-start justify-between">
+          <header className="mb-5 flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.32em] text-white/35">Card Reader</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Credit card advantages, made obvious.</h1>
+              <h1 className="text-[32px] font-semibold tracking-[-0.04em] text-white">Card Reader</h1>
             </div>
             <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/60">v0.6</div>
           </header>
