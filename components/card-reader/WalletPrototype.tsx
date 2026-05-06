@@ -372,23 +372,6 @@ export default function WalletPrototype() {
             <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/60">v0.6</div>
           </header>
 
-          <div className="mb-5 grid grid-cols-3 gap-2 rounded-full bg-white/[0.04] p-1 text-sm backdrop-blur">
-            {([
-              ['wallet', 'Wallet'],
-              ['opportunities', 'Alerts'],
-              ['use-now', 'Use now'],
-            ] as const).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setScreen(value as Screen)}
-                className={`rounded-full px-3 py-2 transition duration-200 ${screen === value ? 'bg-white text-[#050814] shadow-[0_6px_20px_rgba(255,255,255,0.2)]' : 'text-white/60 hover:text-white/80'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-170px)] flex-col gap-0">
               <motion.div
