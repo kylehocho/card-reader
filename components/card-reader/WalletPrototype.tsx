@@ -343,53 +343,6 @@ export default function WalletPrototype() {
     }, 900);
   }
 
-  function markFirstAvailableBenefitUsed() {
-    setCards((prev) =>
-      prev.map((card) => {
-        if (card.id !== selectedCard.id) return card;
-        const nextBenefits = [...card.benefits];
-        const idx = nextBenefits.findIndex((b) => b.status === 'available');
-        if (idx === -1) return card;
-        nextBenefits[idx] = {
-          ...nextBenefits[idx],
-          status: 'used',
-          detail: 'Marked used in prototype state',
-          progress: 100,
-        };
-        return {
-          ...card,
-          benefits: nextBenefits,
-          monthlyCreditsUsed: Math.min(card.monthlyCreditsUsed + 1, card.monthlyCreditsTotal),
-          recommendation: 'One benefit is now used; the next recommendation can rebalance around what remains.',
-        };
-      }),
-    );
-  }
-
-  function simulateMonthlyReset() {
-    setCards((prev) =>
-      prev.map((card) => ({
-        ...card,
-        monthlyCreditsUsed: 0,
-        benefits: card.benefits.map((benefit) =>
-          benefit.status === 'used' && benefit.title.toLowerCase().includes('credit')
-            ? { ...benefit, status: 'available', detail: 'Reset for the new cycle', progress: 0 }
-            : benefit,
-        ),
-      })),
-    );
-    setNotifications((prev) => [
-      {
-        id: `reset-${Date.now()}`,
-        title: 'Prototype monthly reset completed',
-        detail: 'Used monthly credits were restored to available where relevant.',
-        action: 'Review which benefit you want to trigger first this cycle.',
-        severity: 'info',
-      },
-      ...prev,
-    ]);
-  }
-
   return (
     <MotionConfig transition={{ type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1b2345_0%,#0b1021_28%,#02040b_100%)] text-white">
@@ -508,10 +461,6 @@ export default function WalletPrototype() {
                               <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
                             </div>
                           </div>
-                          <div className="flex gap-2 px-1 pt-4">
-                            <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/[0.08]">Mark perk used</button>
-                            <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/[0.08]">Simulate reset</button>
-                          </div>
                         </div>
                       )}
 
@@ -541,10 +490,6 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
-                <div className="mb-3 flex items-center justify-between px-2">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/46">Available cards</p>
-                  <p className="text-[11px] text-white/58">Tap to select</p>
-                </div>
                 <div className="relative h-[268px] overflow-hidden rounded-[30px]">
                   {[...cards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' }].map((card, index) => {
                     const top = 22 + index * 22;
