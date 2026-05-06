@@ -342,6 +342,7 @@ export default function WalletPrototype() {
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [walletPageIndex, setWalletPageIndex] = useState(0);
   const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const selectedCard = useMemo(() => cards.find((card) => card.id === selectedId) ?? cards[0], [cards, selectedId]);
   const selectedNotification = useMemo(
@@ -363,6 +364,7 @@ export default function WalletPrototype() {
 
   function openScanner() {
     setWalletSelectionExpanded(false);
+    setShowProfileMenu(false);
     setShowScanner(true);
     setScanStep('camera');
   }
@@ -371,6 +373,7 @@ export default function WalletPrototype() {
     setSelectedId(cardId);
     setWalletPageIndex(0);
     setWalletSelectionExpanded(false);
+    setShowProfileMenu(false);
   }
 
   function shiftWalletPage(direction: 1 | -1) {
@@ -419,7 +422,7 @@ export default function WalletPrototype() {
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-8 pt-6">
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-120px)] flex-col gap-0">
-              <div className="mb-3 flex items-center justify-between px-2">
+              <div className="relative mb-3 flex items-center justify-between px-2">
                 <button
                   type="button"
                   aria-label="Wallet options"
@@ -431,7 +434,7 @@ export default function WalletPrototype() {
                     <circle cx="15" cy="10" r="1.35" fill="currentColor" />
                   </svg>
                 </button>
-                <div className="flex items-center gap-2.5">
+                <div className="relative flex items-center gap-2.5">
                   <button
                     type="button"
                     aria-label="Add pass"
@@ -444,6 +447,7 @@ export default function WalletPrototype() {
                   <button
                     type="button"
                     aria-label="Profile or passes"
+                    onClick={() => setShowProfileMenu((value) => !value)}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   >
                     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -451,6 +455,34 @@ export default function WalletPrototype() {
                       <path d="M5.9 15.2c.9-2 2.4-3 4.1-3s3.2 1 4.1 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                   </button>
+
+                  {showProfileMenu && (
+                    <div className="absolute right-0 top-12 z-40 w-[196px] overflow-hidden rounded-[24px] border border-white/6 bg-black/95 shadow-[0_18px_40px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                      <button
+                        type="button"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.04]"
+                      >
+                        Profile
+                      </button>
+                      <div className="mx-4 h-px bg-white/8" />
+                      <button
+                        type="button"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.04]"
+                      >
+                        Card details
+                      </button>
+                      <div className="mx-4 h-px bg-white/8" />
+                      <button
+                        type="button"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.04]"
+                      >
+                        Notifications
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="relative z-20 px-1 pt-1">
