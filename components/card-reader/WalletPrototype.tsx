@@ -743,7 +743,7 @@ export default function WalletPrototype() {
                 <div className="w-[56px]" />
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-2xl">
+              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#60656f_0%,#2f333a_100%)] text-[26px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                     K
@@ -755,7 +755,7 @@ export default function WalletPrototype() {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
                 {[
                   'Personal details',
                   'Payment preferences',
@@ -766,12 +766,12 @@ export default function WalletPrototype() {
                       <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
                       <span className="text-[18px] text-white/38">›</span>
                     </button>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
                   </div>
                 ))}
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
                 {[
                   'Connected accounts',
                   'Security',
@@ -789,19 +789,19 @@ export default function WalletPrototype() {
                       <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
                       <span className="text-[18px] text-white/38">›</span>
                     </button>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
                   </div>
                 ))}
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
                 {['Help', 'About Card Reader'].map((label, index, arr) => (
                   <div key={label}>
                     <button type="button" className="flex w-full items-center justify-between px-4 py-3.5 text-left">
                       <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
                       <span className="text-[18px] text-white/38">›</span>
                     </button>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
                   </div>
                 ))}
               </div>
@@ -933,7 +933,7 @@ export default function WalletPrototype() {
                 <div className="w-[56px]" />
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
                 {[
                   ['Allow Notifications', 'allowNotifications'],
                   ['Notify Me When Payment Is Due', 'paymentDue'],
@@ -959,7 +959,7 @@ export default function WalletPrototype() {
                         />
                       </button>
                     </div>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
                   </div>
                 ))}
               </div>
