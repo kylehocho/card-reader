@@ -66,7 +66,7 @@ type Card = {
 };
 
 type ScanStep = 'camera' | 'manual' | 'success';
-type Screen = 'wallet' | 'notifications' | 'opportunities' | 'use-now';
+type Screen = 'wallet' | 'profile' | 'notifications' | 'opportunities' | 'use-now';
 type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
 type WalletPage = 'benefits' | 'rewards' | 'progress' | 'recommendations';
 
@@ -474,7 +474,10 @@ export default function WalletPrototype() {
                     >
                       <button
                         type="button"
-                        onClick={() => setShowProfileMenu(false)}
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          setScreen('profile');
+                        }}
                         className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
                       >
                         Profile
@@ -724,6 +727,85 @@ export default function WalletPrototype() {
                     );
                   })}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {screen === 'profile' && (
+            <section className="space-y-4" style={appleInfoFontStyle}>
+              <div className="mb-1 flex items-center justify-between px-1">
+                <button
+                  type="button"
+                  onClick={() => setScreen('wallet')}
+                  className="rounded-full bg-[#2c2c2e] px-3 py-1.5 text-sm font-medium text-white/88"
+                >
+                  Back
+                </button>
+                <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-white">Profile</h2>
+                <div className="w-[56px]" />
+              </div>
+
+              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-2xl">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#60656f_0%,#2f333a_100%)] text-[26px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                    K
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[22px] font-semibold tracking-[-0.03em] text-white">Kyle Harrison</p>
+                    <p className="mt-1 text-[14px] text-white/68">Member since 2026 · Premium wallet</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+                {[
+                  'Personal details',
+                  'Payment preferences',
+                  'Default card behavior',
+                ].map((label, index, arr) => (
+                  <div key={label}>
+                    <button type="button" className="flex w-full items-center justify-between px-4 py-3.5 text-left">
+                      <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
+                      <span className="text-[18px] text-white/38">›</span>
+                    </button>
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                  </div>
+                ))}
+              </div>
+
+              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+                {[
+                  'Connected accounts',
+                  'Security',
+                  'Privacy',
+                  'Notifications',
+                ].map((label, index, arr) => (
+                  <div key={label}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (label === 'Notifications') setScreen('notifications');
+                      }}
+                      className="flex w-full items-center justify-between px-4 py-3.5 text-left"
+                    >
+                      <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
+                      <span className="text-[18px] text-white/38">›</span>
+                    </button>
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                  </div>
+                ))}
+              </div>
+
+              <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] backdrop-blur-2xl">
+                {['Help', 'About Card Reader'].map((label, index, arr) => (
+                  <div key={label}>
+                    <button type="button" className="flex w-full items-center justify-between px-4 py-3.5 text-left">
+                      <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
+                      <span className="text-[18px] text-white/38">›</span>
+                    </button>
+                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/10" />}
+                  </div>
+                ))}
               </div>
             </section>
           )}
