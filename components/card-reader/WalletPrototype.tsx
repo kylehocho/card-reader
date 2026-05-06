@@ -541,14 +541,17 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
-                <div className="mb-3 px-2" />
-                <div className="relative h-[234px] overflow-hidden">
+                <div className="mb-3 flex items-center justify-between px-2">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/46">Available cards</p>
+                  <p className="text-[11px] text-white/58">Tap to select</p>
+                </div>
+                <div className="relative h-[252px] overflow-hidden rounded-[30px]">
                   {cards
                     .filter((card) => card.id !== selectedId)
                     .map((card, index) => {
-                      const top = 28 + index * 20;
-                      const scale = 1 - index * 0.022;
-                      const opacity = 1 - index * 0.06;
+                      const top = 18 + index * 30;
+                      const scale = 1 - index * 0.036;
+                      const opacity = 1 - index * 0.08;
                       const zIndex = 20 - index;
                       return (
                         <motion.button
@@ -559,7 +562,7 @@ export default function WalletPrototype() {
                           whileTap={{ scale: scale - 0.012 }}
                           className={`absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${card.gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`}
                           style={{ top, zIndex }}
-                          animate={{ scale, opacity, y: index * 1.5 }}
+                          animate={{ scale, opacity, y: index * 2 }}
                         >
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />
                           <div className="relative flex items-start justify-between text-white">
@@ -572,24 +575,23 @@ export default function WalletPrototype() {
                         </motion.button>
                       );
                     })}
-
-                  <motion.button
-                    layout
-                    type="button"
-                    onClick={openScanner}
-                    whileTap={{ scale: 0.985 }}
-                    className="absolute inset-x-0 top-[92px] rounded-[30px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]"
-                    style={{ zIndex: 5 }}
-                  >
-                    <div className="flex items-start justify-between text-white/92">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">Available cards</p>
-                        <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">Add Card</p>
-                      </div>
-                      <p className="mt-1 text-xs text-white/74">Scan</p>
-                    </div>
-                  </motion.button>
                 </div>
+
+                <motion.button
+                  layout
+                  type="button"
+                  onClick={openScanner}
+                  whileTap={{ scale: 0.985 }}
+                  className="mt-3 w-full rounded-[26px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]"
+                >
+                  <div className="flex items-center justify-between text-white/92">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">Add another card</p>
+                      <p className="mt-2 text-[18px] font-semibold tracking-[-0.02em] text-white">Scan Card</p>
+                    </div>
+                    <p className="text-xs text-white/74">Open camera</p>
+                  </div>
+                </motion.button>
               </div>
             </section>
           )}
