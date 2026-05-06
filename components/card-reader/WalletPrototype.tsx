@@ -71,6 +71,10 @@ type WalletPage = 'benefits' | 'progress' | 'rewards';
 
 const walletPages: WalletPage[] = ['benefits', 'progress', 'rewards'];
 
+const appleInfoFontStyle = {
+  fontFamily: '"SF Pro Text", "SF Pro Display", "SF Pro Icons", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif',
+} as const;
+
 const seedCards: Card[] = [
   {
     id: 'amex-gold',
@@ -345,7 +349,7 @@ export default function WalletPrototype() {
 
   return (
     <MotionConfig transition={{ type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}>
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1b2345_0%,#0b1021_28%,#02040b_100%)] text-white">
+      <div className="min-h-screen bg-black text-white">
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-8 pt-6">
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-120px)] flex-col gap-0">
@@ -386,7 +390,10 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-8 px-2 pt-12">
-                <div className="rounded-[18px] border border-white/12 bg-[#8d949f]/28 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div
+                  className="rounded-[18px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  style={appleInfoFontStyle}
+                >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-white/92">
                         <span className="text-sm text-white/70">{pageMeta[walletPages[walletPageIndex]].icon}</span>
@@ -416,19 +423,22 @@ export default function WalletPrototype() {
                     }}
                     className="mt-3 cursor-grab active:cursor-grabbing"
                   >
-                    <div className="min-h-[252px] rounded-[26px] border border-white/12 bg-[#8d949f]/28 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <div
+                      className="min-h-[252px] rounded-[26px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                      style={appleInfoFontStyle}
+                    >
                       {walletPages[walletPageIndex] === 'benefits' && (
                         <div>
                           <div className="mb-1 flex items-center justify-between px-1 pb-3">
-                            <p className="text-[11px] uppercase tracking-[0.24em] text-white/50">Available now</p>
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Available now</p>
                             <p className="text-xs text-white/70">{selectedCard.benefits.length} benefits</p>
                           </div>
                           <div className="divide-y divide-white/10">
                             {selectedCard.benefits.map((benefit) => (
                               <motion.div layout key={benefit.id} className="px-1 py-4 first:pt-0 last:pb-1">
                                 <div>
-                                  <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
-                                  <p className="mt-1 text-[13px] leading-5 text-white/74">{benefit.detail}</p>
+                                  <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{benefit.title}</p>
+                                  <p className="mt-1 text-[13px] leading-[1.35rem] text-white/72">{benefit.detail}</p>
                                 </div>
                                 {typeof benefit.progress === 'number' && (
                                   <div className="mt-3 h-2 rounded-full bg-white/8">
@@ -447,17 +457,17 @@ export default function WalletPrototype() {
                       {walletPages[walletPageIndex] === 'progress' && (
                         <div className="divide-y divide-white/10">
                           <div className="px-1 pb-4">
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Next unlock</p>
-                            <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Next unlock</p>
+                            <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">{selectedCard.spendSummary}</p>
                           </div>
                           <div className="grid grid-cols-2 divide-x divide-white/10">
                             <div className="px-1 py-4 pr-4">
-                              <p className="text-[10px] uppercase tracking-[0.28em] text-white/48">Monthly credits</p>
+                              <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Monthly credits</p>
                               <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
                               <p className="mt-1 text-sm text-white/74">Used this cycle</p>
                             </div>
                             <div className="py-4 pl-4 pr-1">
-                              <p className="text-[10px] uppercase tracking-[0.28em] text-white/48">Next reset</p>
+                              <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Next reset</p>
                               <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
                             </div>
                           </div>
@@ -467,17 +477,17 @@ export default function WalletPrototype() {
                       {walletPages[walletPageIndex] === 'rewards' && (
                         <div className="divide-y divide-white/10">
                           <div className="px-1 pb-4">
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current total</p>
-                            <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Current total</p>
+                            <p className="mt-2 text-[32px] font-semibold tracking-[-0.04em] text-white">{selectedCard.pointsValue}</p>
                             <p className="mt-1 text-[13px] text-white/70">{selectedCard.pointsLabel}</p>
                           </div>
                           <div className="px-1 pt-4">
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/48">Membership year</p>
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Membership year</p>
                             <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
                             <p className="mt-3 text-sm leading-6 text-white/72">{selectedCard.rewardReset}</p>
                             <div className="mt-4 flex flex-wrap gap-2">
                               {selectedCard.categories.map((category) => (
-                                <span key={category} className="rounded-full border border-white/12 bg-white/5 px-3 py-1 text-xs text-white/92">
+                                <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
                                   {category}
                                 </span>
                               ))}
