@@ -390,10 +390,10 @@ export default function WalletPrototype() {
           </div>
 
           {screen === 'wallet' && (
-            <section className="flex min-h-[calc(100vh-170px)] flex-col gap-4">
+            <section className="flex min-h-[calc(100vh-170px)] flex-col gap-0">
               <motion.div
                 layout
-                className={`relative overflow-hidden rounded-[38px] bg-gradient-to-br ${selectedCard.gradient} p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.34)]`}
+                className={`relative z-20 overflow-hidden rounded-[38px] bg-gradient-to-br ${selectedCard.gradient} p-4 pb-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.34)]`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
                 <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
@@ -419,7 +419,7 @@ export default function WalletPrototype() {
                     </div>
                   </div>
 
-                  <div className="mt-4 rounded-[30px] border border-white/10 bg-[#0d1224]/55 p-4 backdrop-blur-2xl">
+                  <div className="mt-4 rounded-[30px] border border-white/10 bg-[#0d1224]/45 p-4 backdrop-blur-2xl">
                     <div className="mb-4 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
@@ -523,24 +523,24 @@ export default function WalletPrototype() {
                 </div>
               </motion.div>
 
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/40">Wallet</p>
+              <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
+                <div className="mb-3 flex items-center justify-between px-2">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/32">Wallet</p>
                   <button
                     type="button"
                     onClick={openScanner}
-                    className="rounded-full border border-dashed border-white/15 bg-white/[0.04] px-4 py-2 text-sm text-white/80 transition hover:bg-white/[0.08]"
+                    className="rounded-full border border-dashed border-white/12 bg-white/[0.03] px-4 py-2 text-sm text-white/78 transition hover:bg-white/[0.08]"
                   >
                     + Add card
                   </button>
                 </div>
-                <div className="relative h-[168px] overflow-hidden rounded-[28px]">
+                <div className="relative h-[170px] overflow-hidden">
                   {cards
                     .filter((card) => card.id !== selectedId)
                     .map((card, index) => {
-                      const top = 12 + index * 28;
-                      const scale = 1 - index * 0.03;
-                      const opacity = 1 - index * 0.08;
+                      const top = 28 + index * 20;
+                      const scale = 1 - index * 0.022;
+                      const opacity = 1 - index * 0.06;
                       const zIndex = 20 - index;
                       return (
                         <motion.button
@@ -548,17 +548,18 @@ export default function WalletPrototype() {
                           layout
                           type="button"
                           onClick={() => selectCard(card.id)}
-                          whileTap={{ scale: scale - 0.015 }}
-                          className={`absolute inset-x-0 rounded-[28px] bg-gradient-to-br ${card.gradient} px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`}
+                          whileTap={{ scale: scale - 0.012 }}
+                          className={`absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${card.gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`}
                           style={{ top, zIndex }}
-                          animate={{ scale, opacity, y: index * 2 }}
+                          animate={{ scale, opacity, y: index * 1.5 }}
                         >
-                          <div className="flex items-start justify-between text-white">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />
+                          <div className="relative flex items-start justify-between text-white">
                             <div>
-                              <p className="text-[10px] uppercase tracking-[0.24em] text-white/65">{card.issuer}</p>
-                              <p className="mt-5 text-[20px] font-semibold tracking-[-0.02em]">{card.name}</p>
+                              <p className="text-[10px] uppercase tracking-[0.24em] text-white/62">{card.issuer}</p>
+                              <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em]">{card.name}</p>
                             </div>
-                            <p className="mt-1 text-xs text-white/72">•••• {card.last4}</p>
+                            <p className="mt-1 text-xs text-white/68">•••• {card.last4}</p>
                           </div>
                         </motion.button>
                       );
