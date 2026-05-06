@@ -412,43 +412,39 @@ export default function WalletPrototype() {
 
               <div className="relative z-10 -mt-8 px-2">
                 <div className="rounded-[32px] border border-white/10 bg-[#0d1224]/55 px-4 pb-4 pt-12 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.24)]">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
-                      <div className="mt-1 flex items-center gap-2">
+                  <div className="rounded-[18px] border border-white/8 bg-[#8f97a3]/25 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-white/82">
                         <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
-                        <h3 className="text-[23px] font-semibold tracking-[-0.03em] text-white">
-                          {pageMeta[walletPages[walletPageIndex]].title}
-                        </h3>
+                        <p className="text-[13px] font-medium tracking-[-0.01em] capitalize">{pageMeta[walletPages[walletPageIndex]].title}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {walletPages.map((page, index) => (
-                        <button
-                          key={page}
-                          type="button"
-                          onClick={() => setWalletPageIndex(index)}
-                          className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
-                          aria-label={page}
-                        />
-                      ))}
+                      <div className="flex items-center gap-2">
+                        {walletPages.map((page, index) => (
+                          <button
+                            key={page}
+                            type="button"
+                            onClick={() => setWalletPageIndex(index)}
+                            className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
+                            aria-label={page}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="overflow-hidden rounded-[26px]">
-                    <motion.div
-                      drag="x"
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={0.12}
-                      onDragEnd={(_, info) => {
-                        if (info.offset.x < -60) shiftWalletPage(1);
-                        if (info.offset.x > 60) shiftWalletPage(-1);
-                      }}
-                      animate={{ x: `${walletPageIndex * -100}%` }}
-                      className="flex cursor-grab active:cursor-grabbing"
-                    >
-                      <div className="w-full shrink-0 px-0">
-                        <div className="min-h-[248px] rounded-[26px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                  <motion.div
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.12}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -60) shiftWalletPage(1);
+                      if (info.offset.x > 60) shiftWalletPage(-1);
+                    }}
+                    className="mt-3 cursor-grab active:cursor-grabbing"
+                  >
+                    <div className="min-h-[252px] rounded-[26px] border border-white/8 bg-[#8f97a3]/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                      {walletPages[walletPageIndex] === 'benefits' && (
+                        <div>
                           <div className="mb-3 flex items-center justify-between">
                             <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">Available now</p>
                             <p className="text-xs text-white/55">{selectedCard.benefits.length} benefits</p>
@@ -474,10 +470,10 @@ export default function WalletPrototype() {
                             ))}
                           </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className="w-full shrink-0 px-0">
-                        <div className="min-h-[248px] rounded-[26px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      {walletPages[walletPageIndex] === 'progress' && (
+                        <div>
                           <div className="rounded-[20px] border border-emerald-400/10 bg-emerald-400/10 p-4">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/70">Next unlock</p>
                             <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
@@ -498,10 +494,10 @@ export default function WalletPrototype() {
                             <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Simulate reset</button>
                           </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className="w-full shrink-0 px-0">
-                        <div className="min-h-[248px] rounded-[26px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      {walletPages[walletPageIndex] === 'rewards' && (
+                        <div>
                           <div className="rounded-[20px] border border-white/8 bg-black/10 p-4">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Current total</p>
                             <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
@@ -520,9 +516,9 @@ export default function WalletPrototype() {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  </div>
+                      )}
+                    </div>
+                  </motion.div>
                 </div>
               </div>
 
