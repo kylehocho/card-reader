@@ -527,15 +527,8 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
-                <div className="mb-3 flex items-center justify-between px-2">
+                <div className="mb-3 px-2">
                   <p className="text-[10px] uppercase tracking-[0.28em] text-white/32">Wallet</p>
-                  <button
-                    type="button"
-                    onClick={openScanner}
-                    className="rounded-full border border-dashed border-white/12 bg-white/[0.03] px-4 py-2 text-sm text-white/78 transition hover:bg-white/[0.08]"
-                  >
-                    + Add card
-                  </button>
                 </div>
                 <div className="relative h-[170px] overflow-hidden">
                   {cards
