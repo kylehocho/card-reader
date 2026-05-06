@@ -159,6 +159,35 @@ const seedCards: Card[] = [
       { id: 'plat-lounge', title: 'Centurion lounge access', status: 'available', detail: 'Available for your next trip', progress: 100 },
     ],
   },
+  {
+    id: 'chase-sapphire-reserve',
+    issuer: 'Chase',
+    name: 'Sapphire Reserve',
+    last4: '1184',
+    gradient: 'from-[#4d5563] via-[#1f2631] to-[#05070c]',
+    accent: '#e5eefc',
+    pointsLabel: 'Ultimate Rewards',
+    pointsValue: '96,280 pts',
+    recommendation: 'Use for travel and dining when you want flexible points plus clean travel protections.',
+    spendSummary: '$142 remains in your annual travel credit.',
+    categories: ['Travel', 'Dining', 'Priority Pass'],
+    alerts: ['Travel credit still partially available', 'DoorDash benefit renews next month'],
+    rewardReset: 'Travel credit refreshes each cardmember year.',
+    annualFeeMonth: 'July',
+    monthlyCreditsUsed: 1,
+    monthlyCreditsTotal: 3,
+    nextResetLabel: 'Travel credit remains open',
+    transactions: [
+      { id: 's1', merchant: 'United Airlines', amount: '$58.00', date: 'Today', category: 'Travel' },
+      { id: 's2', merchant: 'Jon & Vinny\'s', amount: '$64.25', date: 'Yesterday', category: 'Dining' },
+      { id: 's3', merchant: 'Lyft', amount: '$22.14', date: 'Apr 29', category: 'Transport' },
+    ],
+    benefits: [
+      { id: 'reserve-travel', title: 'Annual travel credit', status: 'in-progress', detail: '$158 of $300 used this year', progress: 53 },
+      { id: 'reserve-dash', title: 'DoorDash monthly credit', status: 'available', detail: 'Ready to use this month', progress: 0 },
+      { id: 'reserve-lounge', title: 'Priority Pass access', status: 'available', detail: 'Available for your next airport visit', progress: 100 },
+    ],
+  },
 ];
 
 const seedNotifications: NotificationItem[] = [
