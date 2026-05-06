@@ -212,16 +212,16 @@ const seedRecommendations: RecommendationItem[] = [
   },
 ];
 
-function statusTone(status: Benefit['status']) {
+function statusProgressTone(status: Benefit['status']) {
   switch (status) {
     case 'available':
-      return 'bg-emerald-500/15 text-emerald-200 border-emerald-300/20';
+      return 'bg-white';
     case 'in-progress':
-      return 'bg-amber-500/15 text-amber-100 border-amber-300/20';
+      return 'bg-white/80';
     case 'expiring':
-      return 'bg-rose-500/15 text-rose-100 border-rose-300/20';
+      return 'bg-white/65';
     case 'used':
-      return 'bg-white/10 text-white/74 border-white/10';
+      return 'bg-white/35';
   }
 }
 
@@ -444,18 +444,16 @@ export default function WalletPrototype() {
                           <div className="divide-y divide-white/10">
                             {selectedCard.benefits.map((benefit) => (
                               <motion.div layout key={benefit.id} className="px-1 py-4 first:pt-0 last:pb-1">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
-                                    <p className="mt-1 text-[13px] leading-5 text-white/74">{benefit.detail}</p>
-                                  </div>
-                                  <span className={`rounded-full border px-2.5 py-1 text-[11px] capitalize ${statusTone(benefit.status)}`}>
-                                    {benefit.status}
-                                  </span>
+                                <div>
+                                  <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
+                                  <p className="mt-1 text-[13px] leading-5 text-white/74">{benefit.detail}</p>
                                 </div>
                                 {typeof benefit.progress === 'number' && (
                                   <div className="mt-3 h-2 rounded-full bg-white/8">
-                                    <motion.div className="h-2 rounded-full bg-white" animate={{ width: `${Math.max(benefit.progress, 6)}%` }} />
+                                    <motion.div
+                                      className={`h-2 rounded-full ${statusProgressTone(benefit.status)}`}
+                                      animate={{ width: `${Math.max(benefit.progress, 6)}%` }}
+                                    />
                                   </div>
                                 )}
                               </motion.div>
