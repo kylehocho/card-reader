@@ -411,8 +411,8 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-8 px-2">
-                <div className="rounded-[32px] border border-white/10 bg-[#0d1224]/55 px-4 pb-4 pt-12 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.24)]">
-                  <div className="rounded-[18px] border border-white/8 bg-[#8f97a3]/25 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div className="rounded-[32px] bg-[#0d1224]/55 px-4 pb-4 pt-12 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.24)]">
+                  <div className="rounded-[18px] border border-white/8 bg-[#98a1ad]/20 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-white/82">
                         <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
@@ -442,7 +442,7 @@ export default function WalletPrototype() {
                     }}
                     className="mt-3 cursor-grab active:cursor-grabbing"
                   >
-                    <div className="min-h-[252px] rounded-[26px] border border-white/8 bg-[#8f97a3]/18 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <div className="min-h-[252px] rounded-[26px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                       {walletPages[walletPageIndex] === 'benefits' && (
                         <div>
                           <div className="mb-3 flex items-center justify-between">
@@ -451,7 +451,7 @@ export default function WalletPrototype() {
                           </div>
                           <div className="space-y-3">
                             {selectedCard.benefits.map((benefit) => (
-                              <motion.div layout key={benefit.id} className="rounded-[20px] border border-white/8 bg-black/10 p-4">
+                              <motion.div layout key={benefit.id} className="rounded-[20px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
@@ -474,17 +474,17 @@ export default function WalletPrototype() {
 
                       {walletPages[walletPageIndex] === 'progress' && (
                         <div>
-                          <div className="rounded-[20px] border border-emerald-400/10 bg-emerald-400/10 p-4">
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/70">Next unlock</p>
+                          <div className="rounded-[20px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Next unlock</p>
                             <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
                           </div>
                           <div className="mt-3 grid grid-cols-2 gap-3">
-                            <div className="rounded-[20px] border border-white/8 bg-black/10 p-4">
+                            <div className="rounded-[20px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                               <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Monthly credits</p>
                               <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
                               <p className="mt-1 text-sm text-white/60">Used this cycle</p>
                             </div>
-                            <div className="rounded-[20px] border border-white/8 bg-black/10 p-4">
+                            <div className="rounded-[20px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                               <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Next reset</p>
                               <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
                             </div>
@@ -498,12 +498,12 @@ export default function WalletPrototype() {
 
                       {walletPages[walletPageIndex] === 'rewards' && (
                         <div>
-                          <div className="rounded-[20px] border border-white/8 bg-black/10 p-4">
+                          <div className="rounded-[20px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Current total</p>
                             <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
                             <p className="mt-1 text-[13px] text-white/62">{selectedCard.pointsLabel}</p>
                           </div>
-                          <div className="mt-3 rounded-[20px] border border-white/8 bg-black/10 p-4">
+                          <div className="mt-3 rounded-[20px] border border-white/8 bg-[#98a1ad]/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Membership year</p>
                             <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
                             <p className="mt-3 text-sm leading-6 text-white/65">{selectedCard.rewardReset}</p>
@@ -523,9 +523,7 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
-                <div className="mb-3 px-2">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/32">Wallet</p>
-                </div>
+                <div className="mb-3 px-2" />
                 <div className="relative h-[234px] overflow-hidden">
                   {cards
                     .filter((card) => card.id !== selectedId)
@@ -567,7 +565,7 @@ export default function WalletPrototype() {
                   >
                     <div className="flex items-start justify-between text-white/82">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/55">Wallet</p>
+                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/55">Available cards</p>
                         <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">Add Card</p>
                       </div>
                       <p className="mt-1 text-xs text-white/60">Scan</p>
