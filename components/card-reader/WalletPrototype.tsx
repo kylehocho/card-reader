@@ -267,7 +267,7 @@ function severityTone(severity: NotificationItem['severity']) {
 
 export default function WalletPrototype() {
   const [cards, setCards] = useState(seedCards);
-  const [notifications, setNotifications] = useState(seedNotifications);
+  const [notifications] = useState(seedNotifications);
   const [recommendations] = useState(seedRecommendations);
   const [selectedId, setSelectedId] = useState(seedCards[0].id);
   const [showScanner, setShowScanner] = useState(false);
