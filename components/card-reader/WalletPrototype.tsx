@@ -5,8 +5,9 @@ import { useMemo, useState } from 'react';
 
 const pageMeta = {
   benefits: { title: 'Benefits', icon: '✦' },
-  progress: { title: 'Progress', icon: '◌' },
   rewards: { title: 'Rewards', icon: '◎' },
+  progress: { title: 'Progress', icon: '◌' },
+  recommendations: { title: 'Recommendations', icon: '→' },
 } as const;
 
 type Benefit = {
@@ -67,9 +68,9 @@ type Card = {
 type ScanStep = 'camera' | 'manual' | 'success';
 type Screen = 'wallet' | 'opportunities' | 'use-now';
 type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
-type WalletPage = 'benefits' | 'progress' | 'rewards';
+type WalletPage = 'benefits' | 'rewards' | 'progress' | 'recommendations';
 
-const walletPages: WalletPage[] = ['benefits', 'progress', 'rewards'];
+const walletPages: WalletPage[] = ['benefits', 'rewards', 'progress', 'recommendations'];
 
 const appleInfoFontStyle = {
   fontFamily: '"SF Pro Text", "SF Pro Display", "SF Pro Icons", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif',
@@ -553,6 +554,28 @@ export default function WalletPrototype() {
                         </div>
                       )}
 
+                      {walletPages[walletPageIndex] === 'rewards' && (
+                        <div className="divide-y divide-white/10">
+                          <div className="px-1 pb-4">
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Current total</p>
+                            <p className="mt-2 text-[32px] font-semibold tracking-[-0.04em] text-white">{selectedCard.pointsValue}</p>
+                            <p className="mt-1 text-[13px] text-white/70">{selectedCard.pointsLabel}</p>
+                          </div>
+                          <div className="px-1 pt-4">
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Membership year</p>
+                            <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
+                            <p className="mt-3 text-sm leading-6 text-white/72">{selectedCard.rewardReset}</p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {selectedCard.categories.map((category) => (
+                                <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
+                                  {category}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {walletPages[walletPageIndex] === 'progress' && (
                         <div className="divide-y divide-white/10">
                           <div className="px-1 pb-4">
@@ -573,22 +596,27 @@ export default function WalletPrototype() {
                         </div>
                       )}
 
-                      {walletPages[walletPageIndex] === 'rewards' && (
+                      {walletPages[walletPageIndex] === 'recommendations' && (
                         <div className="divide-y divide-white/10">
                           <div className="px-1 pb-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Current total</p>
-                            <p className="mt-2 text-[32px] font-semibold tracking-[-0.04em] text-white">{selectedCard.pointsValue}</p>
-                            <p className="mt-1 text-[13px] text-white/70">{selectedCard.pointsLabel}</p>
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Best next move</p>
+                            <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">Use {selectedCard.name}</p>
+                            <p className="mt-2 text-[14px] leading-6 text-white/72">{selectedCard.recommendation}</p>
                           </div>
                           <div className="px-1 pt-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Membership year</p>
-                            <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
-                            <p className="mt-3 text-sm leading-6 text-white/72">{selectedCard.rewardReset}</p>
-                            <div className="mt-4 flex flex-wrap gap-2">
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Good fit for</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
                               {selectedCard.categories.map((category) => (
                                 <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
                                   {category}
                                 </span>
+                              ))}
+                            </div>
+                            <div className="mt-4 space-y-2">
+                              {selectedCard.alerts.slice(0, 2).map((alert) => (
+                                <div key={alert} className="rounded-2xl bg-[rgba(255,255,255,0.05)] px-3 py-2 text-sm text-white/74">
+                                  {alert}
+                                </div>
                               ))}
                             </div>
                           </div>
