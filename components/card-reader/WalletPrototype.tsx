@@ -374,137 +374,145 @@ export default function WalletPrototype() {
 
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-170px)] flex-col gap-0">
-              <motion.div
-                layout
-                className={`relative z-20 overflow-hidden rounded-[38px] bg-gradient-to-br ${selectedCard.gradient} p-4 pb-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.34)]`}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
-                <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
+              <div className="relative z-20 px-1 pt-2">
+                <motion.div
+                  layout
+                  className="relative mx-auto w-full max-w-[360px]"
+                >
+                  <motion.div
+                    layout
+                    className={`relative overflow-hidden rounded-[34px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_70px_rgba(0,0,0,0.34)]`}
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
+                    <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
 
-                <div className="relative text-white">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.28em] text-white/65">{selectedCard.issuer}</p>
-                      <h2 className="mt-3 text-[29px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h2>
-                    </div>
-                    <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {selectedCard.last4}</div>
-                  </div>
-
-                  <div className="mt-8 rounded-[28px] border border-white/10 bg-black/18 p-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
-                      <p className="mt-2 text-[30px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
-                      <p className="mt-1 text-[12px] text-white/58">{selectedCard.pointsLabel}</p>
-                    </div>
-                    <div className="mt-4 rounded-[22px] bg-white/10 p-3 text-[12px] leading-5 text-white/88">
-                      <span className="font-medium">Use now:</span>
-                      <div className="mt-1">{selectedCard.recommendation}</div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 rounded-[30px] border border-white/10 bg-[#0d1224]/45 p-4 backdrop-blur-2xl">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
-                          <h3 className="text-[23px] font-semibold tracking-[-0.03em] text-white">
-                            {pageMeta[walletPages[walletPageIndex]].title}
-                          </h3>
+                    <div className="relative text-white">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.28em] text-white/65">{selectedCard.issuer}</p>
+                          <h2 className="mt-3 text-[29px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h2>
                         </div>
+                        <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {selectedCard.last4}</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {walletPages.map((page, index) => (
-                          <button
-                            key={page}
-                            type="button"
-                            onClick={() => setWalletPageIndex(index)}
-                            className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
-                            aria-label={page}
-                          />
+
+                      <div className="mt-10">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
+                        <p className="mt-2 text-[30px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
+                        <p className="mt-1 text-[12px] text-white/58">{selectedCard.pointsLabel}</p>
+                      </div>
+
+                      <div className="mt-5 rounded-[22px] bg-white/10 p-3 text-[12px] leading-5 text-white/88">
+                        <span className="font-medium">Use now:</span>
+                        <div className="mt-1">{selectedCard.recommendation}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </div>
+
+              <div className="relative z-10 -mt-6 px-2">
+                <div className="rounded-[32px] border border-white/10 bg-[#0d1224]/55 px-4 pb-4 pt-10 backdrop-blur-2xl shadow-[0_22px_45px_rgba(0,0,0,0.24)]">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/38">{selectedCard.name}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm text-white/55">{pageMeta[walletPages[walletPageIndex]].icon}</span>
+                        <h3 className="text-[23px] font-semibold tracking-[-0.03em] text-white">
+                          {pageMeta[walletPages[walletPageIndex]].title}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {walletPages.map((page, index) => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setWalletPageIndex(index)}
+                          className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
+                          aria-label={page}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <motion.div
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.12}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -60) shiftWalletPage(1);
+                      if (info.offset.x > 60) shiftWalletPage(-1);
+                    }}
+                    animate={{ x: `${walletPageIndex * -100}%` }}
+                    className="flex min-h-[220px] cursor-grab active:cursor-grabbing"
+                  >
+                    <div className="w-full shrink-0 px-1">
+                      <div className="space-y-3">
+                        {selectedCard.benefits.map((benefit) => (
+                          <motion.div layout key={benefit.id} className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
+                                <p className="mt-1 text-[13px] leading-5 text-white/60">{benefit.detail}</p>
+                              </div>
+                              <span className={`rounded-full border px-2.5 py-1 text-[11px] capitalize ${statusTone(benefit.status)}`}>
+                                {benefit.status}
+                              </span>
+                            </div>
+                            {typeof benefit.progress === 'number' && (
+                              <div className="mt-3 h-2 rounded-full bg-white/8">
+                                <motion.div className="h-2 rounded-full bg-white" animate={{ width: `${Math.max(benefit.progress, 6)}%` }} />
+                              </div>
+                            )}
+                          </motion.div>
                         ))}
                       </div>
                     </div>
 
-                    <motion.div
-                      drag="x"
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={0.12}
-                      onDragEnd={(_, info) => {
-                        if (info.offset.x < -60) shiftWalletPage(1);
-                        if (info.offset.x > 60) shiftWalletPage(-1);
-                      }}
-                      animate={{ x: `${walletPageIndex * -100}%` }}
-                      className="flex min-h-[220px] cursor-grab active:cursor-grabbing"
-                    >
-                      <div className="w-full shrink-0 px-1">
-                        <div className="space-y-3">
-                          {selectedCard.benefits.map((benefit) => (
-                            <motion.div layout key={benefit.id} className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                              <div className="flex items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-[15px] font-medium tracking-[-0.01em] text-white">{benefit.title}</p>
-                                  <p className="mt-1 text-[13px] leading-5 text-white/60">{benefit.detail}</p>
-                                </div>
-                                <span className={`rounded-full border px-2.5 py-1 text-[11px] capitalize ${statusTone(benefit.status)}`}>
-                                  {benefit.status}
-                                </span>
-                              </div>
-                              {typeof benefit.progress === 'number' && (
-                                <div className="mt-3 h-2 rounded-full bg-white/8">
-                                  <motion.div className="h-2 rounded-full bg-white" animate={{ width: `${Math.max(benefit.progress, 6)}%` }} />
-                                </div>
-                              )}
-                            </motion.div>
+                    <div className="w-full shrink-0 px-1">
+                      <div className="rounded-[24px] border border-emerald-400/10 bg-emerald-400/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/70">Next unlock</p>
+                        <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Monthly credits</p>
+                          <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
+                          <p className="mt-1 text-sm text-white/60">Used this cycle</p>
+                        </div>
+                        <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Next reset</p>
+                          <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Mark perk used</button>
+                        <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Simulate reset</button>
+                      </div>
+                    </div>
+
+                    <div className="w-full shrink-0 pl-1">
+                      <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Current total</p>
+                        <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
+                        <p className="mt-1 text-[13px] text-white/62">{selectedCard.pointsLabel}</p>
+                      </div>
+                      <div className="mt-3 rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Membership year</p>
+                        <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
+                        <p className="mt-3 text-sm leading-6 text-white/65">{selectedCard.rewardReset}</p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {selectedCard.categories.map((category) => (
+                            <span key={category} className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/75">
+                              {category}
+                            </span>
                           ))}
                         </div>
                       </div>
-
-                      <div className="w-full shrink-0 px-1">
-                        <div className="rounded-[24px] border border-emerald-400/10 bg-emerald-400/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                          <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200/70">Next unlock</p>
-                          <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-white">{selectedCard.spendSummary}</p>
-                        </div>
-                        <div className="mt-3 grid grid-cols-2 gap-3">
-                          <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Monthly credits</p>
-                            <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
-                            <p className="mt-1 text-sm text-white/60">Used this cycle</p>
-                          </div>
-                          <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Next reset</p>
-                            <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                          <button onClick={markFirstAvailableBenefitUsed} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Mark perk used</button>
-                          <button onClick={simulateMonthlyReset} className="flex-1 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/85 transition hover:bg-white/[0.08]">Simulate reset</button>
-                        </div>
-                      </div>
-
-                      <div className="w-full shrink-0 pl-1">
-                        <div className="rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Current total</p>
-                          <p className="mt-2 text-[31px] font-semibold tracking-[-0.03em] text-white">{selectedCard.pointsValue}</p>
-                          <p className="mt-1 text-[13px] text-white/62">{selectedCard.pointsLabel}</p>
-                        </div>
-                        <div className="mt-3 rounded-[24px] border border-white/8 bg-white/[0.05] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">Membership year</p>
-                          <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
-                          <p className="mt-3 text-sm leading-6 text-white/65">{selectedCard.rewardReset}</p>
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {selectedCard.categories.map((category) => (
-                              <span key={category} className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/75">
-                                {category}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
+                    </div>
+                  </motion.div>
                 </div>
-              </motion.div>
+              </div>
 
               <div className="relative z-10 -mt-7 px-2 pb-2 pt-0">
                 <div className="mb-3 flex items-center justify-between px-2">
