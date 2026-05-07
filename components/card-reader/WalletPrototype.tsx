@@ -11,6 +11,7 @@ import { useMemo, useState } from 'react';
 
 const pageMeta = {
   benefits: { title: 'Benefits', icon: '✦' },
+  multipliers: { title: 'Earn Rates', icon: '↗' },
   rewards: { title: 'Rewards', icon: '◎' },
   progress: { title: 'Important Dates', icon: '◌' },
   recommendations: { title: 'Recommendations', icon: '→' },
@@ -49,6 +50,26 @@ type RecommendationItem = {
   runnerUp?: string;
 };
 
+type CategoryKey = 'restaurants' | 'groceries' | 'flights' | 'gas' | 'cars';
+
+type MultiplierItem = {
+  id: string;
+  category: CategoryKey | 'hotels';
+  label: string;
+  multiplier: string;
+  detail: string;
+  icon: string;
+};
+
+type ConciergeAccess = {
+  id: string;
+  brand: string;
+  label: string;
+  contact: string;
+  detail: string;
+  channel: string;
+};
+
 type Card = {
   id: string;
   issuer: string;
@@ -63,6 +84,8 @@ type Card = {
   benefits: Benefit[];
   alerts: string[];
   categories: string[];
+  multipliers: MultiplierItem[];
+  concierges: ConciergeAccess[];
   rewardReset: string;
   annualFeeMonth: string;
   monthlyCreditsUsed: number;
@@ -72,15 +95,41 @@ type Card = {
 };
 
 type ScanStep = 'camera' | 'manual' | 'success';
-type Screen = 'wallet' | 'profile' | 'card-details' | 'notifications' | 'opportunities' | 'use-now';
+type Screen = 'wallet' | 'profile' | 'card-details' | 'notifications' | 'opportunities' | 'use-now' | 'category-guide' | 'concierge';
 type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
-type WalletPage = 'benefits' | 'rewards' | 'progress' | 'recommendations';
+type WalletPage = 'benefits' | 'multipliers' | 'rewards' | 'progress' | 'recommendations';
 
-const walletPages: WalletPage[] = ['benefits', 'rewards', 'progress', 'recommendations'];
+type CategoryChip = {
+  key: CategoryKey;
+  label: string;
+  icon: string;
+};
+
+type CategoryGuide = {
+  key: CategoryKey;
+  label: string;
+  icon: string;
+  headline: string;
+  bestCardId: string;
+  bestCardLabel: string;
+  earnRate: string;
+  reason: string;
+  runnerUp?: string;
+};
+
+const walletPages: WalletPage[] = ['benefits', 'multipliers', 'rewards', 'progress', 'recommendations'];
 
 const appleInfoFontStyle = {
   fontFamily: '"SF Pro Text", "SF Pro Display", "SF Pro Icons", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif',
 } as const;
+
+const categoryChips: CategoryChip[] = [
+  { key: 'gas', label: 'Gas', icon: '⛽' },
+  { key: 'restaurants', label: 'Dining', icon: '🍽️' },
+  { key: 'flights', label: 'Flights', icon: '✈️' },
+  { key: 'groceries', label: 'Groceries', icon: '🛒' },
+  { key: 'cars', label: 'Cars', icon: '🚗' },
+];
 
 const seedCards: Card[] = [
   {
@@ -94,7 +143,17 @@ const seedCards: Card[] = [
     pointsValue: '128,440 pts',
     recommendation: 'Use for dining tonight to pair 4x points with your unused monthly dining credit.',
     spendSummary: '$642 left to unlock your next dining milestone this month.',
-    categories: ['Dining', 'Groceries', 'Resy'],
+    categories: ['Dining', 'Groceries', 'Flights', 'Amex Travel'],
+    multipliers: [
+      { id: 'gold-restaurants', category: 'restaurants', label: 'Restaurants', multiplier: '4x', detail: 'Restaurants worldwide', icon: '🍽️' },
+      { id: 'gold-groceries', category: 'groceries', label: 'Groceries', multiplier: '4x', detail: 'U.S. supermarkets', icon: '🛒' },
+      { id: 'gold-hotels', category: 'hotels', label: 'Hotels', multiplier: '5x', detail: 'Booked through Amex Travel', icon: '🏨' },
+      { id: 'gold-flights', category: 'flights', label: 'Flights', multiplier: '3x', detail: 'Flights booked directly with airlines or Amex Travel', icon: '✈️' },
+      { id: 'gold-cars', category: 'cars', label: 'Car rentals', multiplier: '2x', detail: 'Prepaid rentals booked through Amex Travel', icon: '🚗' },
+    ],
+    concierges: [
+      { id: 'gold-dining', brand: 'Amex', label: 'Amex dining support', contact: 'Chat in Amex app', detail: 'Helpful for benefit questions and dining bookings tied to Gold offers.', channel: 'Chat' },
+    ],
     alerts: ['Unused $10 dining credit expires in 26 days', 'Welcome bonus is 89% complete'],
     rewardReset: 'Monthly dining credit resets June 1',
     annualFeeMonth: 'January',
@@ -124,6 +183,13 @@ const seedCards: Card[] = [
     recommendation: 'Hold for premium travel, concierge, and ultra-premium purchase protection moments.',
     spendSummary: '$18,000 of elite spend tracked this quarter.',
     categories: ['Luxury travel', 'Concierge', 'High-value purchases'],
+    multipliers: [
+      { id: 'black-flights', category: 'flights', label: 'Flights', multiplier: '2x', detail: 'Strong option when service matters more than raw earn rate', icon: '✈️' },
+      { id: 'black-hotels', category: 'hotels', label: 'Hotels', multiplier: '2x', detail: 'Better paired with premium travel benefits', icon: '🏨' },
+    ],
+    concierges: [
+      { id: 'centurion-concierge', brand: 'Amex', label: 'Centurion concierge', contact: '1-800-525-3355', detail: '24/7 premium travel, dining, and event support.', channel: 'Phone' },
+    ],
     alerts: ['Private aviation credit still unused', 'Concierge dining access available tonight'],
     rewardReset: 'Select annual credits refresh with membership year',
     annualFeeMonth: 'March',
@@ -153,6 +219,15 @@ const seedCards: Card[] = [
     recommendation: 'Use for flights and benefits stacking when lounge/travel credits matter most.',
     spendSummary: '$73 remains in your airline incidental credit bucket.',
     categories: ['Flights', 'Lounges', 'Fine Hotels'],
+    multipliers: [
+      { id: 'plat-flights', category: 'flights', label: 'Flights', multiplier: '5x', detail: 'Flights booked directly with airlines or Amex Travel', icon: '✈️' },
+      { id: 'plat-hotels', category: 'hotels', label: 'Hotels', multiplier: '5x', detail: 'Prepaid hotels booked through Amex Travel', icon: '🏨' },
+      { id: 'plat-cars', category: 'cars', label: 'Car rentals', multiplier: '1x', detail: 'Use mainly for benefits, not category acceleration', icon: '🚗' },
+    ],
+    concierges: [
+      { id: 'platinum-concierge', brand: 'Amex', label: 'Platinum concierge', contact: '1-800-525-3355', detail: 'Travel planning, dining, and premium bookings.', channel: 'Phone' },
+      { id: 'platinum-chat', brand: 'Amex', label: 'Platinum support chat', contact: 'Chat in Amex app', detail: 'Fastest path for quick concierge-adjacent requests.', channel: 'Chat' },
+    ],
     alerts: ['Saks credit is half-used', 'Airline incidental credit almost exhausted'],
     rewardReset: 'Saks and airline credits have different reset calendars',
     annualFeeMonth: 'September',
@@ -182,6 +257,14 @@ const seedCards: Card[] = [
     recommendation: 'Use for travel and dining when you want flexible points plus clean travel protections.',
     spendSummary: '$142 remains in your annual travel credit.',
     categories: ['Travel', 'Dining', 'Priority Pass'],
+    multipliers: [
+      { id: 'reserve-restaurants', category: 'restaurants', label: 'Dining', multiplier: '3x', detail: 'Broad restaurant coverage', icon: '🍽️' },
+      { id: 'reserve-flights', category: 'flights', label: 'Flights', multiplier: '3x', detail: 'Strong default travel card', icon: '✈️' },
+      { id: 'reserve-cars', category: 'cars', label: 'Car rentals', multiplier: '3x', detail: 'Good with primary rental coverage', icon: '🚗' },
+    ],
+    concierges: [
+      { id: 'visa-infinite', brand: 'Visa', label: 'Visa Infinite concierge', contact: '1-800-953-7392', detail: 'Dining reservations, travel support, and event help.', channel: 'Phone' },
+    ],
     alerts: ['Travel credit still partially available', 'DoorDash benefit renews next month'],
     rewardReset: 'Travel credit refreshes each cardmember year.',
     annualFeeMonth: 'July',
@@ -211,6 +294,15 @@ const seedCards: Card[] = [
     recommendation: 'Use for flights, hotels, and big travel purchases when you want a clean 2x floor plus travel portal value.',
     spendSummary: '$95 of your $300 travel credit remains.',
     categories: ['Travel', 'Lounges', 'Everyday spend'],
+    multipliers: [
+      { id: 'vx-flights', category: 'flights', label: 'Flights', multiplier: '5x', detail: 'Booked through Capital One Travel', icon: '✈️' },
+      { id: 'vx-hotels', category: 'hotels', label: 'Hotels', multiplier: '10x', detail: 'Hotels and rental cars via Capital One Travel', icon: '🏨' },
+      { id: 'vx-cars', category: 'cars', label: 'Car rentals', multiplier: '10x', detail: 'Booked through Capital One Travel', icon: '🚗' },
+      { id: 'vx-everyday', category: 'gas', label: 'Everyday spend', multiplier: '2x', detail: 'Solid fallback when no bonus category wins', icon: '⚡' },
+    ],
+    concierges: [
+      { id: 'vx-concierge', brand: 'Capital One', label: 'Venture X concierge', contact: '1-800-227-4825', detail: 'Travel and lifestyle help for Venture X cardholders.', channel: 'Phone' },
+    ],
     alerts: ['Travel credit nearly finished', 'Anniversary miles post next month'],
     rewardReset: 'Travel credit renews each account anniversary year.',
     annualFeeMonth: 'August',
@@ -240,6 +332,15 @@ const seedCards: Card[] = [
     recommendation: 'Use for restaurants, groceries, gas, and airfare when you want broad category coverage.',
     spendSummary: '$318 remains to trigger your next statement credit milestone.',
     categories: ['Dining', 'Groceries', 'Gas'],
+    multipliers: [
+      { id: 'citi-restaurants', category: 'restaurants', label: 'Restaurants', multiplier: '3x', detail: 'Everyday dining winner', icon: '🍽️' },
+      { id: 'citi-groceries', category: 'groceries', label: 'Groceries', multiplier: '3x', detail: 'Broad grocery coverage', icon: '🛒' },
+      { id: 'citi-gas', category: 'gas', label: 'Gas', multiplier: '3x', detail: 'Easy gas default', icon: '⛽' },
+      { id: 'citi-flights', category: 'flights', label: 'Air travel', multiplier: '3x', detail: 'Good broad airfare card', icon: '✈️' },
+    ],
+    concierges: [
+      { id: 'world-elite', brand: 'Mastercard', label: 'World Elite concierge', contact: '1-800-627-8372', detail: 'Available if this product is issued on the World Elite network.', channel: 'Phone' },
+    ],
     alerts: ['Hotel benefit still untouched this year', 'Bonus category spend is trending up'],
     rewardReset: 'Hotel savings benefit refreshes annually.',
     annualFeeMonth: 'November',
@@ -310,6 +411,64 @@ const seedRecommendations: RecommendationItem[] = [
   },
 ];
 
+const categoryGuides: CategoryGuide[] = [
+  {
+    key: 'restaurants',
+    label: 'Dining',
+    icon: '🍽️',
+    headline: 'Best card for restaurants',
+    bestCardId: 'amex-gold',
+    bestCardLabel: 'Amex Gold',
+    earnRate: '4x points',
+    reason: 'Best dining multiplier in this wallet and it can stack with the monthly dining credit.',
+    runnerUp: 'Chase Sapphire Reserve at 3x if you want flexible travel protections instead.',
+  },
+  {
+    key: 'groceries',
+    label: 'Groceries',
+    icon: '🛒',
+    headline: 'Best card for groceries',
+    bestCardId: 'amex-gold',
+    bestCardLabel: 'Amex Gold',
+    earnRate: '4x points',
+    reason: 'Highest grocery earn rate in the current wallet lineup.',
+    runnerUp: 'Citi Strata Premier at 3x when you want a simpler points bucket.',
+  },
+  {
+    key: 'flights',
+    label: 'Flights',
+    icon: '✈️',
+    headline: 'Best card for flights',
+    bestCardId: 'amex-platinum',
+    bestCardLabel: 'Amex Platinum',
+    earnRate: '5x points',
+    reason: 'Best raw flight earn plus lounge and premium travel benefits.',
+    runnerUp: 'Venture X at 5x only when booking through Capital One Travel.',
+  },
+  {
+    key: 'gas',
+    label: 'Gas',
+    icon: '⛽',
+    headline: 'Best card for gas',
+    bestCardId: 'citi-strata-premier',
+    bestCardLabel: 'Citi Strata Premier',
+    earnRate: '3x points',
+    reason: 'Best dedicated gas category multiplier in the current set of cards.',
+    runnerUp: 'Venture X at 2x as the clean fallback.',
+  },
+  {
+    key: 'cars',
+    label: 'Cars',
+    icon: '🚗',
+    headline: 'Best card for rental cars',
+    bestCardId: 'capital-one-venture-x',
+    bestCardLabel: 'Venture X',
+    earnRate: '10x miles',
+    reason: 'Top earn rate when the rental is booked through Capital One Travel.',
+    runnerUp: 'Chase Sapphire Reserve at 3x if you care more about rental-car coverage than portal earning.',
+  },
+];
+
 function statusProgressTone(status: Benefit['status']) {
   switch (status) {
     case 'available':
@@ -352,6 +511,7 @@ export default function WalletPrototype() {
   const [walletPageIndex, setWalletPageIndex] = useState(0);
   const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<CategoryKey>('groceries');
   const [notificationSettings, setNotificationSettings] = useState({
     allowNotifications: true,
     paymentDue: true,
@@ -375,6 +535,19 @@ export default function WalletPrototype() {
   const walletStackItems = useMemo(
     () => [...cards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' as const }],
     [cards, selectedId],
+  );
+  const selectedCategoryGuide = useMemo(
+    () => categoryGuides.find((guide) => guide.key === selectedCategoryKey) ?? categoryGuides[0],
+    [selectedCategoryKey],
+  );
+  const recommendedCategoryCard = useMemo(
+    () => cards.find((card) => card.id === selectedCategoryGuide.bestCardId) ?? cards[0],
+    [cards, selectedCategoryGuide.bestCardId],
+  );
+  const conciergeCards = useMemo(() => cards.filter((card) => card.concierges.length > 0), [cards]);
+  const conciergeEntries = useMemo(
+    () => conciergeCards.flatMap((card) => card.concierges.map((concierge) => ({ ...concierge, cardName: card.name, cardId: card.id, gradient: card.gradient }))),
+    [conciergeCards],
   );
 
   function openScanner() {
@@ -438,6 +611,8 @@ export default function WalletPrototype() {
       recommendation: 'Newly added card — set your perks and value rules next.',
       spendSummary: 'No spend tracking configured yet.',
       categories: ['Custom'],
+      multipliers: [{ id: 'custom-flat', category: 'gas', label: 'Custom category', multiplier: 'Set rate', detail: 'Map bonus categories after onboarding', icon: '⚙️' }],
+      concierges: [],
       alerts: ['New card added to the wallet prototype'],
       rewardReset: 'Set custom reset timing',
       annualFeeMonth: 'Not set',
@@ -508,11 +683,33 @@ export default function WalletPrototype() {
                   />
                 </div>
               </div>
-              <div className="relative z-20 px-1 pt-1">
-                <motion.div
-                  layout
-                  className="relative mx-auto w-full max-w-[360px]"
+
+              <div className="mb-3 flex items-center gap-2 overflow-x-auto px-2 pb-1" style={appleInfoFontStyle}>
+                {categoryChips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryKey(chip.key);
+                      setScreen('category-guide');
+                    }}
+                    className="shrink-0 rounded-full border border-white/10 bg-[rgba(118,118,128,0.24)] px-3 py-2 text-[12px] font-medium text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  >
+                    <span className="mr-1.5">{chip.icon}</span>
+                    {chip.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setScreen('concierge')}
+                  className="ml-auto shrink-0 rounded-full border border-amber-200/18 bg-[linear-gradient(135deg,rgba(214,181,113,0.24),rgba(118,118,128,0.24))] px-3 py-2 text-[12px] font-medium text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
                 >
+                  ✨ Concierge
+                </button>
+              </div>
+
+              <div className="relative z-20 px-1 pt-1">
+                <motion.div layout className="relative mx-auto w-full max-w-[360px]">
                   <motion.div
                     layout
                     className={`relative aspect-[1.586/1] overflow-hidden rounded-[28px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_70px_rgba(0,0,0,0.34)]`}
@@ -549,136 +746,163 @@ export default function WalletPrototype() {
                   className="rounded-[18px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   style={appleInfoFontStyle}
                 >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-white/92">
-                        <span className="text-sm text-white/70">{pageMeta[walletPages[walletPageIndex]].icon}</span>
-                        <p className="text-[13px] font-medium tracking-[-0.01em] capitalize">{pageMeta[walletPages[walletPageIndex]].title}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {walletPages.map((page, index) => (
-                          <button
-                            key={page}
-                            type="button"
-                            onClick={() => setWalletPageIndex(index)}
-                            className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
-                            aria-label={page}
-                          />
-                        ))}
-                      </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-white/92">
+                      <span className="text-sm text-white/70">{pageMeta[walletPages[walletPageIndex]].icon}</span>
+                      <p className="text-[13px] font-medium tracking-[-0.01em] capitalize">{pageMeta[walletPages[walletPageIndex]].title}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {walletPages.map((page, index) => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setWalletPageIndex(index)}
+                          className={`rounded-full transition ${walletPageIndex === index ? 'h-2.5 w-7 bg-white' : 'h-2.5 w-2.5 bg-white/35'}`}
+                          aria-label={page}
+                        />
+                      ))}
                     </div>
                   </div>
+                </div>
 
-                  <motion.div
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.12}
-                    onDragEnd={(_, info) => {
-                      if (info.offset.x < -60) shiftWalletPage(1);
-                      if (info.offset.x > 60) shiftWalletPage(-1);
-                    }}
-                    className="mt-3 cursor-grab active:cursor-grabbing"
+                <motion.div
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.12}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -60) shiftWalletPage(1);
+                    if (info.offset.x > 60) shiftWalletPage(-1);
+                  }}
+                  className="mt-3 cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    className="min-h-[252px] rounded-[26px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    style={appleInfoFontStyle}
                   >
-                    <div
-                      className="min-h-[252px] rounded-[26px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                      style={appleInfoFontStyle}
-                    >
-                      {walletPages[walletPageIndex] === 'benefits' && (
-                        <div>
-                          <div className="mb-1 flex items-center justify-between px-1 pb-3">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Available now</p>
-                            <p className="text-xs text-white/70">{selectedCard.benefits.length} benefits</p>
-                          </div>
-                          <div className="divide-y divide-white/10">
-                            {selectedCard.benefits.map((benefit) => (
-                              <motion.div layout key={benefit.id} className="px-1 py-4 first:pt-0 last:pb-1">
-                                <div>
-                                  <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{benefit.title}</p>
-                                  <p className="mt-1 text-[13px] leading-[1.35rem] text-white/72">{benefit.detail}</p>
+                    {walletPages[walletPageIndex] === 'benefits' && (
+                      <div>
+                        <div className="mb-1 flex items-center justify-between px-1 pb-3">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Available now</p>
+                          <p className="text-xs text-white/70">{selectedCard.benefits.length} benefits</p>
+                        </div>
+                        <div className="divide-y divide-white/10">
+                          {selectedCard.benefits.map((benefit) => (
+                            <motion.div layout key={benefit.id} className="px-1 py-4 first:pt-0 last:pb-1">
+                              <div>
+                                <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{benefit.title}</p>
+                                <p className="mt-1 text-[13px] leading-[1.35rem] text-white/72">{benefit.detail}</p>
+                              </div>
+                              {typeof benefit.progress === 'number' && (
+                                <div className="mt-3 h-2 rounded-full bg-white/8">
+                                  <motion.div
+                                    className={`h-2 rounded-full ${statusProgressTone(benefit.status)}`}
+                                    animate={{ width: `${Math.max(benefit.progress, 6)}%` }}
+                                  />
                                 </div>
-                                {typeof benefit.progress === 'number' && (
-                                  <div className="mt-3 h-2 rounded-full bg-white/8">
-                                    <motion.div
-                                      className={`h-2 rounded-full ${statusProgressTone(benefit.status)}`}
-                                      animate={{ width: `${Math.max(benefit.progress, 6)}%` }}
-                                    />
+                              )}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {walletPages[walletPageIndex] === 'multipliers' && (
+                      <div>
+                        <div className="mb-1 flex items-center justify-between px-1 pb-3">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Category earn rates</p>
+                          <p className="text-xs text-white/70">{selectedCard.multipliers.length} categories</p>
+                        </div>
+                        <div className="space-y-2">
+                          {selectedCard.multipliers.map((item) => (
+                            <div key={item.id} className="rounded-[22px] border border-white/8 bg-white/[0.04] px-3 py-3.5">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/8 text-lg">{item.icon}</div>
+                                  <div>
+                                    <p className="text-[15px] font-semibold tracking-[-0.02em] text-white">{item.label}</p>
+                                    <p className="mt-0.5 text-[12px] leading-5 text-white/66">{item.detail}</p>
                                   </div>
-                                )}
-                              </motion.div>
+                                </div>
+                                <div className="shrink-0 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-sm font-semibold text-white">
+                                  {item.multiplier}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {walletPages[walletPageIndex] === 'rewards' && (
+                      <div className="divide-y divide-white/10">
+                        <div className="px-1 pb-4">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Current total</p>
+                          <p className="mt-2 text-[32px] font-semibold tracking-[-0.04em] text-white">{selectedCard.pointsValue}</p>
+                          <p className="mt-1 text-[13px] text-white/70">{selectedCard.pointsLabel}</p>
+                        </div>
+                        <div className="px-1 pt-4">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Membership year</p>
+                          <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
+                          <p className="mt-3 text-sm leading-6 text-white/72">{selectedCard.rewardReset}</p>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {selectedCard.categories.map((category) => (
+                              <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
+                                {category}
+                              </span>
                             ))}
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {walletPages[walletPageIndex] === 'rewards' && (
-                        <div className="divide-y divide-white/10">
-                          <div className="px-1 pb-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Current total</p>
-                            <p className="mt-2 text-[32px] font-semibold tracking-[-0.04em] text-white">{selectedCard.pointsValue}</p>
-                            <p className="mt-1 text-[13px] text-white/70">{selectedCard.pointsLabel}</p>
+                    {walletPages[walletPageIndex] === 'progress' && (
+                      <div className="divide-y divide-white/10">
+                        <div className="px-1 pb-4">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Next unlock</p>
+                          <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">{selectedCard.spendSummary}</p>
+                        </div>
+                        <div className="grid grid-cols-2 divide-x divide-white/10">
+                          <div className="px-1 py-4 pr-4">
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Monthly credits</p>
+                            <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
+                            <p className="mt-1 text-sm text-white/74">Used this cycle</p>
                           </div>
-                          <div className="px-1 pt-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Membership year</p>
-                            <p className="mt-2 text-base font-medium text-white">Annual fee posts in {selectedCard.annualFeeMonth}</p>
-                            <p className="mt-3 text-sm leading-6 text-white/72">{selectedCard.rewardReset}</p>
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              {selectedCard.categories.map((category) => (
-                                <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
-                                  {category}
-                                </span>
-                              ))}
-                            </div>
+                          <div className="py-4 pl-4 pr-1">
+                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Next reset</p>
+                            <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {walletPages[walletPageIndex] === 'progress' && (
-                        <div className="divide-y divide-white/10">
-                          <div className="px-1 pb-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Next unlock</p>
-                            <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">{selectedCard.spendSummary}</p>
+                    {walletPages[walletPageIndex] === 'recommendations' && (
+                      <div className="divide-y divide-white/10">
+                        <div className="px-1 pb-4">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Best next move</p>
+                          <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">Use {selectedCard.name}</p>
+                          <p className="mt-2 text-[14px] leading-6 text-white/72">{selectedCard.recommendation}</p>
+                        </div>
+                        <div className="px-1 pt-4">
+                          <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Good fit for</p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {selectedCard.categories.map((category) => (
+                              <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
+                                {category}
+                              </span>
+                            ))}
                           </div>
-                          <div className="grid grid-cols-2 divide-x divide-white/10">
-                            <div className="px-1 py-4 pr-4">
-                              <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Monthly credits</p>
-                              <p className="mt-2 text-2xl font-semibold text-white">{selectedCard.monthlyCreditsUsed}/{selectedCard.monthlyCreditsTotal}</p>
-                              <p className="mt-1 text-sm text-white/74">Used this cycle</p>
-                            </div>
-                            <div className="py-4 pl-4 pr-1">
-                              <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Next reset</p>
-                              <p className="mt-2 text-base font-medium text-white">{selectedCard.nextResetLabel}</p>
-                            </div>
+                          <div className="mt-4 space-y-2">
+                            {selectedCard.alerts.slice(0, 2).map((alert) => (
+                              <div key={alert} className="rounded-2xl bg-[rgba(255,255,255,0.05)] px-3 py-2 text-sm text-white/74">
+                                {alert}
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      )}
-
-                      {walletPages[walletPageIndex] === 'recommendations' && (
-                        <div className="divide-y divide-white/10">
-                          <div className="px-1 pb-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Best next move</p>
-                            <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">Use {selectedCard.name}</p>
-                            <p className="mt-2 text-[14px] leading-6 text-white/72">{selectedCard.recommendation}</p>
-                          </div>
-                          <div className="px-1 pt-4">
-                            <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Good fit for</p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {selectedCard.categories.map((category) => (
-                                <span key={category} className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/90">
-                                  {category}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="mt-4 space-y-2">
-                              {selectedCard.alerts.slice(0, 2).map((alert) => (
-                                <div key={alert} className="rounded-2xl bg-[rgba(255,255,255,0.05)] px-3 py-2 text-sm text-white/74">
-                                  {alert}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
               </div>
 
               <div className="relative z-10 mt-3 px-2 pb-2 pt-0">
@@ -730,6 +954,106 @@ export default function WalletPrototype() {
                     );
                   })}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {screen === 'category-guide' && (
+            <section className="space-y-4" style={appleInfoFontStyle}>
+              <div className="mb-1 flex items-center justify-between px-1">
+                <button type="button" onClick={() => setScreen('wallet')} className="rounded-full bg-[#2c2c2e] px-3 py-1.5 text-sm font-medium text-white/88">Back</button>
+                <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-white">Category Guide</h2>
+                <div className="w-[56px]" />
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {categoryChips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={() => setSelectedCategoryKey(chip.key)}
+                    className={`shrink-0 rounded-full px-3 py-2 text-[12px] font-medium transition ${selectedCategoryKey === chip.key ? 'bg-white text-[#111317]' : 'border border-white/10 bg-white/5 text-white/74'}`}
+                  >
+                    <span className="mr-1.5">{chip.icon}</span>
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className={`overflow-hidden rounded-[28px] bg-gradient-to-br ${recommendedCategoryCard.gradient} px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_20px_50px_rgba(0,0,0,0.28)]`}>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-white/62">{selectedCategoryGuide.headline}</p>
+                <div className="mt-3 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[27px] font-semibold tracking-[-0.03em] text-white">{selectedCategoryGuide.bestCardLabel}</p>
+                    <p className="mt-1 text-sm text-white/76">{recommendedCategoryCard.issuer} · •••• {recommendedCategoryCard.last4}</p>
+                  </div>
+                  <div className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white">{selectedCategoryGuide.earnRate}</div>
+                </div>
+              </div>
+
+              <div className="rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
+                <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Why it wins</p>
+                <p className="mt-2 text-[19px] font-semibold tracking-[-0.03em] text-white">{selectedCategoryGuide.reason}</p>
+                {selectedCategoryGuide.runnerUp && <p className="mt-3 text-sm leading-6 text-white/72">Runner-up: {selectedCategoryGuide.runnerUp}</p>}
+              </div>
+
+              <div className="rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
+                <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Top earn rates for this category</p>
+                <div className="mt-3 space-y-2">
+                  {cards
+                    .filter((card) => card.multipliers.some((item) => item.category === selectedCategoryGuide.key))
+                    .map((card) => {
+                      const match = card.multipliers.find((item) => item.category === selectedCategoryGuide.key)!;
+                      return (
+                        <div key={`${card.id}-${match.id}`} className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-3">
+                          <div>
+                            <p className="text-sm font-medium text-white">{card.name}</p>
+                            <p className="mt-0.5 text-[12px] text-white/64">{match.detail}</p>
+                          </div>
+                          <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-sm font-semibold text-white">{match.multiplier}</div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {screen === 'concierge' && (
+            <section className="space-y-4" style={appleInfoFontStyle}>
+              <div className="mb-1 flex items-center justify-between px-1">
+                <button type="button" onClick={() => setScreen('wallet')} className="rounded-full bg-[#2c2c2e] px-3 py-1.5 text-sm font-medium text-white/88">Back</button>
+                <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-white">Concierge</h2>
+                <div className="w-[56px]" />
+              </div>
+
+              <div className="rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
+                <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Available concierge access</p>
+                <p className="mt-2 text-[20px] font-semibold tracking-[-0.03em] text-white">{conciergeEntries.length} access points across {conciergeCards.length} cards</p>
+                <p className="mt-2 text-sm leading-6 text-white/72">Quick hub for phone numbers and chat paths tied to cards already in the wallet.</p>
+              </div>
+
+              <div className="space-y-3">
+                {conciergeEntries.map((entry) => (
+                  <div key={entry.id} className="overflow-hidden rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
+                    <div className={`h-2 w-full bg-gradient-to-r ${entry.gradient}`} />
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.22em] text-white/52">{entry.brand}</p>
+                          <p className="mt-1 text-[18px] font-semibold tracking-[-0.02em] text-white">{entry.label}</p>
+                          <p className="mt-1 text-sm text-white/66">via {entry.cardName}</p>
+                        </div>
+                        <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-white/84">{entry.channel}</div>
+                      </div>
+                      <div className="mt-4 rounded-2xl bg-white/5 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-[0.22em] text-white/50">Contact</p>
+                        <p className="mt-1 text-base font-medium text-white">{entry.contact}</p>
+                        <p className="mt-2 text-sm leading-6 text-white/72">{entry.detail}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
@@ -891,7 +1215,6 @@ export default function WalletPrototype() {
                   </div>
                 ))}
               </div>
-
             </section>
           )}
 
@@ -920,6 +1243,7 @@ export default function WalletPrototype() {
               <div className="rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/50">Notification detail</p>
                 <h3 className="mt-2 text-xl font-semibold text-white">{selectedNotification.title}</h3>
+
                 <p className="mt-3 text-sm leading-6 text-white/72">{selectedNotification.detail}</p>
                 <div className="mt-4 rounded-2xl bg-[#8d949f]/24 p-4 text-sm text-white/90">
                   <span className="font-medium">Recommended action:</span> {selectedNotification.action}
