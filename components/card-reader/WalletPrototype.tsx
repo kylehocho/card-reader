@@ -1,5 +1,11 @@
 'use client';
 
+import { useAuth } from '@/components/auth/AuthProvider';
+import AuthEntrySheet from '@/components/auth/AuthEntrySheet';
+import EmailAuthFlow from '@/components/auth/EmailAuthFlow';
+import ProfileSetupFlow from '@/components/auth/ProfileSetupFlow';
+import ProfileHome from '@/components/profile/ProfileHome';
+import ProfileMenu from '@/components/profile/ProfileMenu';
 import { MotionConfig, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 
@@ -329,6 +335,8 @@ function severityTone(severity: NotificationItem['severity']) {
 }
 
 export default function WalletPrototype() {
+  const { authStatus, profileStatus, authFlow, user, setAuthFlow, signInWithGoogle, signInWithApple, signInWithEmail, confirmEmail, completeProfileSetup, signOut } =
+    useAuth();
   const [cards, setCards] = useState(seedCards);
   const [notifications] = useState(seedNotifications);
   const [recommendations] = useState(seedRecommendations);
@@ -339,6 +347,7 @@ export default function WalletPrototype() {
   const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(notifications[0].id);
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
   const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999' });
+  const [emailDraft, setEmailDraft] = useState('');
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [walletPageIndex, setWalletPageIndex] = useState(0);
   const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
@@ -388,6 +397,32 @@ export default function WalletPrototype() {
       if (next < 0 || next >= walletPages.length) return current;
       return next;
     });
+  }
+
+  function openProfileEntry() {
+    setShowProfileMenu(false);
+    setAuthFlow('entry');
+  }
+
+  function openProfileScreen() {
+    setShowProfileMenu(false);
+    if (authStatus === 'anonymous') {
+      setAuthFlow('entry');
+      return;
+    }
+
+    if (profileStatus === 'missing') {
+      setAuthFlow('setup');
+      return;
+    }
+
+    setScreen('profile');
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    setShowProfileMenu(false);
+    setScreen('wallet');
   }
 
   function finishDemoAdd() {
@@ -462,45 +497,15 @@ export default function WalletPrototype() {
                     </svg>
                   </button>
 
-                  {showProfileMenu && (
-                    <div
-                      className="absolute right-0 top-12 z-40 w-[196px] overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(118,118,128,0.24)] shadow-[0_18px_40px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl"
-                      style={appleInfoFontStyle}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowProfileMenu(false);
-                          setScreen('profile');
-                        }}
-                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
-                      >
-                        Profile
-                      </button>
-                      <div className="mx-4 h-px bg-white/10" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowProfileMenu(false);
-                          setScreen('card-details');
-                        }}
-                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
-                      >
-                        Card details
-                      </button>
-                      <div className="mx-4 h-px bg-white/10" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowProfileMenu(false);
-                          setScreen('notifications');
-                        }}
-                        className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-medium text-white/92 transition hover:bg-white/[0.05]"
-                      >
-                        Notifications
-                      </button>
-                    </div>
-                  )}
+                  <ProfileMenu
+                    isOpen={showProfileMenu}
+                    isAuthenticated={authStatus === 'authenticated'}
+                    onCreateProfile={openProfileEntry}
+                    onSignIn={openProfileEntry}
+                    onOpenProfile={openProfileScreen}
+                    onOpenConnectedAccounts={openProfileScreen}
+                    onSignOut={handleSignOut}
+                  />
                 </div>
               </div>
               <div className="relative z-20 px-1 pt-1">
@@ -729,84 +734,7 @@ export default function WalletPrototype() {
             </section>
           )}
 
-          {screen === 'profile' && (
-            <section className="space-y-4" style={appleInfoFontStyle}>
-              <div className="mb-1 flex items-center justify-between px-1">
-                <button
-                  type="button"
-                  onClick={() => setScreen('wallet')}
-                  className="rounded-full bg-[#2c2c2e] px-3 py-1.5 text-sm font-medium text-white/88"
-                >
-                  Back
-                </button>
-                <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-white">Profile</h2>
-                <div className="w-[56px]" />
-              </div>
-
-              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#60656f_0%,#2f333a_100%)] text-[26px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                    K
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[22px] font-semibold tracking-[-0.03em] text-white">Kyle Harrison</p>
-                    <p className="mt-1 text-[14px] text-white/68">Member since 2026 · Premium wallet</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
-                {[
-                  'Personal details',
-                  'Payment preferences',
-                  'Default card behavior',
-                ].map((label, index, arr) => (
-                  <div key={label}>
-                    <button type="button" className="flex w-full items-center justify-between px-4 py-3.5 text-left">
-                      <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
-                      <span className="text-[18px] text-white/38">›</span>
-                    </button>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
-                  </div>
-                ))}
-              </div>
-
-              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
-                {[
-                  'Connected accounts',
-                  'Security',
-                  'Privacy',
-                  'Notifications',
-                ].map((label, index, arr) => (
-                  <div key={label}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (label === 'Notifications') setScreen('notifications');
-                      }}
-                      className="flex w-full items-center justify-between px-4 py-3.5 text-left"
-                    >
-                      <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
-                      <span className="text-[18px] text-white/38">›</span>
-                    </button>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
-                  </div>
-                ))}
-              </div>
-
-              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
-                {['Help', 'About Card Reader'].map((label, index, arr) => (
-                  <div key={label}>
-                    <button type="button" className="flex w-full items-center justify-between px-4 py-3.5 text-left">
-                      <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
-                      <span className="text-[18px] text-white/38">›</span>
-                    </button>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          {screen === 'profile' && user && <ProfileHome user={user} onBack={() => setScreen('wallet')} onOpenNotifications={() => setScreen('notifications')} />}
 
           {screen === 'card-details' && (
             <section className="space-y-4" style={appleInfoFontStyle}>
@@ -1148,6 +1076,35 @@ export default function WalletPrototype() {
             </motion.div>
           </div>
         )}
+
+        <AuthEntrySheet
+          isOpen={authFlow === 'entry'}
+          isLoading={authStatus === 'loading'}
+          onClose={() => setAuthFlow('closed')}
+          onContinueWithApple={signInWithApple}
+          onContinueWithGoogle={signInWithGoogle}
+          onContinueWithEmail={() => setAuthFlow('email')}
+        />
+
+        <EmailAuthFlow
+          isOpen={authFlow === 'email' || authFlow === 'verify'}
+          mode={authFlow === 'verify' ? 'verify' : 'email'}
+          email={emailDraft}
+          isLoading={authStatus === 'loading'}
+          onEmailChange={setEmailDraft}
+          onBack={() => setAuthFlow(authFlow === 'verify' ? 'email' : 'entry')}
+          onClose={() => setAuthFlow('closed')}
+          onSubmitEmail={() => signInWithEmail(emailDraft)}
+          onConfirmVerification={confirmEmail}
+        />
+
+        <ProfileSetupFlow
+          key={user?.id ?? 'anonymous-setup'}
+          isOpen={authFlow === 'setup'}
+          user={user}
+          isLoading={authStatus === 'loading'}
+          onSubmit={completeProfileSetup}
+        />
       </div>
     </MotionConfig>
   );

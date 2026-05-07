@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AuthProvider } from '@/components/auth/AuthProvider';
 import WalletPrototype from '@/components/card-reader/WalletPrototype';
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <WalletPrototype />;
+  return (
+    <AuthProvider>
+      <WalletPrototype />
+    </AuthProvider>
+  );
 }
