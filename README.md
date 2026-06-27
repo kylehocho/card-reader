@@ -118,6 +118,21 @@ curl -sS -X POST http://localhost:3000/api/recommend-card \
   --data '{"merchant":"Patagonia","url":"https://www.patagonia.com/shop/mens","title":"Patagonia Outdoor Clothing","categoryHint":"shopping"}'
 ```
 
+## Wallet analysis API
+Signed-in clients can call the shared wallet analysis engine through:
+
+```bash
+curl -sS https://card-reader-xi.vercel.app/api/wallet/analysis \
+  -H "authorization: Bearer $SUPABASE_USER_ACCESS_TOKEN"
+```
+
+The endpoint loads the current user's Plaid accounts, account-card matches, recent transactions, and card catalog rows from Supabase, then returns:
+- `analysis.trackers` - statement credit and benefit trackers
+- `analysis.welcomeBonuses` - welcome bonus progress from linked transactions
+- `analysis.recommendations` - transaction-level missed-value recommendations
+- `analysis.alerts` - concise user-facing alerts
+- `meta` - counts for linked accounts, matches, transactions, and catalog rows
+
 ## Tech
 - Next.js
 - React

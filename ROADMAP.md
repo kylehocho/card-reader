@@ -11,6 +11,7 @@
 - Browser extension detects merchant context from URL/title/page text.
 - Extension requests recommendation from backend.
 - Backend returns best card, reward rationale, active offer/benefit, and fallback.
+- Authenticated wallet-analysis API returns shared-engine trackers, welcome bonuses, alerts, and recommendations.
 - App wallet renders analysis from shared engine.
 - Manual card add persists card-product match for users without Plaid.
 
@@ -44,5 +45,6 @@
 ## Current Sprint
 - Build extension MVP.
 - Add recommendation API.
+- Add authenticated wallet analysis API.
 - Wire shared analysis engine into UI.
 - Keep docs current after each material decision.

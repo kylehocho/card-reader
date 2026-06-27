@@ -27,17 +27,18 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Manual account-to-card-product matching.
 - Transaction sync and first-pass missed-value recommendations.
 - Top-10 card catalog and mock analysis data.
+- Authenticated wallet analysis API at `GET /api/wallet/analysis`.
 
 ## Active Gaps
 - Browser extension is scaffold-only until installed locally and wired to user auth.
-- Benefits engine exists but wallet UI still uses some component-local presentation logic.
+- Benefits engine has an authenticated API endpoint, but wallet UI still uses some component-local presentation logic.
 - Merchant offers are rule-based mocks, not issuer-scraped/live offers.
 - Transfer partner optimization is not implemented.
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Wire wallet UI to `analyzeWallet()` outputs for trackers, welcome bonuses, alerts, and recommendations.
+1. Wire wallet UI to `GET /api/wallet/analysis` outputs for trackers, welcome bonuses, alerts, and recommendations.
 2. Install/test the browser extension locally against Patagonia/Amazon/airline pages.
 3. Add a manual card add flow that persists card-product matches without Plaid.
-4. Build `/api/wallet/analysis` for authenticated users.
+4. Add deterministic card-product match hints from Plaid account names and known card catalog aliases.
 5. Add a lightweight admin/catalog editor for card products and benefits.

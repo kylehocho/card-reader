@@ -14,6 +14,7 @@
 - `lib/benefits/analyze-wallet.ts`: pure wallet analysis engine.
 - `app/api/plaid/*`: Plaid linking/sync routes.
 - `app/api/recommend-card`: merchant context recommendation API.
+- `app/api/wallet/analysis`: authenticated wallet analysis API for linked accounts.
 - `extension/`: browser extension MVP.
 
 ## Data Flow
@@ -23,7 +24,8 @@
 4. Server saves Plaid accounts and transactions.
 5. User or future matcher maps Plaid account to `card_products`.
 6. Analysis engine combines card product rules + account matches + transactions.
-7. App/extension render recommendation and benefit actions.
+7. `GET /api/wallet/analysis` exposes wallet trackers, welcome bonuses, alerts, and recommendations for authenticated clients.
+8. App/extension render recommendation and benefit actions.
 
 ## Database Tables
 - `profiles`: app profile for each Supabase auth user.
@@ -34,6 +36,8 @@
 - `account_card_matches`: per-user account-to-card-product mapping.
 
 ## Recommendation API Shape
+`POST /api/recommend-card` is the unauthenticated merchant-context endpoint used by the browser extension MVP.
+
 Input:
 ```json
 {
@@ -41,6 +45,28 @@ Input:
   "url": "https://www.patagonia.com/...",
   "categoryHint": "shopping",
   "cardProductIds": ["amex-gold", "chase-sapphire-reserve"]
+}
+```
+
+## Wallet Analysis API Shape
+`GET /api/wallet/analysis` requires a Supabase bearer token. It loads the authenticated user's linked Plaid accounts, card-product matches, recent transactions, and the full card catalog before calling `analyzeWallet()`.
+
+Output:
+```json
+{
+  "analysis": {
+    "trackers": [],
+    "welcomeBonuses": [],
+    "recommendations": [],
+    "alerts": []
+  },
+  "meta": {
+    "cardProducts": 10,
+    "linkedAccounts": 10,
+    "matchedAccounts": 10,
+    "transactions": 31,
+    "generatedAt": "2026-06-27T00:00:00.000Z"
+  }
 }
 ```
 
