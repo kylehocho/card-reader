@@ -4,8 +4,10 @@ import type { AuthProviderName, UserIdentity } from '@/components/auth/types';
 
 type ProfileHomeProps = {
   user: UserIdentity;
+  connectedAccountsCount: number;
   onBack: () => void;
   onOpenNotifications: () => void;
+  onOpenConnectedAccounts: () => void;
 };
 
 const appleInfoFontStyle = {
@@ -18,7 +20,7 @@ const providerTone: Record<AuthProviderName, string> = {
   email: 'bg-emerald-400/20 text-emerald-100',
 };
 
-export default function ProfileHome({ user, onBack, onOpenNotifications }: ProfileHomeProps) {
+export default function ProfileHome({ user, connectedAccountsCount, onBack, onOpenNotifications, onOpenConnectedAccounts }: ProfileHomeProps) {
   const title = user.displayName || user.firstName || 'Your profile';
   const subtitle = user.email || 'No email connected yet';
   const initial = title.charAt(0).toUpperCase();
@@ -59,7 +61,7 @@ export default function ProfileHome({ user, onBack, onOpenNotifications }: Profi
           {[
             ['Profile', 'Ready'],
             ['Alerts', 'On'],
-            ['Sync', 'Later'],
+            ['Sync', connectedAccountsCount > 0 ? String(connectedAccountsCount) : 'Later'],
           ].map(([label, value]) => (
             <div key={label} className="rounded-[20px] border border-white/10 bg-black/15 px-3 py-3">
               <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">{label}</p>
@@ -71,15 +73,15 @@ export default function ProfileHome({ user, onBack, onOpenNotifications }: Profi
 
       <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
         {[
-          ['Personal details', 'Name, email, and profile basics'],
-          ['Connected accounts', 'Apple, Google, and email sign-in methods'],
-          ['Future card sync', 'Issuer connections and account linking will live here'],
-        ].map(([label, detail], index, arr) => (
-          <div key={label}>
-            <button type="button" className="flex w-full items-center justify-between px-4 py-3.5 text-left">
+          { label: 'Personal details', detail: 'Name, email, and profile basics' },
+          { label: 'Connected accounts', detail: connectedAccountsCount > 0 ? `${connectedAccountsCount} Plaid sandbox account${connectedAccountsCount === 1 ? '' : 's'} linked` : 'Plaid sandbox issuer linking starts here', onClick: onOpenConnectedAccounts },
+          { label: 'Future card sync', detail: 'Issuer connections and account linking will live here', onClick: onOpenConnectedAccounts },
+        ].map((item, index, arr) => (
+          <div key={item.label}>
+            <button type="button" onClick={item.onClick} className="flex w-full items-center justify-between px-4 py-3.5 text-left">
               <div>
-                <span className="text-[16px] tracking-[-0.01em] text-white">{label}</span>
-                <p className="mt-0.5 text-[13px] text-white/56">{detail}</p>
+                <span className="text-[16px] tracking-[-0.01em] text-white">{item.label}</span>
+                <p className="mt-0.5 text-[13px] text-white/56">{item.detail}</p>
               </div>
               <span className="text-[18px] text-white/38">›</span>
             </button>

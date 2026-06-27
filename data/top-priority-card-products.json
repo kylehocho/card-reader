@@ -1,0 +1,164 @@
+[
+  {
+    "id": "chase-sapphire-reserve",
+    "issuer": "Chase",
+    "name": "Chase Sapphire Reserve",
+    "network": "Visa",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 550,
+    "reward_currency": "Ultimate Rewards",
+    "rewards": { "dining": 3, "travel": 3, "chase_travel": 8, "flights": 4, "hotels": 4, "general": 1 },
+    "benefits": [
+      { "id": "csr-travel-credit", "type": "statement_credit", "title": "$300 annual travel credit", "value": 300, "cadence": "annual", "eligible_categories": ["travel", "rideshare", "parking", "transit"], "reset": "cardmember_year", "enrollment_required": false },
+      { "id": "csr-ge-credit", "type": "statement_credit", "title": "Global Entry/TSA/NEXUS credit", "value": 120, "cadence": "every_4_years", "eligible_merchants": ["global entry", "tsa precheck", "nexus"], "enrollment_required": false },
+      { "id": "csr-lounge", "type": "access", "title": "Sapphire Lounge/Priority Pass", "cadence": "ongoing" },
+      { "id": "csr-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 6000, "days": 90, "bonus": "125k Ultimate Rewards" }
+    ]
+  },
+  {
+    "id": "chase-sapphire-preferred",
+    "issuer": "Chase",
+    "name": "Chase Sapphire Preferred",
+    "network": "Visa",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 95,
+    "reward_currency": "Ultimate Rewards",
+    "rewards": { "dining": 3, "online_grocery": 3, "streaming": 3, "travel": 2, "chase_travel": 5, "general": 1 },
+    "benefits": [
+      { "id": "csp-hotel-credit", "type": "statement_credit", "title": "$50 Chase Travel hotel credit", "value": 50, "cadence": "annual", "eligible_categories": ["hotel"], "requires_portal": true, "reset": "cardmember_year" },
+      { "id": "csp-anniversary-boost", "type": "points_boost", "title": "10% anniversary points boost", "cadence": "annual" },
+      { "id": "csp-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 5000, "days": 90, "bonus": "75k Ultimate Rewards" }
+    ]
+  },
+  {
+    "id": "amex-platinum",
+    "issuer": "American Express",
+    "name": "The Platinum Card from American Express",
+    "network": "American Express",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 695,
+    "reward_currency": "Membership Rewards",
+    "rewards": { "flights": 5, "prepaid_hotels": 5, "general": 1 },
+    "benefits": [
+      { "id": "platinum-airline-credit", "type": "statement_credit", "title": "$200 airline fee credit", "value": 200, "cadence": "annual", "eligible_categories": ["airline_fee"], "enrollment_required": true, "reset": "calendar_year" },
+      { "id": "platinum-uber-cash", "type": "statement_credit", "title": "Monthly Uber Cash", "value": 15, "cadence": "monthly", "eligible_merchants": ["uber", "uber eats"], "enrollment_required": true },
+      { "id": "platinum-digital-credit", "type": "statement_credit", "title": "Digital entertainment credit", "value": 20, "cadence": "monthly", "eligible_merchants": ["disney", "hulu", "espn", "peacock", "new york times"], "enrollment_required": true },
+      { "id": "platinum-saks-credit", "type": "statement_credit", "title": "Saks credit", "value": 50, "cadence": "semiannual", "eligible_merchants": ["saks"], "enrollment_required": true },
+      { "id": "platinum-lounge", "type": "access", "title": "Centurion Lounge/Priority Pass/Delta Sky Club rules", "cadence": "ongoing" },
+      { "id": "platinum-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 8000, "days": 180, "bonus": "150k Membership Rewards" }
+    ]
+  },
+  {
+    "id": "amex-gold",
+    "issuer": "American Express",
+    "name": "American Express Gold Card",
+    "network": "American Express",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 325,
+    "reward_currency": "Membership Rewards",
+    "rewards": { "dining": 4, "groceries": 4, "flights": 3, "general": 1 },
+    "benefits": [
+      { "id": "gold-dining-credit", "type": "statement_credit", "title": "Monthly dining credit", "value": 10, "cadence": "monthly", "eligible_merchants": ["grubhub", "five guys", "goldbelly", "wine.com", "cheesecake factory"], "enrollment_required": true },
+      { "id": "gold-uber-cash", "type": "statement_credit", "title": "Monthly Uber Cash", "value": 10, "cadence": "monthly", "eligible_merchants": ["uber", "uber eats"], "enrollment_required": true },
+      { "id": "gold-resy-credit", "type": "statement_credit", "title": "Resy credit", "value": 50, "cadence": "semiannual", "eligible_merchants": ["resy"], "enrollment_required": true },
+      { "id": "gold-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 6000, "days": 180, "bonus": "90k Membership Rewards" }
+    ]
+  },
+  {
+    "id": "capital-one-venture-x",
+    "issuer": "Capital One",
+    "name": "Capital One Venture X Rewards Credit Card",
+    "network": "Visa",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 395,
+    "reward_currency": "Capital One Miles",
+    "rewards": { "capital_one_travel_hotels": 10, "hotels": 2, "capital_one_travel_flights": 5, "flights": 2, "general": 2 },
+    "benefits": [
+      { "id": "venture-x-travel-credit", "type": "statement_credit", "title": "$300 Capital One Travel credit", "value": 300, "cadence": "annual", "eligible_categories": ["capital_one_travel"], "requires_portal": true, "reset": "cardmember_year" },
+      { "id": "venture-x-anniversary-miles", "type": "anniversary_bonus", "title": "10k anniversary miles", "cadence": "annual" },
+      { "id": "venture-x-lounge", "type": "access", "title": "Capital One Lounge/Priority Pass", "cadence": "ongoing" },
+      { "id": "venture-x-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 4000, "days": 90, "bonus": "75k Capital One miles" }
+    ]
+  },
+  {
+    "id": "chase-freedom-unlimited",
+    "issuer": "Chase",
+    "name": "Chase Freedom Unlimited",
+    "network": "Visa",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 0,
+    "reward_currency": "Ultimate Rewards",
+    "rewards": { "chase_travel": 5, "dining": 3, "drugstore": 3, "general": 1.5 },
+    "benefits": [
+      { "id": "cfu-drugstore", "type": "category_tracker", "title": "Drugstore/dining 3x tracker", "cadence": "ongoing", "eligible_categories": ["drugstore", "dining"] },
+      { "id": "cfu-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 500, "days": 90, "bonus": "$200 cash back / 20k Ultimate Rewards" }
+    ]
+  },
+  {
+    "id": "chase-freedom-flex",
+    "issuer": "Chase",
+    "name": "Chase Freedom Flex",
+    "network": "Mastercard",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 0,
+    "reward_currency": "Ultimate Rewards",
+    "rewards": { "rotating_quarterly": 5, "chase_travel": 5, "dining": 3, "drugstore": 3, "general": 1 },
+    "benefits": [
+      { "id": "cff-quarterly", "type": "activation", "title": "Quarterly 5% categories", "value": 1500, "cadence": "quarterly", "activation_required": true },
+      { "id": "cff-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 500, "days": 90, "bonus": "$200 cash back / 20k Ultimate Rewards" }
+    ]
+  },
+  {
+    "id": "citi-strata-premier",
+    "issuer": "Citi",
+    "name": "Citi Strata Premier",
+    "network": "Mastercard",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 95,
+    "reward_currency": "ThankYou Points",
+    "rewards": { "air_travel": 3, "hotel": 3, "gas": 3, "ev_charging": 3, "dining": 3, "groceries": 3, "general": 1 },
+    "benefits": [
+      { "id": "strata-hotel-credit", "type": "statement_credit", "title": "$100 annual hotel savings benefit", "value": 100, "cadence": "annual", "eligible_categories": ["hotel"], "requires_portal": true, "minimum_purchase": 500 },
+      { "id": "strata-welcome", "type": "welcome_bonus", "title": "Welcome bonus tracker", "target": 4000, "days": 90, "bonus": "70k ThankYou Points" }
+    ]
+  },
+  {
+    "id": "bilt-mastercard",
+    "issuer": "Bilt / Wells Fargo",
+    "name": "Bilt Mastercard",
+    "network": "Mastercard",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 0,
+    "reward_currency": "Bilt Points",
+    "rewards": { "rent": 1, "dining": 3, "travel": 2, "general": 1 },
+    "benefits": [
+      { "id": "bilt-rent", "type": "category_tracker", "title": "Rent rewards without transaction fee", "cadence": "monthly", "eligible_categories": ["rent"], "transaction_minimum": 5 },
+      { "id": "bilt-rent-day", "type": "activation", "title": "Rent Day boosts", "cadence": "monthly", "activation_required": false },
+      { "id": "bilt-transaction-minimum", "type": "usage_requirement", "title": "5 transactions per statement period", "cadence": "statement_cycle", "target": 5 }
+    ]
+  },
+  {
+    "id": "discover-it-cash-back",
+    "issuer": "Discover",
+    "name": "Discover it Cash Back",
+    "network": "Discover",
+    "product_type": "credit",
+    "is_business": false,
+    "annual_fee": 0,
+    "reward_currency": "Cash Back",
+    "rewards": { "rotating_quarterly": 5, "general": 1 },
+    "benefits": [
+      { "id": "discover-quarterly", "type": "activation", "title": "Quarterly 5% categories", "value": 1500, "cadence": "quarterly", "activation_required": true },
+      { "id": "discover-cashback-match", "type": "anniversary_bonus", "title": "First-year Cashback Match", "cadence": "first_year" }
+    ]
+  }
+]

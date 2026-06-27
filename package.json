@@ -6,11 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:plaid:sandbox": "node scripts/seed-plaid-sandbox-user.mjs",
+    "seed:plaid:top10": "node scripts/seed-top-priority-mock-wallet.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
     "framer-motion": "^12.38.0",
     "next": "16.2.4",
+    "plaid": "^42.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

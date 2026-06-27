@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Card Reader</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Card Reader</p>
+        <h1 id="merchant">Current merchant</h1>
+      </header>
+
+      <section id="state" class="panel">
+        <p class="muted">Checking this page...</p>
+      </section>
+
+      <section id="settings" class="settings">
+        <label for="apiBaseUrl">API</label>
+        <input id="apiBaseUrl" type="url" placeholder="https://card-reader-xi.vercel.app" />
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
