@@ -133,6 +133,8 @@ The endpoint loads the current user's Plaid accounts, account-card matches, rece
 - `analysis.alerts` - concise user-facing alerts
 - `meta` - counts for linked accounts, matches, transactions, and catalog rows
 
+For signed-in sessions, the wallet home now uses this endpoint as the source for selected-card benefit trackers, the welcome bonus carousel, recommendation summaries, and the Opportunities list. Anonymous prototype sessions keep using seed data as the local design fallback. See `docs/WALLET_ANALYSIS_UI.md` for implementation details and edge cases.
+
 ## Tech
 - Next.js
 - React

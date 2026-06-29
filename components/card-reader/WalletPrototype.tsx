@@ -6,6 +6,7 @@ import EmailAuthFlow from '@/components/auth/EmailAuthFlow';
 import ProfileSetupFlow from '@/components/auth/ProfileSetupFlow';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
+import type { BenefitTracker, CardRecommendation, WalletAnalysis } from '@/lib/benefits/types';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { MotionConfig, motion } from 'framer-motion';
@@ -167,7 +168,7 @@ type MerchantResult = {
   tags: string[];
 };
 
-type RewardCategory = 'dining' | 'travel' | 'groceries' | 'flights' | 'general';
+type RewardCategory = 'dining' | 'travel' | 'groceries' | 'flights' | 'hotel' | 'gas' | 'drugstore' | 'rent' | 'streaming' | 'capital_one_travel' | 'rotating_quarterly' | 'general';
 
 type TransactionRecommendation = {
   id: string;
@@ -194,6 +195,11 @@ type WelcomeBonus = {
   bonus: string;
   nextMove: string;
 
+};
+
+type WalletAnalysisResponse = {
+  analysis?: WalletAnalysis;
+  error?: string;
 };
 
 type Card = {
@@ -764,6 +770,19 @@ function statusProgressTone(status: Benefit['status']) {
   }
 }
 
+function benefitStatusFromTracker(status: BenefitTracker['status']): Benefit['status'] {
+  switch (status) {
+    case 'available':
+      return 'available';
+    case 'used':
+      return 'used';
+    case 'needs-action':
+      return 'expiring';
+    case 'in-progress':
+      return 'in-progress';
+  }
+}
+
 function severityTone(severity: NotificationItem['severity']) {
   switch (severity) {
     case 'info':
@@ -840,6 +859,20 @@ function readableRewardCategory(category: RewardCategory) {
       return 'Groceries';
     case 'flights':
       return 'Flights';
+    case 'hotel':
+      return 'Hotels';
+    case 'gas':
+      return 'Gas';
+    case 'drugstore':
+      return 'Drugstores';
+    case 'rent':
+      return 'Rent';
+    case 'streaming':
+      return 'Streaming';
+    case 'capital_one_travel':
+      return 'Capital One Travel';
+    case 'rotating_quarterly':
+      return 'Rotating category';
     case 'general':
       return 'General spend';
   }
@@ -863,10 +896,57 @@ function rewardMultiplier(product: CardProductRow, category: RewardCategory) {
     travel: ['travel', 'capital_one_travel_hotels', 'capital_one_travel_flights'],
     groceries: ['groceries', 'us_supermarkets'],
     flights: ['flights', 'travel', 'capital_one_travel_flights'],
+    hotel: ['hotel', 'hotels', 'capital_one_travel_hotels'],
+    gas: ['gas', 'ev_charging'],
+    drugstore: ['drugstore'],
+    rent: ['rent'],
+    streaming: ['streaming'],
+    capital_one_travel: ['capital_one_travel', 'capital_one_travel_hotels', 'capital_one_travel_flights'],
+    rotating_quarterly: ['rotating_quarterly'],
     general: ['general'],
   };
 
   return Math.max(...aliases[category].map((key) => (typeof rewards[key] === 'number' ? rewards[key] : 0)), 1);
+}
+
+function recommendationFromAnalysis(recommendation: CardRecommendation): TransactionRecommendation {
+  return {
+    id: recommendation.id,
+    merchant: recommendation.merchant,
+    amount: formatTransactionAmount(recommendation.estimatedLift),
+    date: 'Synced analysis',
+    category: recommendation.category,
+    currentCard: recommendation.currentCard,
+    currentMultiplier: recommendation.currentMultiplier,
+    bestCard: recommendation.bestCard,
+    bestMultiplier: recommendation.bestMultiplier,
+    estimatedLift: formatTransactionAmount(recommendation.estimatedLift),
+    reason: recommendation.reason,
+  };
+}
+
+function welcomeBonusFromTracker(tracker: BenefitTracker): WelcomeBonus {
+  return {
+    id: tracker.id,
+    cardProductId: tracker.cardProductId,
+    card: tracker.cardName,
+    issuer: tracker.issuer,
+    deadline: tracker.cadence === 'first_year' ? 'First-year offer' : tracker.cadence,
+    spent: tracker.used,
+    target: tracker.target,
+    bonus: tracker.title,
+    nextMove: tracker.nextAction,
+  };
+}
+
+function benefitFromTracker(tracker: BenefitTracker): Benefit {
+  return {
+    id: tracker.id,
+    title: tracker.title,
+    status: benefitStatusFromTracker(tracker.status),
+    detail: tracker.detail,
+    progress: tracker.progress,
+  };
 }
 
 function inferRewardCategory(transaction: PlaidTransactionRow): RewardCategory {
@@ -1019,6 +1099,9 @@ export default function WalletPrototype() {
   const [editingMatchAccountIds, setEditingMatchAccountIds] = useState<string[]>([]);
   const [transactionSyncStatus, setTransactionSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [plaidTransactions, setPlaidTransactions] = useState<PlaidTransactionRow[]>([]);
+  const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
+  const [walletAnalysisStatus, setWalletAnalysisStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [walletAnalysisError, setWalletAnalysisError] = useState<string | null>(null);
 
   const [notificationSettings, setNotificationSettings] = useState({
     allowNotifications: true,
@@ -1052,6 +1135,43 @@ export default function WalletPrototype() {
       const nonPlaidCards = currentCards.filter((card) => !card.id.startsWith('plaid-'));
       return isUserBackedWallet ? accountsToAdd.map(buildPlaidCard) : [...nonPlaidCards, ...accountsToAdd.map(buildPlaidCard)];
     });
+  }, [authStatus, profileStatus, usesSupabase]);
+
+  const loadWalletAnalysis = useCallback(async () => {
+    if (!usesSupabase || authStatus !== 'authenticated' || profileStatus !== 'ready') {
+      setWalletAnalysis(null);
+      setWalletAnalysisStatus('idle');
+      setWalletAnalysisError(null);
+      return;
+    }
+
+    const supabase = getBrowserSupabaseClient();
+    if (!supabase) return;
+
+    setWalletAnalysisStatus('loading');
+    setWalletAnalysisError(null);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      if (!accessToken) throw new Error('Sign in again to refresh wallet analysis.');
+
+      const response = await fetch('/api/wallet/analysis', {
+        headers: { Authorization: 'Bearer ' + accessToken },
+      });
+      const payload = (await response.json()) as WalletAnalysisResponse;
+
+      if (!response.ok || !payload.analysis) {
+        throw new Error(payload.error ?? 'Unable to load wallet analysis.');
+      }
+
+      setWalletAnalysis(payload.analysis);
+      setWalletAnalysisStatus('ready');
+    } catch (error) {
+      setWalletAnalysis(null);
+      setWalletAnalysisStatus('error');
+      setWalletAnalysisError(error instanceof Error ? error.message : 'Unable to load wallet analysis.');
+    }
   }, [authStatus, profileStatus, usesSupabase]);
 
   const loadPersistedPlaidState = useCallback(async () => {
@@ -1094,7 +1214,8 @@ export default function WalletPrototype() {
     const connectedAccounts = ((accounts ?? []) as PlaidAccountWithRelations[]).map((account) => accountFromPersistedRow(account, transactionsByAccountId));
     syncPlaidAccountsToWallet(connectedAccounts);
     setPlaidStatus(connectedAccounts.length > 0 ? 'connected' : 'idle');
-  }, [authStatus, profileStatus, syncPlaidAccountsToWallet]);
+    void loadWalletAnalysis();
+  }, [authStatus, loadWalletAnalysis, profileStatus, syncPlaidAccountsToWallet]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -1104,17 +1225,48 @@ export default function WalletPrototype() {
     return () => window.clearTimeout(timeoutId);
   }, [loadPersistedPlaidState]);
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadWalletAnalysis();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loadWalletAnalysis]);
+
   const isUserBackedWallet = usesSupabase && authStatus === 'authenticated' && profileStatus === 'ready';
   const visibleCards = useMemo(() => (isUserBackedWallet ? cards.filter((card) => card.id.startsWith('plaid-')) : cards), [cards, isUserBackedWallet]);
   const isEmptyUserWallet = isUserBackedWallet && visibleCards.length === 0;
+  const selectedPlaidAccount = useMemo(
+    () => plaidAccounts.find((account) => `plaid-${account.accountId}` === selectedId) ?? null,
+    [plaidAccounts, selectedId],
+  );
+  const selectedAnalysisTrackers = useMemo(
+    () => (selectedPlaidAccount?.cardProductId ? (walletAnalysis?.trackers ?? []).filter((tracker) => tracker.cardProductId === selectedPlaidAccount.cardProductId) : []),
+    [selectedPlaidAccount, walletAnalysis],
+  );
   const welcomeBonuses = useMemo(() => {
     if (!isUserBackedWallet) return seedWelcomeBonuses;
+    if (walletAnalysis) return walletAnalysis.welcomeBonuses.map(welcomeBonusFromTracker);
 
     const linkedCardProductIds = new Set(plaidAccounts.map((account) => account.cardProductId).filter(Boolean));
     return seedWelcomeBonuses.filter((bonus) => linkedCardProductIds.has(bonus.cardProductId));
-  }, [isUserBackedWallet, plaidAccounts]);
+  }, [isUserBackedWallet, plaidAccounts, walletAnalysis]);
   const selectedCard = useMemo(() => visibleCards.find((card) => card.id === selectedId) ?? (isEmptyUserWallet ? emptyWalletCard : visibleCards[0] ?? seedCards[0]), [isEmptyUserWallet, selectedId, visibleCards]);
-  const visibleNotifications = useMemo(() => (isUserBackedWallet ? [] : notifications), [isUserBackedWallet, notifications]);
+  const displayedBenefits = useMemo(
+    () => (isUserBackedWallet && selectedAnalysisTrackers.length > 0 ? selectedAnalysisTrackers.map(benefitFromTracker) : selectedCard.benefits),
+    [isUserBackedWallet, selectedAnalysisTrackers, selectedCard.benefits],
+  );
+  const visibleNotifications = useMemo<NotificationItem[]>(() => {
+    if (!isUserBackedWallet) return notifications;
+
+    return (walletAnalysis?.alerts ?? []).map((alert, index) => ({
+      id: `analysis-alert-${index}`,
+      title: alert.split(':')[0] ?? 'Wallet alert',
+      detail: alert,
+      action: 'Review the matched card and route spend before the next reset.',
+      severity: index === 0 ? 'warning' : 'info',
+    }));
+  }, [isUserBackedWallet, notifications, walletAnalysis]);
   const selectedNotification = useMemo(
     () => visibleNotifications.find((n) => n.id === selectedNotificationId) ?? visibleNotifications[0] ?? null,
     [selectedNotificationId, visibleNotifications],
@@ -1135,7 +1287,11 @@ export default function WalletPrototype() {
 
     return [...results].sort((a, b) => a.rank - b.rank);
   }, [merchantQuery]);
-  const transactionRecommendations = useMemo<TransactionRecommendation[]>(() => {
+  const analysisTransactionRecommendations = useMemo(
+    () => (walletAnalysis?.recommendations ?? []).map(recommendationFromAnalysis),
+    [walletAnalysis],
+  );
+  const localTransactionRecommendations = useMemo<TransactionRecommendation[]>(() => {
     if (plaidTransactions.length === 0 || cardProducts.length === 0) return [];
 
     const productById = new Map(cardProducts.map((product) => [product.id, product]));
@@ -1173,6 +1329,7 @@ export default function WalletPrototype() {
       .filter((recommendation) => recommendation.bestMultiplier > recommendation.currentMultiplier)
       .slice(0, 5);
   }, [cardProducts, plaidAccounts, plaidTransactions]);
+  const transactionRecommendations = walletAnalysis ? analysisTransactionRecommendations : localTransactionRecommendations;
   const featuredTransactionRecommendation = transactionRecommendations[0] ?? null;
   const featuredMerchant = merchantResults[0] ?? seedMerchantResults[0];
   const walletStackItems = useMemo(
@@ -1267,6 +1424,9 @@ export default function WalletPrototype() {
     setPlaidAccounts([]);
     setPendingLinkedAccounts([]);
     setPlaidTransactions([]);
+    setWalletAnalysis(null);
+    setWalletAnalysisStatus('idle');
+    setWalletAnalysisError(null);
     setPlaidStatus('idle');
     setPlaidError(null);
     setShowProfileMenu(false);
@@ -1470,6 +1630,7 @@ export default function WalletPrototype() {
     setSelectedId(`plaid-${account.accountId}`);
     setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
     setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saved' }));
+    void loadWalletAnalysis();
   }
 
   function finishLinkedCardSetup() {
@@ -1508,6 +1669,7 @@ export default function WalletPrototype() {
       }
 
       await loadPersistedPlaidState();
+      void loadWalletAnalysis();
       setTransactionSyncStatus('idle');
     } catch (error) {
       setTransactionSyncStatus('error');
@@ -1796,10 +1958,10 @@ export default function WalletPrototype() {
                       <div>
                         <div className="mb-1 flex items-center justify-between px-1 pb-3">
                           <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Available now</p>
-                          <p className="text-xs text-white/70">{selectedCard.benefits.length} benefits</p>
+                          <p className="text-xs text-white/70">{displayedBenefits.length} benefits</p>
                         </div>
                         <div className="divide-y divide-white/10">
-                          {selectedCard.benefits.map((benefit) => (
+                          {displayedBenefits.map((benefit) => (
                             <motion.div layout key={benefit.id} className="px-1 py-4 first:pt-0 last:pb-1">
                               <div>
                                 <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{benefit.title}</p>
@@ -2015,7 +2177,11 @@ export default function WalletPrototype() {
                       </button>
                     </div>
                     <p className="mt-2 text-[13px] leading-5 text-white/70">
-                      {plaidAccounts[0].institutionName} · {plaidAccounts[0].name} •••• {plaidAccounts[0].mask}
+                      {walletAnalysisStatus === 'loading'
+                        ? 'Refreshing benefit trackers and missed-value recommendations...'
+                        : walletAnalysisStatus === 'error'
+                          ? walletAnalysisError ?? 'Wallet analysis could not refresh.'
+                          : plaidAccounts[0].institutionName + ' · ' + plaidAccounts[0].name + ' •••• ' + plaidAccounts[0].mask}
                     </p>
                   </div>
                 </div>

@@ -15,6 +15,7 @@
 - `app/api/plaid/*`: Plaid linking/sync routes.
 - `app/api/recommend-card`: merchant context recommendation API.
 - `app/api/wallet/analysis`: authenticated wallet analysis API for linked accounts.
+- `components/card-reader/WalletPrototype.tsx`: mobile-first wallet client; signed-in analysis panels consume `/api/wallet/analysis`.
 - `extension/`: browser extension MVP.
 
 ## Data Flow
@@ -25,7 +26,8 @@
 5. User or future matcher maps Plaid account to `card_products`.
 6. Analysis engine combines card product rules + account matches + transactions.
 7. `GET /api/wallet/analysis` exposes wallet trackers, welcome bonuses, alerts, and recommendations for authenticated clients.
-8. App/extension render recommendation and benefit actions.
+8. Signed-in wallet UI renders API-backed trackers, welcome bonuses, alerts, and missed-value recommendations.
+9. App/extension render recommendation and benefit actions.
 
 ## Database Tables
 - `profiles`: app profile for each Supabase auth user.
@@ -70,7 +72,7 @@ Output:
 }
 ```
 
-Output:
+Merchant recommendation output:
 ```json
 {
   "merchant": "Patagonia",

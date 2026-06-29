@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-06-27
+Last updated: 2026-06-29
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Wallet home and Opportunities surfaces now consume the authenticated wallet analysis API for signed-in benefit trackers, welcome bonuses, alerts, and missed-value recommendations.
 - User-backed wallets no longer show demo seed cards or global welcome bonus rows.
 - Added top-10 priority card catalog.
 - Added first-pass wallet benefits analyzer.
@@ -31,13 +32,13 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 
 ## Active Gaps
 - Browser extension is scaffold-only until installed locally and wired to user auth.
-- Benefits engine has an authenticated API endpoint, but wallet UI still uses some component-local presentation logic.
+- Benefits engine has an authenticated API endpoint and the wallet UI consumes it for signed-in analysis surfaces; component-local fallback logic still supports anonymous/demo sessions.
 - Merchant offers are rule-based mocks, not issuer-scraped/live offers.
 - Transfer partner optimization is not implemented.
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Wire wallet UI to `GET /api/wallet/analysis` outputs for trackers, welcome bonuses, alerts, and recommendations.
+1. Add focused tests for `analyzeWallet()` and signed-in analysis UI mapping.
 2. Install/test the browser extension locally against Patagonia/Amazon/airline pages.
 3. Add a manual card add flow that persists card-product matches without Plaid.
 4. Add deterministic card-product match hints from Plaid account names and known card catalog aliases.
