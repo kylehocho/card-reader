@@ -10,6 +10,15 @@ type ExchangeTokenRequest = {
   institutionName?: string | null;
 };
 
+type PlaidAccountLike = {
+  type: string;
+  subtype?: string | null;
+};
+
+function isCreditCardAccount(account: PlaidAccountLike) {
+  return account.type === 'credit' && account.subtype === 'credit card';
+}
+
 export async function POST(request: Request) {
   try {
     const { user, response: authResponse } = await getAuthenticatedUser(request);
@@ -32,6 +41,21 @@ export async function POST(request: Request) {
       plaid.accountsGet({ access_token: accessToken }),
       plaid.liabilitiesGet({ access_token: accessToken }).catch(() => null),
     ]);
+    const creditCardAccounts = accountsResponse.data.accounts.filter(isCreditCardAccount);
+
+    if (creditCardAccounts.length === 0) {
+      await plaid.itemRemove({ access_token: accessToken }).catch(() => null);
+
+      return NextResponse.json(
+        {
+          error: 'No credit card accounts were found for this Plaid connection. Connect a credit card account to import it into Card Reader.',
+          importedAccounts: 0,
+          skippedAccounts: accountsResponse.data.accounts.length,
+        },
+        { status: 422 },
+      );
+    }
+
     const supabase = getSupabaseAdminClient();
     const { data: plaidItem, error: itemError } = await supabase
       .from('plaid_items')
@@ -53,7 +77,7 @@ export async function POST(request: Request) {
       throw new Error(itemError?.message ?? 'Unable to save Plaid item.');
     }
 
-    const accountsToSave = accountsResponse.data.accounts.map((account) => ({
+    const accountsToSave = creditCardAccounts.map((account) => ({
       user_id: user.id,
       plaid_item_id: plaidItem.id,
       account_id: account.account_id,
@@ -80,8 +104,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       itemId,
       savedItemId: plaidItem.id,
-      accounts: accountsResponse.data.accounts,
+      accounts: creditCardAccounts,
       savedAccounts,
+      importedAccounts: savedAccounts?.length ?? 0,
+      skippedAccounts: accountsResponse.data.accounts.length - creditCardAccounts.length,
       liabilities: liabilitiesResponse?.data.liabilities ?? null,
     });
   } catch (error) {

@@ -56,12 +56,12 @@ Run `supabase/schema.sql` in the Supabase SQL editor for the project. It creates
 
 The app now uses Supabase Auth and the `profiles` table whenever `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are configured. Without those env vars, it falls back to the local prototype auth flow so UI work remains easy.
 
-The add-card sheet uses Plaid as the production linking path for signed-in users. In sandbox, use Plaid test credentials in Link; the app requires a signed-in Supabase user, exchanges the returned public token server-side, encrypts the Plaid access token, writes Plaid item/account records, then prompts the user to match each returned credit account to a real card product before finishing the flow.
+The add-card sheet uses Plaid as the production linking path for signed-in users. In sandbox, use Plaid test credentials in Link; the app requires a signed-in Supabase user, exchanges the returned public token server-side, encrypts the Plaid access token, writes Plaid item/account records, then prompts the user to match each returned credit account to a real card product before finishing the flow. Plaid Link is filtered to credit card accounts, and the server refuses connections that do not return at least one `type = credit`, `subtype = credit card` account.
 
 Connected sandbox accounts are also visible from Profile → Connected accounts, which is the mock home for later persisted Plaid items, issuer account IDs, and card-product benefit mapping.
 From the post-Link matching step or Profile → Connected accounts, a signed-in user can assign each persisted Plaid credit account to a card product from `card_products`. The selection writes to `account_card_matches` under Supabase RLS and updates the wallet card to show the matched product.
 The match UI also shows conservative card-product suggestions when a Plaid account name strongly matches the catalog. Suggestions are not saved automatically; accepting one writes `match_status = suggested` with the computed confidence.
-The same screen includes a transaction sync action. It calls `/api/plaid/sync-transactions`, which decrypts stored Plaid access tokens server-side, pulls recent Plaid sandbox transactions, writes them to `plaid_transactions`, and then displays the latest rows under each connected account.
+The same screen includes a transaction sync action. It calls `/api/plaid/sync-transactions`, which decrypts stored Plaid access tokens server-side, pulls recent Plaid sandbox transactions, writes only transactions tied to persisted credit card accounts to `plaid_transactions`, and then displays the latest rows under each connected account.
 The wallet and Opportunities surfaces now run a first-pass recommendation check over synced transactions. It infers a simple rewards category from Plaid merchant/category data, compares the matched card against `card_products.rewards`, and surfaces better-card ideas with an estimated value lift.
 
 For Supabase-backed signed-in sessions, the wallet is user-owned: it only renders cards from persisted linked accounts or cards created in that session. The prototype seed deck remains available only as anonymous/local fallback data so a new production user does not inherit example cards.
@@ -75,7 +75,7 @@ After the Supabase schema is current and the required env vars are present, run:
 npm run seed:plaid:sandbox
 ```
 
-The seed script creates a confirmed Supabase test user, creates a Plaid sandbox public token, exchanges it through the live app endpoint, saves the returned Plaid item/accounts, syncs recent Plaid transactions, and creates one starter `account_card_matches` row against the Chase Sapphire Reserve catalog entry.
+The seed script creates a confirmed Supabase test user, creates a Plaid sandbox public token, exchanges it through the live app endpoint, saves returned Plaid credit card item/accounts, syncs recent credit card transactions, and creates one starter `account_card_matches` row against the Chase Sapphire Reserve catalog entry.
 
 Optional seed overrides:
 

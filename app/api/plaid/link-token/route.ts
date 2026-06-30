@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getPlaidClient, plaidCountryCodes, plaidProducts } from '@/lib/plaid';
+import { getPlaidClient, plaidCountryCodes, plaidCreditCardAccountFilters, plaidProducts } from '@/lib/plaid';
 import { getAuthenticatedUser } from '@/lib/supabase/auth';
 
 export async function POST(request: Request) {
@@ -13,6 +13,7 @@ export async function POST(request: Request) {
       country_codes: plaidCountryCodes,
       language: 'en',
       products: plaidProducts,
+      account_filters: plaidCreditCardAccountFilters,
       user: {
         client_user_id: user.id,
       },

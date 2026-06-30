@@ -1165,6 +1165,8 @@ export default function WalletPrototype() {
       supabase
         .from('plaid_accounts')
         .select('*, plaid_items(institution_name), account_card_matches(*, card_products(id, issuer, name))')
+        .eq('type', 'credit')
+        .eq('subtype', 'credit card')
         .order('created_at', { ascending: true }),
       supabase.from('plaid_transactions').select('*').order('date', { ascending: false }).limit(100),
     ]);
@@ -1519,10 +1521,9 @@ export default function WalletPrototype() {
                   currentBalance: account.balances.current,
                   limit: account.balances.limit,
                 }));
-            const creditAccounts = connectedAccounts.filter((account) => account.type === 'credit' || account.subtype === 'credit card');
-            const accountsToAdd = creditAccounts.length > 0 ? creditAccounts : connectedAccounts.slice(0, 1);
+            const accountsToAdd = connectedAccounts.filter((account) => account.type === 'credit' && account.subtype === 'credit card');
 
-            syncPlaidAccountsToWallet(connectedAccounts);
+            syncPlaidAccountsToWallet(accountsToAdd);
             setPendingLinkedAccounts(accountsToAdd);
 
             const firstAddedAccount = accountsToAdd[0];
@@ -3070,7 +3071,7 @@ export default function WalletPrototype() {
                   <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Sandbox connection</p>
                   <h3 className="mt-2 text-[22px] font-semibold tracking-[-0.03em] text-white">Link a test issuer</h3>
                   <p className="mt-2 text-sm leading-6 text-white/72">
-                    Plaid will return sandbox accounts, then Card Reader will save them to this profile and ask you to match each credit account to a real card product.
+                    Plaid will only import credit card accounts. Checking, savings, loan, and investment accounts are skipped before they reach this profile.
                   </p>
 
                   {plaidAccounts.length > 0 && (
@@ -3168,8 +3169,8 @@ export default function WalletPrototype() {
                     </div>
                   ) : (
                     <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
-                      <p className="text-[16px] font-semibold text-white">No credit accounts returned</p>
-                      <p className="mt-2 text-sm leading-6 text-white/64">Open Connected Accounts to review everything Plaid returned for this profile.</p>
+                      <p className="text-[16px] font-semibold text-white">No credit cards imported</p>
+                      <p className="mt-2 text-sm leading-6 text-white/64">This Plaid connection did not return a credit card account. Connect a credit card account to add it to this wallet.</p>
                     </div>
                   )}
 

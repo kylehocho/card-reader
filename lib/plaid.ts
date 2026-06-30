@@ -1,4 +1,4 @@
-import { Configuration, CountryCode, PlaidApi, PlaidEnvironments, Products } from 'plaid';
+import { Configuration, CountryCode, CreditAccountSubtype, PlaidApi, PlaidEnvironments, Products } from 'plaid';
 
 const plaidEnv = (process.env.PLAID_ENV ?? 'sandbox').trim();
 
@@ -29,3 +29,8 @@ export function getPlaidClient() {
 
 export const plaidProducts = [Products.Liabilities, Products.Transactions];
 export const plaidCountryCodes = [CountryCode.Us];
+export const plaidCreditCardAccountFilters = {
+  credit: {
+    account_subtypes: [CreditAccountSubtype.CreditCard],
+  },
+};

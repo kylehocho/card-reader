@@ -57,30 +57,38 @@ export async function POST(request: Request) {
           end_date: formatDate(endDate),
           options: { count: 500, offset: 0 },
         }),
-        supabase.from('plaid_accounts').select('id,account_id').eq('user_id', user.id).eq('plaid_item_id', item.id),
+        supabase
+          .from('plaid_accounts')
+          .select('id,account_id')
+          .eq('user_id', user.id)
+          .eq('plaid_item_id', item.id)
+          .eq('type', 'credit')
+          .eq('subtype', 'credit card'),
       ]);
 
       if (accountsError) throw new Error(accountsError.message);
 
       const accountIdByPlaidId = new Map((accounts ?? []).map((account) => [account.account_id, account.id]));
-      const transactionsToSave: Database['public']['Tables']['plaid_transactions']['Insert'][] = transactionsResponse.data.transactions.map((transaction) => ({
-        user_id: user.id,
-        plaid_item_id: item.id,
-        plaid_account_id: accountIdByPlaidId.get(transaction.account_id) ?? null,
-        account_id: transaction.account_id,
-        transaction_id: transaction.transaction_id,
-        name: transaction.name,
-        merchant_name: transaction.merchant_name ?? null,
-        amount: transaction.amount,
-        iso_currency_code: transaction.iso_currency_code ?? null,
-        date: transaction.date,
-        authorized_date: transaction.authorized_date ?? null,
-        pending: transaction.pending,
-        payment_channel: transaction.payment_channel ?? null,
-        category: transaction.category ?? [],
-        category_id: transaction.category_id ?? null,
-        personal_finance_category: toJson(transaction.personal_finance_category),
-      }));
+      const transactionsToSave: Database['public']['Tables']['plaid_transactions']['Insert'][] = transactionsResponse.data.transactions
+        .filter((transaction) => accountIdByPlaidId.has(transaction.account_id))
+        .map((transaction) => ({
+          user_id: user.id,
+          plaid_item_id: item.id,
+          plaid_account_id: accountIdByPlaidId.get(transaction.account_id) ?? null,
+          account_id: transaction.account_id,
+          transaction_id: transaction.transaction_id,
+          name: transaction.name,
+          merchant_name: transaction.merchant_name ?? null,
+          amount: transaction.amount,
+          iso_currency_code: transaction.iso_currency_code ?? null,
+          date: transaction.date,
+          authorized_date: transaction.authorized_date ?? null,
+          pending: transaction.pending,
+          payment_channel: transaction.payment_channel ?? null,
+          category: transaction.category ?? [],
+          category_id: transaction.category_id ?? null,
+          personal_finance_category: toJson(transaction.personal_finance_category),
+        }));
 
       if (transactionsToSave.length > 0) {
         const { data: savedTransactions, error: transactionsError } = await supabase
@@ -96,6 +104,7 @@ export async function POST(request: Request) {
         plaidItemId: item.id,
         available: transactionsResponse.data.total_transactions,
         saved: transactionsToSave.length,
+        skipped: transactionsResponse.data.transactions.length - transactionsToSave.length,
       });
     }
 
