@@ -27,6 +27,8 @@ Detect merchant context while a user shops and recommend the best linked card or
 3. Map common domains to merchant/category hints.
 4. Send context to `/api/recommend-card`.
 
+The background worker also derives fallback context from `tabs` URL/title when content-script messaging misses a page update, so the extension can still produce a recommendation for known merchant domains.
+
 ## Security/Privacy
 - Only send merchant context and page URL for active tab.
 - Do not scrape payment forms.

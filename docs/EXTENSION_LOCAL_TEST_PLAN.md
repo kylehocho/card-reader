@@ -35,3 +35,12 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 
 ## Pass Criteria
 The extension passes this MVP smoke when at least three different merchant categories produce non-empty recommendation responses and the popup renders them without service worker errors.
+
+## 2026-06-29 Automation Attempt
+- Launched an isolated Chrome profile with the unpacked extension loaded from `extension/`.
+- Confirmed the MV3 service worker registered under the unpacked extension id.
+- Navigated merchant pages through CDP, but the automated run did not leave `currentContext` or `currentRecommendation` in extension session storage.
+- Direct `chrome-extension://.../popup.html` navigation returned Chrome `ERR_FILE_NOT_FOUND` in the CDP-launched profile even though the popup file exists, so popup rendering could not be verified through this automation path.
+- Patched the extension to make content-script startup messaging safe across Chrome callback/promise variants and to add a background tab URL/title fallback when content-script messaging fails.
+
+Remaining evidence needed: load the extension manually through `chrome://extensions` or use a browser harness with first-class extension popup support, then capture the popup output for the priority page matrix above.

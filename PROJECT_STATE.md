@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Started browser extension local smoke in isolated Chrome; patched extension fallback behavior after automation showed session storage was not populated from merchant page navigation.
 - Added `/api/wallet/analysis` route tests for auth, Supabase error, and happy-path response shape.
 - Added deterministic Plaid account-to-card-product match hints with conservative user acceptance flow.
 - Moved `/Goal CTO` daily work logs into dedicated Notion sub-pages under `Daily Work Logs`.
@@ -38,7 +39,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- Browser extension is scaffold-only until installed locally and wired to user auth.
+- Browser extension is scaffold-only until manually loaded or tested with an extension-capable browser harness; CDP automation did not verify popup/session storage end to end.
 - Benefits engine has an authenticated API endpoint and the wallet UI consumes it for signed-in analysis surfaces; component-local fallback logic still supports anonymous/demo sessions.
 - Test coverage now protects first-pass wallet analysis, signed-in UI mapping, `/api/wallet/analysis` route behavior, and card-match hints; browser-driven signed-in Plaid smoke is still missing.
 - Merchant offers are rule-based mocks, not issuer-scraped/live offers.
@@ -46,7 +47,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Install/test the browser extension locally using `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
+1. Complete manual or extension-capable browser smoke using `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
 2. Add a browser-driven signed-in Plaid smoke against production.
 3. Add a manual card add flow that persists card-product matches without Plaid.
 4. Add card-match hint telemetry or review state so accepted suggestions can improve future matching.

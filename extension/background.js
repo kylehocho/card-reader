@@ -1,4 +1,18 @@
 const DEFAULT_API_BASE_URL = 'https://card-reader-xi.vercel.app';
+const MERCHANT_DOMAIN_HINTS = {
+  'patagonia.com': { merchant: 'Patagonia', categoryHint: 'shopping' },
+  'amazon.com': { merchant: 'Amazon', categoryHint: 'shopping' },
+  'delta.com': { merchant: 'Delta Air Lines', categoryHint: 'flights' },
+  'united.com': { merchant: 'United Airlines', categoryHint: 'flights' },
+  'aa.com': { merchant: 'American Airlines', categoryHint: 'flights' },
+  'airbnb.com': { merchant: 'Airbnb', categoryHint: 'travel' },
+  'hyatt.com': { merchant: 'Hyatt', categoryHint: 'hotel' },
+  'marriott.com': { merchant: 'Marriott', categoryHint: 'hotel' },
+  'hilton.com': { merchant: 'Hilton', categoryHint: 'hotel' },
+  'wholefoodsmarket.com': { merchant: 'Whole Foods', categoryHint: 'groceries' },
+  'uber.com': { merchant: 'Uber', categoryHint: 'travel' },
+  'ubereats.com': { merchant: 'Uber Eats', categoryHint: 'dining' }
+};
 const DEMO_CARD_IDS = [
   'chase-sapphire-reserve',
   'chase-sapphire-preferred',
@@ -11,6 +25,35 @@ const DEMO_CARD_IDS = [
   'bilt-mastercard',
   'discover-it-cash-back'
 ];
+
+function cleanHost(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+function hintForHost(host) {
+  return MERCHANT_DOMAIN_HINTS[host] || Object.entries(MERCHANT_DOMAIN_HINTS).find(([domain]) => host.endsWith(`.${domain}`))?.[1] || null;
+}
+
+function contextFromTab(tab) {
+  const host = cleanHost(tab.url || '');
+  if (!host) return null;
+
+  const hint = hintForHost(host);
+  const title = tab.title || host;
+  const merchant = hint?.merchant || title.split(/[|–-]/)[0]?.trim() || host;
+
+  return {
+    merchant,
+    title,
+    url: tab.url,
+    host,
+    categoryHint: hint?.categoryHint || ''
+  };
+}
 
 async function apiBaseUrl() {
   const stored = await chrome.storage.sync.get(['apiBaseUrl']);
@@ -66,14 +109,24 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
     const context = await chrome.tabs.sendMessage(tabId, { type: 'CARD_READER_GET_CONTEXT' });
     await refreshRecommendation(tabId, context);
   } catch {
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    const fallbackContext = tab ? contextFromTab(tab) : null;
+    if (fallbackContext) {
+      await refreshRecommendation(tabId, fallbackContext);
+      return;
+    }
     await chrome.action.setBadgeText({ tabId, text: '' });
   }
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status !== 'complete') return;
   chrome.tabs.sendMessage(tabId, { type: 'CARD_READER_GET_CONTEXT' }, (context) => {
-    if (chrome.runtime.lastError || !context) return;
+    if (chrome.runtime.lastError || !context) {
+      const fallbackContext = contextFromTab(tab);
+      if (fallbackContext) void refreshRecommendation(tabId, fallbackContext);
+      return;
+    }
     void refreshRecommendation(tabId, context);
   });
 });

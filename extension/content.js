@@ -42,4 +42,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return true;
 });
 
-chrome.runtime.sendMessage({ type: 'CARD_READER_CONTEXT_CHANGED', context: pageMerchantContext() }).catch(() => {});
+const contextMessage = chrome.runtime.sendMessage({ type: 'CARD_READER_CONTEXT_CHANGED', context: pageMerchantContext() });
+if (contextMessage && typeof contextMessage.catch === 'function') {
+  contextMessage.catch(() => {});
+}
