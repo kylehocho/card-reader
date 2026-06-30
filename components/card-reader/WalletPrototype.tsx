@@ -17,6 +17,7 @@ import {
   type TransactionRecommendationView,
   type WelcomeBonusView,
 } from '@/lib/benefits/wallet-analysis-view';
+import { suggestCardProductMatch, type CardProductMatchSuggestion } from '@/lib/cards/card-match-hints';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { MotionConfig, motion } from 'framer-motion';
@@ -76,6 +77,7 @@ type PlaidAccountRow = Database['public']['Tables']['plaid_accounts']['Row'];
 type PlaidTransactionRow = Database['public']['Tables']['plaid_transactions']['Row'];
 type CardProductRow = Database['public']['Tables']['card_products']['Row'];
 type AccountCardMatchRow = Database['public']['Tables']['account_card_matches']['Row'];
+type CardProductSuggestion = CardProductMatchSuggestion<CardProductRow>;
 
 type PlaidAccountWithRelations = PlaidAccountRow & {
   plaid_items?: { institution_name: string | null } | null;
@@ -850,7 +852,15 @@ function accountMatchStateLabel(account: PlaidConnectedAccount, saveState: 'idle
   if (saveState === 'saving') return 'Saving';
   if (saveState === 'saved') return 'Saved';
   if (saveState === 'error') return 'Sync issue';
+  if (account.matchStatus === 'suggested') return 'Suggested';
   return account.cardProductId ? 'Matched' : 'Needs review';
+}
+
+function matchToneClass(label: string) {
+  if (label === 'Sync issue') return 'bg-rose-300/16 text-rose-50';
+  if (label === 'Needs review') return 'bg-amber-300/16 text-amber-50';
+  if (label === 'Suggested') return 'bg-sky-300/16 text-sky-50';
+  return 'bg-emerald-300/16 text-emerald-50';
 }
 
 function isRewardMap(value: unknown): value is Record<string, number> {
@@ -983,6 +993,43 @@ function buildPlaidCard(account: PlaidConnectedAccount): Card {
     benefits: [{ id: `plaid-${account.accountId}-benefit`, title: 'Plaid connection', status: 'available', detail: 'Sandbox account data is available to the app.', progress: 100 }],
     isBusiness: false,
   };
+}
+
+function MatchSuggestionCard({
+  account,
+  suggestion,
+  saveState,
+  onAccept,
+}: {
+  account: PlaidConnectedAccount;
+  suggestion: CardProductSuggestion | null;
+  saveState: 'idle' | 'saving' | 'saved' | 'error';
+  onAccept: (account: PlaidConnectedAccount, cardProductId: string, source: 'manual' | 'suggested', confidence: number) => Promise<void>;
+}) {
+  if (!suggestion || account.cardProductId === suggestion.product.id) return null;
+
+  return (
+    <div className="mt-3 rounded-2xl border border-sky-300/18 bg-sky-300/10 px-3 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-sky-100/62">Suggested match</p>
+          <p className="mt-1 text-[14px] font-semibold leading-5 text-white">{suggestion.product.name}</p>
+          <p className="mt-1 text-[12px] leading-5 text-white/58">
+            {suggestion.product.issuer} · {Math.round(suggestion.confidence * 100)}% confidence
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={saveState === 'saving'}
+          onClick={() => void onAccept(account, suggestion.product.id, 'suggested', suggestion.confidence)}
+          className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#10131a] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Use
+        </button>
+      </div>
+      <p className="mt-2 text-[12px] leading-5 text-white/58">{suggestion.reason}</p>
+    </div>
+  );
 }
 
 export default function WalletPrototype() {
@@ -1198,6 +1245,18 @@ export default function WalletPrototype() {
     () => filteredRecommendations.find((r) => r.id === selectedRecommendationId) ?? filteredRecommendations[0],
     [filteredRecommendations, selectedRecommendationId],
   );
+  const matchSuggestionByAccountId = useMemo(() => {
+    return new Map(
+      plaidAccounts.map((account) => [
+        account.accountId,
+        suggestCardProductMatch({
+          accountName: account.name,
+          institutionName: account.institutionName,
+          products: cardProducts,
+        }),
+      ]),
+    );
+  }, [cardProducts, plaidAccounts]);
 
   const merchantResults = useMemo(() => {
     const normalized = merchantQuery.trim().toLowerCase();
@@ -1492,7 +1551,7 @@ export default function WalletPrototype() {
     }
   }
 
-  async function updateCardMatch(account: PlaidConnectedAccount, cardProductId: string) {
+  async function updateCardMatch(account: PlaidConnectedAccount, cardProductId: string, source: 'manual' | 'suggested' = 'manual', confidence = 1) {
     if (!user || !account.dbId) {
       setPlaidError('Reconnect this Plaid account before saving a card match.');
       return;
@@ -1510,8 +1569,8 @@ export default function WalletPrototype() {
         user_id: user.id,
         plaid_account_id: account.dbId,
         card_product_id: cardProductId,
-        match_status: 'manual',
-        match_confidence: 1,
+        match_status: source,
+        match_confidence: confidence,
       },
       { onConflict: 'user_id,plaid_account_id' },
     );
@@ -1530,7 +1589,7 @@ export default function WalletPrototype() {
             cardProductId,
             cardProductName: selectedProduct?.name ?? null,
             cardProductIssuer: selectedProduct?.issuer ?? null,
-            matchStatus: 'manual',
+            matchStatus: source,
           }
         : currentAccount,
     );
@@ -1544,7 +1603,7 @@ export default function WalletPrototype() {
               cardProductId,
               cardProductName: selectedProduct?.name ?? null,
               cardProductIssuer: selectedProduct?.issuer ?? null,
-              matchStatus: 'manual',
+              matchStatus: source,
             }
           : currentAccount,
       ),
@@ -2327,6 +2386,7 @@ export default function WalletPrototype() {
                     const isEditingMatch = editingMatchAccountIds.includes(account.accountId);
                     const showMatchEditor = !account.cardProductId || isEditingMatch;
                     const matchStateLabel = accountMatchStateLabel(account, saveState);
+                    const matchSuggestion = matchSuggestionByAccountId.get(account.accountId) ?? null;
 
                     return (
                       <div
@@ -2369,13 +2429,14 @@ export default function WalletPrototype() {
                         <div className="mt-4 rounded-[22px] border border-white/10 bg-black/15 px-3 py-3">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Matched card product</p>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchStateLabel === 'Sync issue' ? 'bg-rose-300/16 text-rose-50' : matchStateLabel === 'Needs review' ? 'bg-amber-300/16 text-amber-50' : 'bg-emerald-300/16 text-emerald-50'}`}>
+                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchToneClass(matchStateLabel)}`}>
                               {matchStateLabel}
                             </span>
                           </div>
 
                           {showMatchEditor ? (
                             <>
+                              <MatchSuggestionCard account={account} suggestion={matchSuggestion} saveState={saveState} onAccept={updateCardMatch} />
                               <select
                                 id={`match-${account.accountId}`}
                                 aria-label={`Match ${account.name} to a card product`}
@@ -3005,6 +3066,7 @@ export default function WalletPrototype() {
                       {pendingLinkedAccounts.map((account) => {
                         const saveState = matchStatusByAccount[account.accountId] ?? 'idle';
                         const matchStateLabel = accountMatchStateLabel(account, saveState);
+                        const matchSuggestion = matchSuggestionByAccountId.get(account.accountId) ?? null;
 
                         return (
                           <div key={account.accountId} className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
@@ -3022,10 +3084,11 @@ export default function WalletPrototype() {
                               <label className="text-[11px] uppercase tracking-[0.18em] text-white/42" htmlFor={`pending-match-${account.accountId}`}>
                                 Matched card product
                               </label>
-                              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchStateLabel === 'Sync issue' ? 'bg-rose-300/16 text-rose-50' : matchStateLabel === 'Needs review' ? 'bg-amber-300/16 text-amber-50' : 'bg-emerald-300/16 text-emerald-50'}`}>
+                              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchToneClass(matchStateLabel)}`}>
                                 {matchStateLabel}
                               </span>
                             </div>
+                            <MatchSuggestionCard account={account} suggestion={matchSuggestion} saveState={saveState} onAccept={updateCardMatch} />
                             <select
                               id={`pending-match-${account.accountId}`}
                               value={account.cardProductId ?? ''}

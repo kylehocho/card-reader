@@ -3,12 +3,12 @@
 ## High Priority
 - Wallet UI still contains demo presentation data and should progressively consume `analyzeWallet()` outputs.
 - Supabase keys were shared in Telegram during setup; rotate them later through a secure path.
-- Account-card matching is manual; add deterministic matching hints from Plaid account names/masks and user selection history.
+- Account-card matching now has deterministic hints; add telemetry/review state so accepted suggestions improve future matching.
 - Recommendation estimates use simple multiplier math; add point valuations and issuer-specific redemption assumptions.
 
 ## Medium Priority
 - Convert top-priority catalog JSON into a versioned admin-editable table workflow.
-- Add API route tests for `/api/wallet/analysis` and browser-driven signed-in Plaid smoke coverage.
+- Add browser-driven signed-in Plaid smoke coverage.
 - Continue extracting presentation projections from `WalletPrototype.tsx`; signed-in analysis mappers now live in `lib/benefits/wallet-analysis-view.ts`.
 - Add merchant normalization aliases and MCC/category confidence.
 - Add real extension auth/session handling.

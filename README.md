@@ -60,6 +60,7 @@ The add-card sheet uses Plaid as the production linking path for signed-in users
 
 Connected sandbox accounts are also visible from Profile → Connected accounts, which is the mock home for later persisted Plaid items, issuer account IDs, and card-product benefit mapping.
 From the post-Link matching step or Profile → Connected accounts, a signed-in user can assign each persisted Plaid credit account to a card product from `card_products`. The selection writes to `account_card_matches` under Supabase RLS and updates the wallet card to show the matched product.
+The match UI also shows conservative card-product suggestions when a Plaid account name strongly matches the catalog. Suggestions are not saved automatically; accepting one writes `match_status = suggested` with the computed confidence.
 The same screen includes a transaction sync action. It calls `/api/plaid/sync-transactions`, which decrypts stored Plaid access tokens server-side, pulls recent Plaid sandbox transactions, writes them to `plaid_transactions`, and then displays the latest rows under each connected account.
 The wallet and Opportunities surfaces now run a first-pass recommendation check over synced transactions. It infers a simple rewards category from Plaid merchant/category data, compares the matched card against `card_products.rewards`, and surfaces better-card ideas with an estimated value lift.
 
@@ -114,6 +115,7 @@ https://card-reader-xi.vercel.app
 ```
 
 For local testing, edit `API_BASE_URL` in `extension/background.js` to `http://localhost:3000`.
+See `docs/EXTENSION_LOCAL_TEST_PLAN.md` for the browser smoke matrix and evidence to capture.
 
 API smoke test:
 

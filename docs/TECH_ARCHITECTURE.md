@@ -11,6 +11,7 @@
 ## Core Modules
 - `data/top-priority-card-products.json`: canonical MVP catalog.
 - `lib/cards/top-priority-cards.ts`: app helper for priority catalog.
+- `lib/cards/card-match-hints.ts`: deterministic Plaid account-to-card-product suggestion helper.
 - `lib/benefits/analyze-wallet.ts`: pure wallet analysis engine.
 - `app/api/plaid/*`: Plaid linking/sync routes.
 - `app/api/recommend-card`: merchant context recommendation API.
@@ -23,7 +24,7 @@
 2. User links Plaid account.
 3. Server exchanges Plaid public token and stores encrypted access token.
 4. Server saves Plaid accounts and transactions.
-5. User or future matcher maps Plaid account to `card_products`.
+5. User maps Plaid account to `card_products`, optionally accepting a deterministic match hint.
 6. Analysis engine combines card product rules + account matches + transactions.
 7. `GET /api/wallet/analysis` exposes wallet trackers, welcome bonuses, alerts, and recommendations for authenticated clients.
 8. Signed-in wallet UI renders API-backed trackers, welcome bonuses, alerts, and missed-value recommendations.
@@ -36,6 +37,9 @@
 - `plaid_transactions`: transaction history for analysis.
 - `card_products`: card catalog, rewards, and benefits JSON.
 - `account_card_matches`: per-user account-to-card-product mapping.
+
+## Card Match Hints
+The client scores linked Plaid account names and institution names against the loaded card catalog. Alias matches and product-token overlap can produce a suggestion, but the app does not write the match automatically. If the user accepts the suggestion, the saved row uses `match_status = suggested` and stores the computed confidence. Manual dropdown saves continue to use `match_status = manual`.
 
 ## Recommendation API Shape
 `POST /api/recommend-card` is the unauthenticated merchant-context endpoint used by the browser extension MVP.

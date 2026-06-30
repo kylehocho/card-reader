@@ -39,3 +39,6 @@ Detect merchant context while a user shops and recommend the best linked card or
 - Local cache of user card products.
 - Offer match notifications.
 - Airport/lounge context from location or travel booking pages.
+
+## Local Test Plan
+Use `docs/EXTENSION_LOCAL_TEST_PLAN.md` for the current smoke-test matrix across Patagonia, Amazon, airline/travel, grocery, and dining pages.

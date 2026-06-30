@@ -14,6 +14,10 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Added `/api/wallet/analysis` route tests for auth, Supabase error, and happy-path response shape.
+- Added deterministic Plaid account-to-card-product match hints with conservative user acceptance flow.
+- Moved `/Goal CTO` daily work logs into dedicated Notion sub-pages under `Daily Work Logs`.
+- Added a browser extension local test plan covering merchant pages, API calls, popup rendering, privacy checks, and evidence capture.
 - Added Vitest coverage for `analyzeWallet()` and signed-in wallet analysis UI mapping.
 - Fixed grocery category inference so merchants like Whole Foods do not get swallowed by the broader dining/food rule.
 - Wallet home and Opportunities surfaces now consume the authenticated wallet analysis API for signed-in benefit trackers, welcome bonuses, alerts, and missed-value recommendations.
@@ -31,18 +35,19 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Transaction sync and first-pass missed-value recommendations.
 - Top-10 card catalog and mock analysis data.
 - Authenticated wallet analysis API at `GET /api/wallet/analysis`.
+- Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
 - Browser extension is scaffold-only until installed locally and wired to user auth.
 - Benefits engine has an authenticated API endpoint and the wallet UI consumes it for signed-in analysis surfaces; component-local fallback logic still supports anonymous/demo sessions.
-- Test coverage now protects first-pass wallet analysis and signed-in UI mapping, but API route tests and browser-driven signed-in Plaid smoke are still missing.
+- Test coverage now protects first-pass wallet analysis, signed-in UI mapping, `/api/wallet/analysis` route behavior, and card-match hints; browser-driven signed-in Plaid smoke is still missing.
 - Merchant offers are rule-based mocks, not issuer-scraped/live offers.
 - Transfer partner optimization is not implemented.
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Install/test the browser extension locally against Patagonia/Amazon/airline pages.
-2. Add API route tests for `/api/wallet/analysis` auth/error/data-shape behavior.
+1. Install/test the browser extension locally using `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
+2. Add a browser-driven signed-in Plaid smoke against production.
 3. Add a manual card add flow that persists card-product matches without Plaid.
-4. Add deterministic card-product match hints from Plaid account names and known card catalog aliases.
+4. Add card-match hint telemetry or review state so accepted suggestions can improve future matching.
 5. Add a lightweight admin/catalog editor for card products and benefits.
