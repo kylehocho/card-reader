@@ -2387,6 +2387,7 @@ export default function WalletPrototype() {
               onBack={() => setScreen('wallet')}
               onOpenNotifications={() => setScreen('notifications')}
               onOpenConnectedAccounts={() => setScreen('connected-accounts')}
+              onSignOut={handleSignOut}
             />
           )}
 
