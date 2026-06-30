@@ -42,14 +42,14 @@ async function refreshActiveTab() {
 }
 
 async function refresh() {
-  const [{ currentContext, currentRecommendation, currentError }, { apiBaseUrl }, { authToken }] = await Promise.all([
+  const [{ currentContext, currentRecommendation, currentError }, { apiBaseUrl }, { authToken, authUserEmail }] = await Promise.all([
     chrome.storage.session.get(['currentContext', 'currentRecommendation', 'currentError']),
     chrome.storage.sync.get(['apiBaseUrl']),
-    chrome.storage.local.get(['authToken'])
+    chrome.storage.local.get(['authToken', 'authUserEmail'])
   ]);
 
   apiBaseUrlEl.value = apiBaseUrl || 'https://card-reader-xi.vercel.app';
-  authStatusEl.textContent = authToken ? 'Signed-in wallet' : 'Demo catalog';
+  authStatusEl.textContent = authToken ? `Signed-in wallet${authUserEmail ? `: ${authUserEmail}` : ''}` : 'Demo catalog';
 
   if (currentRecommendation) {
     renderRecommendation(currentContext, currentRecommendation);

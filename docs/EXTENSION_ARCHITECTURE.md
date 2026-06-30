@@ -34,7 +34,9 @@ The background worker also derives fallback context from `tabs` URL/title when c
 
 `/api/recommend-card` now supports authenticated recommendations when a Supabase bearer token is present: it validates the user and ranks only the card products matched to that user's linked accounts. Anonymous extension/API calls keep using the top-10 demo catalog.
 
-The extension options page stores the API base URL in `chrome.storage.sync` and the Supabase bearer token in `chrome.storage.local`. Background recommendations attach `Authorization: Bearer <token>` when local token storage is populated; otherwise they send the demo top-10 card IDs.
+The web app exposes `/extension/connect` for first-class auth handoff. When a signed-in user clicks Connect, the page posts the current Supabase access token to the page's content script. The content script only accepts messages from the production Card Reader origin or local dev, forwards the token to the background worker, and the worker stores it in `chrome.storage.local`. API base URL preferences use `chrome.storage.sync`. The extension options page still allows manual token paste for debugging.
+
+Background recommendations attach `Authorization: Bearer <token>` when local token storage is populated; otherwise they send the demo top-10 card IDs.
 
 The popup reads the cached `chrome.storage.session` recommendation first. If no recommendation or error is cached, or if the user clicks Refresh, it sends `CARD_READER_REFRESH_ACTIVE_TAB` to the background worker. The worker queries the active tab, asks the content script for structured context, falls back to tab URL/title context when needed, calls `/api/recommend-card`, updates the badge, stores the result, and returns the recommendation to the popup.
 
@@ -46,7 +48,6 @@ The popup reads the cached `chrome.storage.session` recommendation first. If no 
 - Add user controls before production release.
 
 ## Later
-- First-class auth handoff from web app to extension instead of manual token paste.
 - Scoped extension token with refresh/expiry handling.
 - Offer match notifications.
 - Airport/lounge context from location or travel booking pages.

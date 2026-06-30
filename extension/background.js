@@ -63,6 +63,32 @@ async function extensionSettings() {
   };
 }
 
+function cleanApiBaseUrl(value) {
+  if (typeof value !== 'string') return DEFAULT_API_BASE_URL;
+
+  const trimmedValue = value.trim().replace(/\/$/, '');
+  if (trimmedValue === 'https://card-reader-xi.vercel.app' || trimmedValue === 'http://localhost:3000') return trimmedValue;
+  return DEFAULT_API_BASE_URL;
+}
+
+async function saveAuthToken(message) {
+  const authToken = typeof message.authToken === 'string' ? message.authToken.trim() : '';
+  if (!authToken) throw new Error('No signed-in session token was provided.');
+
+  const apiBaseUrl = cleanApiBaseUrl(message.apiBaseUrl);
+  const authExpiresAt = typeof message.authExpiresAt === 'number' ? message.authExpiresAt : null;
+  const userEmail = typeof message.userEmail === 'string' ? message.userEmail : null;
+
+  await Promise.all([
+    chrome.storage.sync.set({ apiBaseUrl }),
+    chrome.storage.local.set({
+      authToken,
+      authExpiresAt,
+      authUserEmail: userEmail
+    })
+  ]);
+}
+
 async function recommend(context) {
   const settings = await extensionSettings();
   const headers = { 'Content-Type': 'application/json' };
@@ -166,6 +192,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         sendResponse({ ok: false, error: message });
       });
+    return true;
+  }
+
+  if (message?.type === 'CARD_READER_SAVE_AUTH_TOKEN') {
+    saveAuthToken(message)
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({ ok: false, error: error instanceof Error ? error.message : 'Unable to save session.' }));
     return true;
   }
 

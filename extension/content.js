@@ -36,6 +36,38 @@ function pageMerchantContext() {
   };
 }
 
+function isAllowedCardReaderOrigin(origin) {
+  return origin === 'https://card-reader-xi.vercel.app' || origin === 'http://localhost:3000';
+}
+
+window.addEventListener('message', (event) => {
+  if (event.source !== window || !isAllowedCardReaderOrigin(event.origin)) return;
+
+  const message = event.data;
+  if (message?.type !== 'CARD_READER_SAVE_AUTH_TOKEN') return;
+
+  chrome.runtime.sendMessage(
+    {
+      type: 'CARD_READER_SAVE_AUTH_TOKEN',
+      apiBaseUrl: message.apiBaseUrl,
+      authToken: message.authToken,
+      authExpiresAt: message.authExpiresAt,
+      userEmail: message.userEmail
+    },
+    (response) => {
+      window.postMessage(
+        {
+          type: 'CARD_READER_AUTH_TOKEN_SAVED',
+          requestId: message.requestId,
+          ok: Boolean(response?.ok),
+          error: response?.error || null
+        },
+        event.origin
+      );
+    }
+  );
+});
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== 'CARD_READER_GET_CONTEXT') return false;
   sendResponse(pageMerchantContext());

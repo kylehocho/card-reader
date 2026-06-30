@@ -10,7 +10,7 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 2. Open extension settings from the popup or Chrome extension details page.
 3. For local API testing, set the API base URL to `http://localhost:3000`.
 4. For production API testing, leave the API base URL as `https://card-reader-xi.vercel.app`.
-5. To test signed-in recommendations, paste a Supabase access token into extension settings. The token is stored in `chrome.storage.local`, not sync storage.
+5. To test signed-in recommendations, sign in to the web app, open `/extension/connect`, and click Connect extension. The token is stored in `chrome.storage.local`, not sync storage. Manual token paste in extension settings remains available for debugging.
 6. Open `chrome://extensions`, enable developer mode, choose Load unpacked, and select the `extension/` folder.
 7. Keep the extension service worker console open while testing.
 
@@ -27,6 +27,7 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 - Popup open can self-refresh the active tab when session storage has not already been populated.
 - Popup Refresh button can re-run the active-tab recommendation without reloading the merchant page.
 - Anonymous mode sends demo top-10 card IDs; signed-in mode sends the bearer token and lets the API use the user's matched card products.
+- `/extension/connect` can sync the current web session into the extension without copying a token manually.
 - Popup shows merchant, category, best card, runner-up if present, and the recommendation reason.
 - Popup status shows either `Demo catalog` or `Signed-in wallet`.
 - Extension handles API errors with a visible fallback state instead of a blank popup.

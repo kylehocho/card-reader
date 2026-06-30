@@ -125,7 +125,7 @@ https://card-reader-xi.vercel.app
 ```
 
 For local testing, open the extension settings page and set the API base URL to `http://localhost:3000`.
-To test signed-in recommendations, paste a Supabase access token into extension settings. The token is stored in `chrome.storage.local`; API URL preferences use `chrome.storage.sync`.
+To test signed-in recommendations, sign in to the web app and open `/extension/connect`. The page sends the current Supabase session to the installed extension, which stores the bearer token in `chrome.storage.local`; API URL preferences use `chrome.storage.sync`. The options page still accepts a pasted token for debugging.
 See `docs/EXTENSION_LOCAL_TEST_PLAN.md` for the browser smoke matrix and evidence to capture.
 
 API smoke test:

@@ -87,6 +87,7 @@ export default function ProfileHome({ user, connectedAccountsCount, onBack, onOp
       <div className="overflow-hidden rounded-[24px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
         {[
           { label: 'Synced cards', detail: connectedAccountsLabel, action: connectedAccountsCount > 0 ? 'Manage' : 'Connect', onClick: onOpenConnectedAccounts },
+          { label: 'Browser extension', detail: 'Use this wallet for merchant recommendations', action: 'Connect', onClick: () => window.open('/extension/connect', '_blank', 'noopener,noreferrer') },
           { label: 'Alerts', detail: 'Recommendation and benefit notifications', action: 'Open', onClick: onOpenNotifications },
           { label: 'Identity', detail: subtitle, action: null, onClick: undefined },
         ].map((item, index, arr) => (

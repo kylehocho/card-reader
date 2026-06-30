@@ -16,6 +16,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 ## Recently Completed
 - Added extension-side settings for authenticated recommendations: API base URL in sync storage, Supabase bearer token in local storage, signed-in wallet status in the popup, and authenticated `/api/recommend-card` calls from the background worker.
 - Added a popup-triggered active-tab refresh path for the browser extension, including a visible Refresh control, so popup smoke tests can request a fresh recommendation even when session storage was not pre-populated by background tab events.
+- Added first-class web-to-extension auth handoff at `/extension/connect`, so signed-in users can sync the current Supabase session into the extension without pasting tokens manually.
 - Added optional Supabase bearer auth to `/api/recommend-card` so authenticated extension clients can rank only the user's matched card products instead of the top-10 demo catalog.
 - Added a first-pass merchant intelligence catalog for the recommendation engine, plus merchant-context tests and a Supabase table blueprint for moving merchant/reward rules out of JSON later.
 - Started browser extension local smoke in isolated Chrome; patched extension fallback behavior after automation showed session storage was not populated from merchant page navigation.
@@ -54,7 +55,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 
 ## Next Best Actions
 1. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
-2. Replace manual token paste with first-class auth handoff from web app to extension.
+2. Add token refresh/expiry handling for long-lived extension sessions.
 3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production.
 4. Move merchant catalog and offer rules into Supabase once import/admin ownership is ready.
 5. Add a manual card add flow that persists card-product matches without Plaid.
