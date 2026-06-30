@@ -49,7 +49,19 @@ function account(overrides: Record<string, unknown>) {
   };
 }
 
-function supabaseSuccess() {
+function queryResult<T>(data: T, error: { message: string } | null = null) {
+  const query = {
+    select: vi.fn(() => query),
+    eq: vi.fn(() => query),
+    limit: vi.fn(() => query),
+    single: vi.fn(async () => ({ data, error })),
+    then: (resolve: (value: { data: T; error: { message: string } | null }) => unknown) => Promise.resolve({ data, error }).then(resolve),
+  };
+
+  return query;
+}
+
+function supabaseSuccess(existingAccounts: unknown[] = []) {
   const upsert = vi.fn((rows: unknown) => ({
     select: vi.fn((selection?: string) => {
       if (selection === 'id') {
@@ -63,7 +75,16 @@ function supabaseSuccess() {
   }));
 
   return {
-    from: vi.fn(() => ({ upsert })),
+    from: vi.fn((table: string) => {
+      if (table === 'plaid_accounts') {
+        return {
+          upsert,
+          select: vi.fn(() => queryResult(existingAccounts)),
+        };
+      }
+
+      return { upsert };
+    }),
     upsert,
   };
 }
@@ -152,5 +173,55 @@ describe('POST /api/plaid/exchange-token', () => {
         subtype: 'credit card',
       }),
     ]);
+  });
+
+  it('removes the new Plaid item when the returned credit card is already linked', async () => {
+    const duplicateCreditCard = account({
+      account_id: 'new-credit-1',
+      name: 'Plaid Credit Card',
+      official_name: 'Plaid Diamond 12.5% APR Interest Credit Card',
+      mask: '3333',
+    });
+    const itemRemove = vi.fn(async () => ({ data: {} }));
+    const plaid = {
+      itemPublicTokenExchange: vi.fn(async () => ({ data: { access_token: 'access-token', item_id: 'item-id' } })),
+      accountsGet: vi.fn(async () => ({
+        data: {
+          item: { institution_id: 'ins_1' },
+          accounts: [duplicateCreditCard],
+        },
+      })),
+      liabilitiesGet: vi.fn(async () => ({ data: { liabilities: { credit: [] } } })),
+      itemRemove,
+    };
+    const supabase = supabaseSuccess([
+      {
+        name: 'Plaid Credit Card',
+        official_name: 'Plaid Diamond 12.5% APR Interest Credit Card',
+        mask: '3333',
+        type: 'credit',
+        subtype: 'credit card',
+        plaid_items: {
+          institution_id: 'ins_1',
+          institution_name: 'Chase',
+          status: 'active',
+        },
+      },
+    ]);
+
+    mocks.getPlaidClient.mockReturnValue(plaid);
+    mocks.getSupabaseAdminClient.mockReturnValue(supabase);
+
+    const response = await POST(request({ publicToken: 'public-token' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toMatchObject({
+      importedAccounts: 0,
+      skippedDuplicateAccounts: 1,
+    });
+    expect(body.error).toContain('already linked');
+    expect(itemRemove).toHaveBeenCalledWith({ access_token: 'access-token' });
+    expect(supabase.upsert).not.toHaveBeenCalled();
   });
 });

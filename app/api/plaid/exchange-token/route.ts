@@ -11,12 +11,54 @@ type ExchangeTokenRequest = {
 };
 
 type PlaidAccountLike = {
+  name?: string | null;
+  official_name?: string | null;
+  mask?: string | null;
   type: string;
   subtype?: string | null;
 };
 
+type ExistingPlaidAccount = {
+  name: string | null;
+  official_name: string | null;
+  mask: string | null;
+  type: string;
+  subtype: string | null;
+  plaid_items:
+    | {
+        institution_id: string | null;
+        institution_name: string | null;
+        status: string | null;
+      }
+    | {
+        institution_id: string | null;
+        institution_name: string | null;
+        status: string | null;
+      }[]
+    | null;
+};
+
 function isCreditCardAccount(account: PlaidAccountLike) {
   return account.type === 'credit' && account.subtype === 'credit card';
+}
+
+function normalizeFingerprintPart(value?: string | null) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function accountFingerprint(account: PlaidAccountLike) {
+  return [
+    normalizeFingerprintPart(account.official_name ?? account.name),
+    normalizeFingerprintPart(account.mask),
+    normalizeFingerprintPart(account.subtype),
+  ].join('|');
+}
+
+function relationOne<T>(value: T | T[] | null): T | null {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 export async function POST(request: Request) {
@@ -42,6 +84,8 @@ export async function POST(request: Request) {
       plaid.liabilitiesGet({ access_token: accessToken }).catch(() => null),
     ]);
     const creditCardAccounts = accountsResponse.data.accounts.filter(isCreditCardAccount);
+    const institutionId = body.institutionId ?? accountsResponse.data.item.institution_id ?? null;
+    const institutionName = body.institutionName ?? null;
 
     if (creditCardAccounts.length === 0) {
       await plaid.itemRemove({ access_token: accessToken }).catch(() => null);
@@ -57,14 +101,52 @@ export async function POST(request: Request) {
     }
 
     const supabase = getSupabaseAdminClient();
+    const { data: existingAccounts, error: existingAccountsError } = await supabase
+      .from('plaid_accounts')
+      .select('name,official_name,mask,type,subtype,plaid_items(institution_id,institution_name,status)')
+      .eq('user_id', user.id)
+      .eq('type', 'credit')
+      .eq('subtype', 'credit card');
+
+    if (existingAccountsError) {
+      throw new Error(existingAccountsError.message);
+    }
+
+    const existingFingerprints = new Set(
+      ((existingAccounts ?? []) as ExistingPlaidAccount[])
+        .filter((account) => {
+          const item = relationOne(account.plaid_items);
+          if (!item || item.status !== 'active') return false;
+          const sameInstitutionId = institutionId && item.institution_id === institutionId;
+          const sameInstitutionName = institutionName && normalizeFingerprintPart(item.institution_name) === normalizeFingerprintPart(institutionName);
+          return sameInstitutionId || sameInstitutionName;
+        })
+        .map(accountFingerprint),
+    );
+    const newCreditCardAccounts = creditCardAccounts.filter((account) => !existingFingerprints.has(accountFingerprint(account)));
+
+    if (newCreditCardAccounts.length === 0) {
+      await plaid.itemRemove({ access_token: accessToken }).catch(() => null);
+
+      return NextResponse.json(
+        {
+          error: 'This Plaid credit card connection is already linked.',
+          importedAccounts: 0,
+          skippedAccounts: accountsResponse.data.accounts.length - creditCardAccounts.length,
+          skippedDuplicateAccounts: creditCardAccounts.length,
+        },
+        { status: 409 },
+      );
+    }
+
     const { data: plaidItem, error: itemError } = await supabase
       .from('plaid_items')
       .upsert(
         {
           user_id: user.id,
           item_id: itemId,
-          institution_id: body.institutionId ?? accountsResponse.data.item.institution_id ?? null,
-          institution_name: body.institutionName ?? null,
+          institution_id: institutionId,
+          institution_name: institutionName,
           access_token_encrypted: encryptSecret(accessToken),
           status: 'active',
         },
@@ -77,7 +159,7 @@ export async function POST(request: Request) {
       throw new Error(itemError?.message ?? 'Unable to save Plaid item.');
     }
 
-    const accountsToSave = creditCardAccounts.map((account) => ({
+    const accountsToSave = newCreditCardAccounts.map((account) => ({
       user_id: user.id,
       plaid_item_id: plaidItem.id,
       account_id: account.account_id,
@@ -104,10 +186,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       itemId,
       savedItemId: plaidItem.id,
-      accounts: creditCardAccounts,
+      accounts: newCreditCardAccounts,
       savedAccounts,
       importedAccounts: savedAccounts?.length ?? 0,
       skippedAccounts: accountsResponse.data.accounts.length - creditCardAccounts.length,
+      skippedDuplicateAccounts: creditCardAccounts.length - newCreditCardAccounts.length,
       liabilities: liabilitiesResponse?.data.liabilities ?? null,
     });
   } catch (error) {
