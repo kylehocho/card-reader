@@ -311,6 +311,80 @@ export type Database = {
           },
         ];
       };
+      recommendation_events: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          mode: 'demo' | 'signed_in';
+          merchant: string;
+          host: string | null;
+          url: string | null;
+          title: string | null;
+          category: string;
+          best_card_product_id: string | null;
+          runner_up_card_product_id: string | null;
+          matched_offer_title: string | null;
+          candidate_card_count: number;
+          request_context: Json;
+          response_snapshot: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          mode: 'demo' | 'signed_in';
+          merchant: string;
+          host?: string | null;
+          url?: string | null;
+          title?: string | null;
+          category: string;
+          best_card_product_id?: string | null;
+          runner_up_card_product_id?: string | null;
+          matched_offer_title?: string | null;
+          candidate_card_count?: number;
+          request_context?: Json;
+          response_snapshot?: Json;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string | null;
+          mode?: 'demo' | 'signed_in';
+          merchant?: string;
+          host?: string | null;
+          url?: string | null;
+          title?: string | null;
+          category?: string;
+          best_card_product_id?: string | null;
+          runner_up_card_product_id?: string | null;
+          matched_offer_title?: string | null;
+          candidate_card_count?: number;
+          request_context?: Json;
+          response_snapshot?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'recommendation_events_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'recommendation_events_best_card_product_id_fkey';
+            columns: ['best_card_product_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'recommendation_events_runner_up_card_product_id_fkey';
+            columns: ['runner_up_card_product_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

@@ -4,6 +4,7 @@ import merchantCatalog from '@/data/merchant-catalog.json';
 
 export type MerchantContext = {
   merchant?: string;
+  host?: string;
   url?: string;
   title?: string;
   categoryHint?: string;
@@ -90,6 +91,10 @@ function hostnameFromUrl(url?: string) {
   }
 }
 
+function hostnameFromContext(context: MerchantContext) {
+  return normalize(context.host) || hostnameFromUrl(context.url);
+}
+
 function normalize(value?: string | null) {
   return value?.trim().toLowerCase() ?? '';
 }
@@ -127,7 +132,7 @@ function offerFor(entry: MerchantCatalogEntry | null, candidateCards: AnalysisCa
 }
 
 function inferMerchant(context: MerchantContext) {
-  const host = hostnameFromUrl(context.url);
+  const host = hostnameFromContext(context);
   const catalogEntry = findCatalogEntry(context, host);
 
   if (catalogEntry) {

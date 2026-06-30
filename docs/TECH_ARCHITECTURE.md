@@ -60,6 +60,8 @@ The endpoint now normalizes merchant context against `data/merchant-catalog.json
 
 If the request includes a Supabase bearer token, the endpoint validates the session and replaces any client-supplied `cardProductIds` with the authenticated user's matched `account_card_matches.card_product_id` values. Anonymous requests keep using the top-10 demo catalog for public extension smoke and shareable API demos.
 
+Successful recommendation calls are also written to `recommendation_events` when Supabase server credentials are available. The event row stores demo vs signed-in mode, user id when present, merchant/category inputs, selected card ids, candidate-card count, and scrubbed request/response snapshots. Logging failures are non-blocking so the recommendation endpoint does not fail if the analytics table has not been applied yet.
+
 ## Wallet Analysis API Shape
 `GET /api/wallet/analysis` requires a Supabase bearer token. It loads the authenticated user's linked Plaid accounts, card-product matches, recent transactions, and the full card catalog before calling `analyzeWallet()`.
 

@@ -38,7 +38,13 @@ function supabaseForAuth(options: {
   userError?: { message: string } | null;
   matches?: unknown[];
   matchError?: { message: string } | null;
+  recommendationEventError?: { message: string } | null;
 }) {
+  const recommendationEventsInsert = vi.fn(async () => ({
+    data: null,
+    error: options.recommendationEventError ?? null,
+  }));
+
   return {
     auth: {
       getUser: vi.fn(async () => ({
@@ -47,12 +53,14 @@ function supabaseForAuth(options: {
       })),
     },
     from: vi.fn((table: string) => {
+      if (table === 'recommendation_events') return { insert: recommendationEventsInsert };
       if (table !== 'account_card_matches') throw new Error(`Unexpected table ${table}`);
       return queryResult({
         data: options.matches ?? [],
         error: options.matchError ?? null,
       });
     }),
+    recommendationEventsInsert,
   };
 }
 
@@ -94,12 +102,11 @@ describe('POST /api/recommend-card', () => {
   });
 
   it('uses the authenticated user matched card products when a bearer token is present', async () => {
-    mocks.getSupabaseAdminClient.mockReturnValue(
-      supabaseForAuth({
-        user: { id: 'user-1' },
-        matches: [{ card_product_id: 'amex-gold' }],
-      }),
-    );
+    const supabase = supabaseForAuth({
+      user: { id: 'user-1' },
+      matches: [{ card_product_id: 'amex-gold' }],
+    });
+    mocks.getSupabaseAdminClient.mockReturnValue(supabase);
 
     const response = await POST(
       request(
@@ -121,6 +128,59 @@ describe('POST /api/recommend-card', () => {
         title: 'Amex Uber Cash may apply to Uber Eats after enrollment.',
       },
     });
+    expect(supabase.recommendationEventsInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: 'user-1',
+        mode: 'signed_in',
+        merchant: 'Uber Eats',
+        category: 'dining',
+        best_card_product_id: 'amex-gold',
+        candidate_card_count: 1,
+      }),
+    );
+  });
+
+  it('logs anonymous recommendations when server credentials are configured', async () => {
+    const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+
+    const supabase = supabaseForAuth({});
+    mocks.getSupabaseAdminClient.mockReturnValue(supabase);
+
+    try {
+      const response = await POST(
+        request({
+          merchant: 'Whole Foods',
+          host: 'wholefoodsmarket.com',
+          categoryHint: 'groceries',
+          cardProductIds: ['amex-gold', 'capital-one-venture-x'],
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(supabase.recommendationEventsInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: null,
+          mode: 'demo',
+          merchant: 'Whole Foods',
+          host: 'wholefoodsmarket.com',
+          category: 'groceries',
+          best_card_product_id: 'amex-gold',
+          candidate_card_count: 2,
+          request_context: expect.objectContaining({
+            host: 'wholefoodsmarket.com',
+            requestedCardProductCount: 2,
+          }),
+        }),
+      );
+    } finally {
+      if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      else process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
+      if (originalServiceRoleKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      else process.env.SUPABASE_SERVICE_ROLE_KEY = originalServiceRoleKey;
+    }
   });
 
   it('returns a controlled response when the authenticated user has no matched cards', async () => {

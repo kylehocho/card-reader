@@ -46,8 +46,38 @@ create table if not exists public.card_reward_rules (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.recommendation_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  mode text not null check (mode in ('demo', 'signed_in')),
+  merchant text not null,
+  host text,
+  url text,
+  title text,
+  category text not null,
+  best_card_product_id text references public.card_products(id) on delete set null,
+  runner_up_card_product_id text references public.card_products(id) on delete set null,
+  matched_offer_title text,
+  candidate_card_count integer not null default 0,
+  request_context jsonb not null default '{}'::jsonb,
+  response_snapshot jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists merchant_catalog_domains_idx on public.merchant_catalog using gin (domains);
 create index if not exists merchant_catalog_aliases_idx on public.merchant_catalog using gin (aliases);
 create index if not exists merchant_offer_rules_merchant_id_idx on public.merchant_offer_rules (merchant_id);
 create index if not exists card_reward_rules_card_product_id_idx on public.card_reward_rules (card_product_id);
 create index if not exists card_reward_rules_reward_category_idx on public.card_reward_rules (reward_category);
+create index if not exists recommendation_events_user_id_created_at_idx on public.recommendation_events (user_id, created_at desc);
+create index if not exists recommendation_events_created_at_idx on public.recommendation_events (created_at desc);
+
+alter table public.merchant_catalog enable row level security;
+alter table public.merchant_offer_rules enable row level security;
+alter table public.card_reward_rules enable row level security;
+alter table public.recommendation_events enable row level security;
+
+drop policy if exists "Users can read own recommendation events" on public.recommendation_events;
+create policy "Users can read own recommendation events"
+on public.recommendation_events for select
+using (auth.uid() = user_id);
