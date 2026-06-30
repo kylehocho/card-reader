@@ -1,5 +1,6 @@
 import { topPriorityCards } from '@/lib/cards/top-priority-cards';
 import type { AnalysisCardProduct, RewardCategory } from '@/lib/benefits/types';
+import merchantCatalog from '@/data/merchant-catalog.json';
 
 export type MerchantContext = {
   merchant?: string;
@@ -34,20 +35,23 @@ export type MerchantRecommendation = {
   } | null;
 };
 
-const domainMerchants: Record<string, { merchant: string; category: RewardCategory; offer?: string }> = {
-  'patagonia.com': { merchant: 'Patagonia', category: 'general', offer: 'Check Amex/Chase merchant offers before checkout.' },
-  'amazon.com': { merchant: 'Amazon', category: 'general' },
-  'delta.com': { merchant: 'Delta Air Lines', category: 'flights' },
-  'united.com': { merchant: 'United Airlines', category: 'flights' },
-  'aa.com': { merchant: 'American Airlines', category: 'flights' },
-  'airbnb.com': { merchant: 'Airbnb', category: 'travel' },
-  'hyatt.com': { merchant: 'Hyatt', category: 'hotel' },
-  'marriott.com': { merchant: 'Marriott', category: 'hotel' },
-  'hilton.com': { merchant: 'Hilton', category: 'hotel' },
-  'wholefoodsmarket.com': { merchant: 'Whole Foods', category: 'groceries' },
-  'ubereats.com': { merchant: 'Uber Eats', category: 'dining' },
-  'uber.com': { merchant: 'Uber', category: 'travel' },
+type MerchantCatalogOffer = {
+  id: string;
+  title: string;
+  source: string;
+  eligible_card_product_ids?: string[];
 };
+
+type MerchantCatalogEntry = {
+  id: string;
+  name: string;
+  domains: string[];
+  aliases: string[];
+  category: RewardCategory;
+  offers: MerchantCatalogOffer[];
+};
+
+const merchantEntries = merchantCatalog as MerchantCatalogEntry[];
 
 const categoryAliases: Array<[RegExp, RewardCategory]> = [
   [/restaurant|dining|food|cafe|coffee|doordash|ubereats|resy/i, 'dining'],
@@ -59,14 +63,15 @@ const categoryAliases: Array<[RegExp, RewardCategory]> = [
   [/rent|apartment/i, 'rent'],
   [/streaming|netflix|hulu|disney|spotify/i, 'streaming'],
   [/travel|rideshare|uber|lyft|parking|transit/i, 'travel'],
+  [/retail|shopping|apparel|clothing|outdoor|marketplace/i, 'general'],
 ];
 
 const rewardAliases: Record<RewardCategory, string[]> = {
   dining: ['dining', 'restaurants'],
   groceries: ['groceries', 'us_supermarkets', 'online_grocery'],
   travel: ['travel'],
-  flights: ['flights', 'air_travel', 'capital_one_travel_flights'],
-  hotel: ['hotel', 'hotels', 'prepaid_hotels', 'capital_one_travel_hotels'],
+  flights: ['flights', 'air_travel'],
+  hotel: ['hotel', 'hotels'],
   gas: ['gas', 'ev_charging'],
   drugstore: ['drugstore'],
   rent: ['rent'],
@@ -85,17 +90,59 @@ function hostnameFromUrl(url?: string) {
   }
 }
 
+function normalize(value?: string | null) {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function merchantText(context: MerchantContext, host: string | null) {
+  return [context.merchant, context.categoryHint, context.title, host].filter(Boolean).join(' ').toLowerCase();
+}
+
+function findCatalogEntry(context: MerchantContext, host: string | null) {
+  if (host) {
+    const domainMatch = merchantEntries.find((entry) => entry.domains.some((domain) => host === domain || host.endsWith(`.${domain}`)));
+    if (domainMatch) return domainMatch;
+  }
+
+  const text = merchantText(context, host);
+  if (!text) return null;
+
+  return (
+    merchantEntries.find((entry) => {
+      const names = [entry.name, ...entry.aliases].map(normalize).filter(Boolean);
+      return names.some((name) => text.includes(name));
+    }) ?? null
+  );
+}
+
+function offerFor(entry: MerchantCatalogEntry | null, candidateCards: AnalysisCardProduct[]) {
+  if (!entry) return null;
+  const candidateIds = new Set(candidateCards.map((card) => card.id));
+  return (
+    entry.offers.find((offer) => {
+      const eligibleIds = offer.eligible_card_product_ids ?? [];
+      return eligibleIds.length === 0 || eligibleIds.some((cardId) => candidateIds.has(cardId));
+    }) ?? null
+  );
+}
+
 function inferMerchant(context: MerchantContext) {
   const host = hostnameFromUrl(context.url);
-  const domainMatch = host ? domainMerchants[host] ?? Object.entries(domainMerchants).find(([domain]) => host.endsWith(`.${domain}`))?.[1] : null;
+  const catalogEntry = findCatalogEntry(context, host);
 
-  if (domainMatch) return domainMatch;
+  if (catalogEntry) {
+    return {
+      merchant: catalogEntry.name,
+      category: catalogEntry.category,
+      catalogEntry,
+    };
+  }
 
   const merchant = context.merchant?.trim() || context.title?.split(/[|–-]/)[0]?.trim() || host || 'Current merchant';
-  const text = [merchant, context.categoryHint, context.title, host].filter(Boolean).join(' ');
+  const text = merchantText(context, host);
   const category = categoryAliases.find(([pattern]) => pattern.test(text))?.[1] ?? 'general';
 
-  return { merchant, category };
+  return { merchant, category, catalogEntry: null };
 }
 
 function multiplierFor(product: AnalysisCardProduct, category: RewardCategory) {
@@ -112,6 +159,7 @@ export function recommendCardForMerchant(context: MerchantContext): MerchantReco
     .sort((left, right) => right.multiplier - left.multiplier || left.card.annual_fee - right.card.annual_fee);
   const best = rankedCards[0] ?? { card: topPriorityCards[0], multiplier: 1 };
   const runnerUp = rankedCards[1];
+  const matchedOffer = offerFor(inferred.catalogEntry, candidateCards);
 
   return {
     merchant: inferred.merchant,
@@ -132,14 +180,13 @@ export function recommendCardForMerchant(context: MerchantContext): MerchantReco
           rewardCurrency: runnerUp.card.reward_currency,
         }
       : undefined,
-    reason: `${inferred.category} context ranks ${best.card.name} highest among ${candidateCards.length} available card${candidateCards.length === 1 ? '' : 's'} at ${best.multiplier}x.`,
-    matchedOffer:
-      'offer' in inferred && inferred.offer
-        ? {
-            title: inferred.offer,
-            source: 'MVP merchant-domain rule',
-            confidence: 'mock',
-          }
-        : null,
+    reason: `${inferred.category} context ranks ${best.card.name} highest among ${candidateCards.length} available card${candidateCards.length === 1 ? '' : 's'} at ${best.multiplier}x${inferred.catalogEntry ? ` using the ${inferred.catalogEntry.name} merchant catalog match` : ''}.`,
+    matchedOffer: matchedOffer
+      ? {
+          title: matchedOffer.title,
+          source: matchedOffer.source,
+          confidence: 'catalog-rule',
+        }
+      : null,
   };
 }

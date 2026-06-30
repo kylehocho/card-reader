@@ -10,6 +10,7 @@
 
 ## Core Modules
 - `data/top-priority-card-products.json`: canonical MVP catalog.
+- `data/merchant-catalog.json`: canonical MVP merchant domains, aliases, categories, and offer hints.
 - `lib/cards/top-priority-cards.ts`: app helper for priority catalog.
 - `lib/cards/card-match-hints.ts`: deterministic Plaid account-to-card-product suggestion helper.
 - `lib/benefits/analyze-wallet.ts`: pure wallet analysis engine.
@@ -37,6 +38,7 @@
 - `plaid_transactions`: transaction history for analysis.
 - `card_products`: card catalog, rewards, and benefits JSON.
 - `account_card_matches`: per-user account-to-card-product mapping.
+- Target recommendation tables are sketched in `supabase/merchant-intelligence.sql`: `merchant_catalog`, `merchant_offer_rules`, and `card_reward_rules`.
 
 ## Card Match Hints
 The client scores linked Plaid account names and institution names against the loaded card catalog. Alias matches and product-token overlap can produce a suggestion, but the app does not write the match automatically. If the user accepts the suggestion, the saved row uses `match_status = suggested` and stores the computed confidence. Manual dropdown saves continue to use `match_status = manual`.
@@ -53,6 +55,8 @@ Input:
   "cardProductIds": ["amex-gold", "chase-sapphire-reserve"]
 }
 ```
+
+The endpoint now normalizes merchant context against `data/merchant-catalog.json` before falling back to text/category inference. The catalog keeps merchant detection thin: the extension sends host/title/category hints, and the backend owns canonical merchant names, reward categories, aliases, and merchant-specific offer hints.
 
 ## Wallet Analysis API Shape
 `GET /api/wallet/analysis` requires a Supabase bearer token. It loads the authenticated user's linked Plaid accounts, card-product matches, recent transactions, and the full card catalog before calling `analyzeWallet()`.
@@ -90,6 +94,6 @@ Merchant recommendation output:
 ## Scaling Path
 - Move card catalog editing into an admin dashboard.
 - Add background sync jobs for Plaid and offer refresh.
-- Add merchant normalization and offer ingestion.
+- Move merchant normalization, offer rules, and card reward rules from JSON into Supabase using the `supabase/merchant-intelligence.sql` blueprint.
 - Add analytics/audit trail for recommendation decisions.
 - Add mobile clients consuming the same analysis API.

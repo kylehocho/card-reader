@@ -135,6 +135,8 @@ curl -sS -X POST http://localhost:3000/api/recommend-card \
   --data '{"merchant":"Patagonia","url":"https://www.patagonia.com/shop/mens","title":"Patagonia Outdoor Clothing","categoryHint":"shopping"}'
 ```
 
+The recommendation endpoint keeps merchant detection intentionally thin. The extension sends merchant, URL, title, and category hints; the backend normalizes those inputs against `data/merchant-catalog.json`, ranks candidate cards from the top-priority card catalog, and returns a reason plus any merchant-specific offer hint. See `docs/CARD_INTELLIGENCE_CATALOG.md` for the scaling path toward Supabase-backed merchant and reward-rule tables.
+
 ## Wallet analysis API
 Signed-in clients can call the shared wallet analysis engine through:
 

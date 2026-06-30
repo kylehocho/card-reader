@@ -1,0 +1,142 @@
+[
+  {
+    "id": "patagonia",
+    "name": "Patagonia",
+    "domains": ["patagonia.com"],
+    "aliases": ["patagonia outdoor clothing"],
+    "category": "general",
+    "offers": [
+      {
+        "id": "patagonia-offer-check",
+        "title": "Check issuer merchant offers before checkout.",
+        "source": "Merchant catalog rule",
+        "eligible_card_product_ids": ["amex-platinum", "amex-gold", "chase-sapphire-reserve", "chase-sapphire-preferred"]
+      }
+    ]
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon",
+    "domains": ["amazon.com"],
+    "aliases": ["amazon.com", "amazon marketplace"],
+    "category": "general",
+    "offers": []
+  },
+  {
+    "id": "delta-air-lines",
+    "name": "Delta Air Lines",
+    "domains": ["delta.com"],
+    "aliases": ["delta", "delta airlines"],
+    "category": "flights",
+    "offers": []
+  },
+  {
+    "id": "united-airlines",
+    "name": "United Airlines",
+    "domains": ["united.com"],
+    "aliases": ["united", "united airlines"],
+    "category": "flights",
+    "offers": []
+  },
+  {
+    "id": "american-airlines",
+    "name": "American Airlines",
+    "domains": ["aa.com", "americanairlines.com"],
+    "aliases": ["aa", "american airlines"],
+    "category": "flights",
+    "offers": []
+  },
+  {
+    "id": "airbnb",
+    "name": "Airbnb",
+    "domains": ["airbnb.com"],
+    "aliases": ["air bnb"],
+    "category": "travel",
+    "offers": []
+  },
+  {
+    "id": "hyatt",
+    "name": "Hyatt",
+    "domains": ["hyatt.com"],
+    "aliases": ["world of hyatt"],
+    "category": "hotel",
+    "offers": []
+  },
+  {
+    "id": "marriott",
+    "name": "Marriott",
+    "domains": ["marriott.com"],
+    "aliases": ["marriott bonvoy"],
+    "category": "hotel",
+    "offers": []
+  },
+  {
+    "id": "hilton",
+    "name": "Hilton",
+    "domains": ["hilton.com"],
+    "aliases": ["hilton honors"],
+    "category": "hotel",
+    "offers": []
+  },
+  {
+    "id": "whole-foods",
+    "name": "Whole Foods",
+    "domains": ["wholefoodsmarket.com"],
+    "aliases": ["whole foods market"],
+    "category": "groceries",
+    "offers": []
+  },
+  {
+    "id": "trader-joes",
+    "name": "Trader Joe's",
+    "domains": ["traderjoes.com"],
+    "aliases": ["trader joe", "trader joe's"],
+    "category": "groceries",
+    "offers": []
+  },
+  {
+    "id": "resy",
+    "name": "Resy",
+    "domains": ["resy.com"],
+    "aliases": ["resy restaurant"],
+    "category": "dining",
+    "offers": [
+      {
+        "id": "amex-gold-resy-credit",
+        "title": "Amex Gold Resy credit may apply after enrollment.",
+        "source": "Merchant catalog rule",
+        "eligible_card_product_ids": ["amex-gold"]
+      }
+    ]
+  },
+  {
+    "id": "uber",
+    "name": "Uber",
+    "domains": ["uber.com"],
+    "aliases": ["uber rides", "uber trip"],
+    "category": "travel",
+    "offers": [
+      {
+        "id": "amex-uber-cash",
+        "title": "Amex Uber Cash may apply after enrollment.",
+        "source": "Merchant catalog rule",
+        "eligible_card_product_ids": ["amex-platinum", "amex-gold"]
+      }
+    ]
+  },
+  {
+    "id": "uber-eats",
+    "name": "Uber Eats",
+    "domains": ["ubereats.com"],
+    "aliases": ["uber eats"],
+    "category": "dining",
+    "offers": [
+      {
+        "id": "amex-uber-eats-cash",
+        "title": "Amex Uber Cash may apply to Uber Eats after enrollment.",
+        "source": "Merchant catalog rule",
+        "eligible_card_product_ids": ["amex-platinum", "amex-gold"]
+      }
+    ]
+  }
+]
