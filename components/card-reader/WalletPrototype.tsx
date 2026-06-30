@@ -848,6 +848,28 @@ function readableRewardCategory(category: RewardCategory) {
   }
 }
 
+function dedupeTransactionRecommendations(items: TransactionRecommendationView[]) {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = [item.merchant, item.category, item.currentCard, item.bestCard].join('|').toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupeNotifications(items: NotificationItem[]) {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = item.title.trim().toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function accountMatchStateLabel(account: PlaidConnectedAccount, saveState: 'idle' | 'saving' | 'saved' | 'error') {
   if (saveState === 'saving') return 'Saving';
   if (saveState === 'saved') return 'Saved';
@@ -1052,7 +1074,6 @@ export default function WalletPrototype() {
   const [showScanner, setShowScanner] = useState(false);
   const [scanStep, setScanStep] = useState<ScanStep>('camera');
   const [screen, setScreen] = useState<Screen>('wallet');
-  const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(notifications[0].id);
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
   const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999', isBusiness: false });
   const [emailDraft, setEmailDraft] = useState('');
@@ -1239,10 +1260,6 @@ export default function WalletPrototype() {
 
     return (walletAnalysis?.alerts ?? []).map(alertFromAnalysis);
   }, [isUserBackedWallet, notifications, walletAnalysis]);
-  const selectedNotification = useMemo(
-    () => visibleNotifications.find((n) => n.id === selectedNotificationId) ?? visibleNotifications[0] ?? null,
-    [selectedNotificationId, visibleNotifications],
-  );
   const filteredRecommendations = useMemo<RecommendationItem[]>(() => [], []);
   const selectedRecommendation = useMemo(
     () => filteredRecommendations.find((r) => r.id === selectedRecommendationId) ?? filteredRecommendations[0],
@@ -1314,6 +1331,8 @@ export default function WalletPrototype() {
       .slice(0, 5);
   }, [cardProducts, plaidAccounts, plaidTransactions]);
   const transactionRecommendations = walletAnalysis ? analysisTransactionRecommendations : localTransactionRecommendations;
+  const expiringValueRecommendations = useMemo(() => dedupeTransactionRecommendations(transactionRecommendations).slice(0, 4), [transactionRecommendations]);
+  const expiringValueAlerts = useMemo(() => dedupeNotifications(visibleNotifications).slice(0, 4), [visibleNotifications]);
   const featuredTransactionRecommendation = transactionRecommendations[0] ?? null;
   const featuredMerchant = merchantResults[0] ?? seedMerchantResults[0];
   const walletStackItems = useMemo(
@@ -2754,81 +2773,55 @@ export default function WalletPrototype() {
                 <div className="w-[56px]" />
               </div>
 
-              <div className="rounded-[26px] border border-white/12 bg-[#0d1224]/90 p-3.5 backdrop-blur-xl">
-                <p className="text-xs uppercase tracking-[0.22em] text-white/50">Recommendations</p>
-                <h2 className="mt-1 text-[22px] font-semibold tracking-[-0.03em]">Expiring perks and missed value</h2>
-                <p className="mt-1 text-[13px] leading-5 text-white/70">Synced transactions are checked against the matched card catalog.</p>
-              </div>
-
-
-              {transactionRecommendations.length > 0 && (
-                <div className="grid gap-2.5">
-                  {transactionRecommendations.map((item, index) => (
-                    <div key={item.id} className={index === 0 ? 'rounded-[24px] bg-white p-3.5 text-[#080a0f]' : 'rounded-[24px] border border-white/12 bg-[#0d1224]/90 p-3.5 backdrop-blur-xl'}>
-                      <div className="flex items-center justify-between gap-3">
+              {expiringValueRecommendations.length > 0 && (
+                <div className="grid gap-2">
+                  {expiringValueRecommendations.map((item) => (
+                    <div key={item.id} className="rounded-[24px] border border-white/12 bg-[#0d1224]/90 p-3.5 backdrop-blur-xl">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className={index === 0 ? 'text-[11px] uppercase tracking-[0.18em] text-black/44' : 'text-[11px] uppercase tracking-[0.18em] text-white/50'}>
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">
                             {readableRewardCategory(item.category)} · {item.date}
                           </p>
-                          <h3 className={index === 0 ? 'mt-1 truncate text-[18px] font-semibold tracking-[-0.03em]' : 'mt-1 truncate text-[18px] font-semibold tracking-[-0.03em] text-white'}>{item.merchant}</h3>
+                          <h3 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.03em] text-white">{item.merchant}</h3>
                         </div>
-                        <span className={index === 0 ? 'shrink-0 rounded-full bg-black px-2.5 py-1 text-[11px] font-semibold text-white' : 'shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white'}>
-                          Missed {item.estimatedLift}
+                        <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#080a0f]">
+                          {item.estimatedLift}
                         </span>
                       </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <div className={index === 0 ? 'rounded-2xl bg-black/[0.05] px-3 py-2' : 'rounded-2xl bg-white/[0.06] px-3 py-2'}>
-                          <p className={index === 0 ? 'text-[11px] text-black/40' : 'text-[11px] text-white/40'}>Paid with</p>
-                          <p className={index === 0 ? 'mt-1 truncate text-[13px] font-semibold' : 'mt-1 truncate text-[13px] font-semibold text-white'}>{item.currentCard}</p>
-                        </div>
-                        <div className={index === 0 ? 'rounded-2xl bg-black/[0.05] px-3 py-2' : 'rounded-2xl bg-white/[0.06] px-3 py-2'}>
-                          <p className={index === 0 ? 'text-[11px] text-black/40' : 'text-[11px] text-white/40'}>Better card</p>
-                          <p className={index === 0 ? 'mt-1 truncate text-[13px] font-semibold' : 'mt-1 truncate text-[13px] font-semibold text-white'}>{item.bestCard}</p>
-                        </div>
-                      </div>
-                      <p className={index === 0 ? 'mt-2 text-[12px] leading-5 text-black/62' : 'mt-2 text-[12px] leading-5 text-white/66'}>{item.reason}</p>
+                      <p className="mt-2 text-[13px] leading-5 text-white/72">
+                        Use <span className="font-semibold text-white">{item.bestCard}</span> instead of {item.currentCard}.
+                      </p>
                     </div>
                   ))}
-
                 </div>
               )}
 
-              {transactionRecommendations.length === 0 && plaidTransactions.length > 0 && (
+              {expiringValueRecommendations.length === 0 && plaidTransactions.length > 0 && (
                 <div className="rounded-[28px] border border-white/12 bg-[#0d1224]/90 p-4 text-sm leading-6 text-white/70 backdrop-blur-xl">
-                  Synced transactions are loaded, but the current matched card already ties or wins under the starter reward rules. More issuer rules and merchant categories will make this sharper.
+                  No missed-value transactions right now.
                 </div>
               )}
 
-              {visibleNotifications.length === 0 && transactionRecommendations.length === 0 && (
+              {expiringValueAlerts.length === 0 && expiringValueRecommendations.length === 0 && (
                 <div className="rounded-[28px] border border-white/12 bg-[#0d1224]/90 p-4 text-sm leading-6 text-white/70 backdrop-blur-xl">
-                  No active expiring-value alerts yet. Connect a card and sync transactions to start tracking unused credits, expiring perks, and missed-value opportunities.
+                  No expiring-value alerts yet.
                 </div>
               )}
 
-              {visibleNotifications.length > 0 && (
-                <div className="grid gap-3">
-                  {visibleNotifications.map((item) => (
-                    <button
+              {expiringValueAlerts.length > 0 && (
+                <div className="grid gap-2">
+                  {expiringValueAlerts.map((item) => (
+                    <div
                       key={item.id}
-                      type="button"
-                      onClick={() => setSelectedNotificationId(item.id)}
-                      className={`rounded-[28px] border p-4 text-left transition duration-200 ${severityTone(item.severity)} ${selectedNotificationId === item.id ? 'ring-2 ring-white/20 shadow-lg' : 'hover:bg-white/10'}`}
+                      className={`rounded-[24px] border p-3.5 ${severityTone(item.severity)}`}
                     >
-                      <p className="text-xs uppercase tracking-[0.22em] text-white/50">{item.severity}</p>
-                      <p className="mt-2 text-base font-medium text-white">{item.title}</p>
-                    </button>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="min-w-0 truncate text-[15px] font-semibold text-white">{item.title}</p>
+                        <span className="shrink-0 text-[11px] uppercase tracking-[0.16em] text-white/45">{item.severity}</span>
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-white/62">{item.detail}</p>
+                    </div>
                   ))}
-                </div>
-              )}
-
-              {selectedNotification && (
-                <div className="rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/50">Notification detail</p>
-                  <h3 className="mt-2 text-xl font-semibold text-white">{selectedNotification.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/72">{selectedNotification.detail}</p>
-                  <div className="mt-4 rounded-2xl bg-[#8d949f]/24 p-4 text-sm text-white/90">
-                    <span className="font-medium">Recommended action:</span> {selectedNotification.action}
-                  </div>
                 </div>
               )}
             </section>
