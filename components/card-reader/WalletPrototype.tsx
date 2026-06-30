@@ -853,12 +853,12 @@ function accountMatchStateLabel(account: PlaidConnectedAccount, saveState: 'idle
   if (saveState === 'saved') return 'Saved';
   if (saveState === 'error') return 'Sync issue';
   if (account.matchStatus === 'suggested') return 'Suggested';
-  return account.cardProductId ? 'Matched' : 'Needs review';
+  return account.cardProductId ? 'Synced' : 'Unassigned';
 }
 
 function matchToneClass(label: string) {
   if (label === 'Sync issue') return 'bg-rose-300/16 text-rose-50';
-  if (label === 'Needs review') return 'bg-amber-300/16 text-amber-50';
+  if (label === 'Unassigned') return 'bg-amber-300/16 text-amber-50';
   if (label === 'Suggested') return 'bg-sky-300/16 text-sky-50';
   return 'bg-emerald-300/16 text-emerald-50';
 }
@@ -1072,6 +1072,7 @@ export default function WalletPrototype() {
   const [plaidError, setPlaidError] = useState<string | null>(null);
   const [matchStatusByAccount, setMatchStatusByAccount] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const [editingMatchAccountIds, setEditingMatchAccountIds] = useState<string[]>([]);
+  const [removingAccountIds, setRemovingAccountIds] = useState<string[]>([]);
   const [transactionSyncStatus, setTransactionSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [plaidTransactions, setPlaidTransactions] = useState<PlaidTransactionRow[]>([]);
   const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
@@ -1612,6 +1613,60 @@ export default function WalletPrototype() {
     setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
     setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saved' }));
     void loadWalletAnalysis();
+  }
+
+  async function removeConnectedAccount(account: PlaidConnectedAccount) {
+    if (!user || !account.dbId) {
+      setPlaidError('Sign in again before removing this connected account.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Remove ${account.cardProductName ?? account.name} from Connected Accounts?`);
+    if (!confirmed) return;
+
+    const supabase = getBrowserSupabaseClient();
+    if (!supabase) return;
+
+    setRemovingAccountIds((current) => [...new Set([...current, account.accountId])]);
+    setPlaidError(null);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      if (!accessToken) throw new Error('Sign in again before removing this connected account.');
+
+      const response = await fetch('/api/plaid/remove-account', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + accessToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plaidAccountId: account.dbId }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Unable to remove connected account.');
+      }
+
+      const nextAccounts = plaidAccounts.filter((currentAccount) => currentAccount.accountId !== account.accountId);
+      syncPlaidAccountsToWallet(nextAccounts);
+      setPendingLinkedAccounts((currentAccounts) => currentAccounts.filter((currentAccount) => currentAccount.accountId !== account.accountId));
+      setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
+      setMatchStatusByAccount((current) => {
+        const next = { ...current };
+        delete next[account.accountId];
+        return next;
+      });
+      if (selectedId === `plaid-${account.accountId}`) {
+        setSelectedId(nextAccounts[0] ? `plaid-${nextAccounts[0].accountId}` : seedCards[0].id);
+      }
+      void loadWalletAnalysis();
+    } catch (error) {
+      setPlaidError(error instanceof Error ? error.message : 'Unable to remove connected account.');
+    } finally {
+      setRemovingAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
+    }
   }
 
   function finishLinkedCardSetup() {
@@ -2367,6 +2422,7 @@ export default function WalletPrototype() {
                     const showMatchEditor = !account.cardProductId || isEditingMatch;
                     const matchStateLabel = accountMatchStateLabel(account, saveState);
                     const matchSuggestion = matchSuggestionByAccountId.get(account.accountId) ?? null;
+                    const isRemoving = removingAccountIds.includes(account.accountId);
                     const displayName = account.cardProductName ?? account.name;
                     const detailParts = [
                       account.institutionName,
@@ -2441,12 +2497,32 @@ export default function WalletPrototype() {
                                 ))}
                               </select>
                               {account.cardProductId && (
+                                <div className="mt-2 flex items-center justify-between gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId))}
+                                    className="text-[12px] font-medium text-white/62"
+                                  >
+                                    Cancel edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isRemoving}
+                                    onClick={() => void removeConnectedAccount(account)}
+                                    className="text-[12px] font-medium text-rose-100/76 disabled:opacity-50"
+                                  >
+                                    {isRemoving ? 'Removing...' : 'Remove'}
+                                  </button>
+                                </div>
+                              )}
+                              {!account.cardProductId && (
                                 <button
                                   type="button"
-                                  onClick={() => setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId))}
-                                  className="mt-2 text-[12px] font-medium text-white/62"
+                                  disabled={isRemoving}
+                                  onClick={() => void removeConnectedAccount(account)}
+                                  className="mt-2 text-[12px] font-medium text-rose-100/76 disabled:opacity-50"
                                 >
-                                  Cancel edit
+                                  {isRemoving ? 'Removing...' : 'Remove account'}
                                 </button>
                               )}
                             </div>
@@ -2457,6 +2533,14 @@ export default function WalletPrototype() {
                               Synced
                             </span>
                             <div className="flex shrink-0 items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={isRemoving}
+                                onClick={() => void removeConnectedAccount(account)}
+                                className="rounded-full bg-rose-300/12 px-3 py-1.5 text-xs font-medium text-rose-50/82 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                {isRemoving ? 'Removing' : 'Remove'}
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => setEditingMatchAccountIds((current) => [...new Set([...current, account.accountId])])}
