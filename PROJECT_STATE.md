@@ -19,6 +19,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Added first-class web-to-extension auth handoff at `/extension/connect`, so signed-in users can sync the current Supabase session into the extension without pasting tokens manually.
 - Added extension token-expiry handling so expired signed-in sessions surface a reconnect-needed state instead of silently falling back to demo recommendations.
 - Added backend recommendation event logging for successful `/api/recommend-card` calls, with a Supabase `recommendation_events` SQL blueprint and typed route coverage.
+- Added authenticated `GET /api/recommendation-events` so signed-in smoke tooling can read recent recommendation history once the migration is applied.
 - Added optional Supabase bearer auth to `/api/recommend-card` so authenticated extension clients can rank only the user's matched card products instead of the top-10 demo catalog.
 - Added a first-pass merchant intelligence catalog for the recommendation engine, plus merchant-context tests and a Supabase table blueprint for moving merchant/reward rules out of JSON later.
 - Started browser extension local smoke in isolated Chrome; patched extension fallback behavior after automation showed session storage was not populated from merchant page navigation.
@@ -58,6 +59,6 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 ## Next Best Actions
 1. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
 2. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
-3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production.
+3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
 4. Apply the `recommendation_events` migration to production Supabase, then query recent recommendation logs during extension smoke.
 5. Add a manual card add flow that persists card-product matches without Plaid.

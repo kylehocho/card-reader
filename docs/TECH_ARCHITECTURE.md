@@ -62,6 +62,8 @@ If the request includes a Supabase bearer token, the endpoint validates the sess
 
 Successful recommendation calls are also written to `recommendation_events` when Supabase server credentials are available. The event row stores demo vs signed-in mode, user id when present, merchant/category inputs, selected card ids, candidate-card count, and scrubbed request/response snapshots. Logging failures are non-blocking so the recommendation endpoint does not fail if the analytics table has not been applied yet.
 
+`GET /api/recommendation-events` is an authenticated read endpoint for recent signed-in recommendation history. It returns the user's latest event rows and exposes `meta.loggingAvailable=false` when the SQL migration has not been applied yet, which lets extension smoke tooling distinguish "no events" from "logging table unavailable."
+
 ## Wallet Analysis API Shape
 `GET /api/wallet/analysis` requires a Supabase bearer token. It loads the authenticated user's linked Plaid accounts, card-product matches, recent transactions, and the full card catalog before calling `analyzeWallet()`.
 
