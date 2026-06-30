@@ -29,6 +29,8 @@ Detect merchant context while a user shops and recommend the best linked card or
 
 The background worker also derives fallback context from `tabs` URL/title when content-script messaging misses a page update, so the extension can still produce a recommendation for known merchant domains.
 
+`/api/recommend-card` now supports authenticated recommendations when a Supabase bearer token is present: it validates the user and ranks only the card products matched to that user's linked accounts. Anonymous extension/API calls keep using the top-10 demo catalog.
+
 ## Security/Privacy
 - Only send merchant context and page URL for active tab.
 - Do not scrape payment forms.
@@ -37,8 +39,8 @@ The background worker also derives fallback context from `tabs` URL/title when c
 - Add user controls before production release.
 
 ## Later
-- Authenticated extension session.
-- Local cache of user card products.
+- Auth handoff from web app to extension.
+- Local cache of the Supabase session or a scoped extension token.
 - Offer match notifications.
 - Airport/lounge context from location or travel booking pages.
 

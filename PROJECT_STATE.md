@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Added optional Supabase bearer auth to `/api/recommend-card` so authenticated extension clients can rank only the user's matched card products instead of the top-10 demo catalog.
 - Added a first-pass merchant intelligence catalog for the recommendation engine, plus merchant-context tests and a Supabase table blueprint for moving merchant/reward rules out of JSON later.
 - Started browser extension local smoke in isolated Chrome; patched extension fallback behavior after automation showed session storage was not populated from merchant page navigation.
 - Added `/api/wallet/analysis` route tests for auth, Supabase error, and happy-path response shape.
@@ -37,6 +38,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Transaction sync and first-pass missed-value recommendations.
 - Top-10 card catalog and mock analysis data.
 - Authenticated wallet analysis API at `GET /api/wallet/analysis`.
+- Auth-aware merchant recommendation API at `POST /api/recommend-card`.
 - Merchant catalog normalization for known extension smoke merchants and offer hints.
 - Deterministic card-match hints in the Plaid matching UI.
 
@@ -50,7 +52,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 
 ## Next Best Actions
 1. Complete manual or extension-capable browser smoke using `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
-2. Add authenticated extension sessions so recommendations use the signed-in user's linked cards instead of the top-10 demo catalog.
+2. Add auth handoff/session storage in the browser extension so it can send the Supabase bearer token to `/api/recommend-card`.
 3. Add a browser-driven signed-in Plaid smoke against production.
 4. Move merchant catalog and offer rules into Supabase once import/admin ownership is ready.
 5. Add a manual card add flow that persists card-product matches without Plaid.

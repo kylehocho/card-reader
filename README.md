@@ -137,6 +137,8 @@ curl -sS -X POST http://localhost:3000/api/recommend-card \
 
 The recommendation endpoint keeps merchant detection intentionally thin. The extension sends merchant, URL, title, and category hints; the backend normalizes those inputs against `data/merchant-catalog.json`, ranks candidate cards from the top-priority card catalog, and returns a reason plus any merchant-specific offer hint. See `docs/CARD_INTELLIGENCE_CATALOG.md` for the scaling path toward Supabase-backed merchant and reward-rule tables.
 
+When `/api/recommend-card` receives a Supabase bearer token, it validates the session and uses the signed-in user's matched card products from `account_card_matches` instead of any client-supplied demo card list. Anonymous calls keep using the top-10 catalog so public extension smoke tests still work.
+
 ## Wallet analysis API
 Signed-in clients can call the shared wallet analysis engine through:
 
