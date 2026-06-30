@@ -17,6 +17,8 @@ Detect merchant context while a user shops and recommend the best linked card or
 - `extension/manifest.json`
 - `extension/content.js`
 - `extension/background.js`
+- `extension/options.html`
+- `extension/options.js`
 - `extension/popup.html`
 - `extension/popup.js`
 - `extension/styles.css`
@@ -31,6 +33,8 @@ The background worker also derives fallback context from `tabs` URL/title when c
 
 `/api/recommend-card` now supports authenticated recommendations when a Supabase bearer token is present: it validates the user and ranks only the card products matched to that user's linked accounts. Anonymous extension/API calls keep using the top-10 demo catalog.
 
+The extension options page stores the API base URL in `chrome.storage.sync` and the Supabase bearer token in `chrome.storage.local`. Background recommendations attach `Authorization: Bearer <token>` when local token storage is populated; otherwise they send the demo top-10 card IDs.
+
 ## Security/Privacy
 - Only send merchant context and page URL for active tab.
 - Do not scrape payment forms.
@@ -39,8 +43,8 @@ The background worker also derives fallback context from `tabs` URL/title when c
 - Add user controls before production release.
 
 ## Later
-- Auth handoff from web app to extension.
-- Local cache of the Supabase session or a scoped extension token.
+- First-class auth handoff from web app to extension instead of manual token paste.
+- Scoped extension token with refresh/expiry handling.
 - Offer match notifications.
 - Airport/lounge context from location or travel booking pages.
 

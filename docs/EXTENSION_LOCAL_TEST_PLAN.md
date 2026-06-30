@@ -3,14 +3,16 @@
 Last updated: 2026-06-29
 
 ## Goal
-Verify the Manifest V3 browser extension can detect merchant context from real shopping pages, call the recommendation API, and show a usable card recommendation before investing in authenticated extension sessions.
+Verify the Manifest V3 browser extension can detect merchant context from real shopping pages, call the recommendation API, and show usable anonymous or signed-in card recommendations.
 
 ## Setup
 1. Run the app locally with `npm run dev` if testing against local API changes.
-2. For local API testing, set `API_BASE_URL` in `extension/background.js` to `http://localhost:3000`.
-3. For production API testing, leave `API_BASE_URL` as `https://card-reader-xi.vercel.app`.
-4. Open `chrome://extensions`, enable developer mode, choose Load unpacked, and select the `extension/` folder.
-5. Keep the extension service worker console open while testing.
+2. Open extension settings from the popup or Chrome extension details page.
+3. For local API testing, set the API base URL to `http://localhost:3000`.
+4. For production API testing, leave the API base URL as `https://card-reader-xi.vercel.app`.
+5. To test signed-in recommendations, paste a Supabase access token into extension settings. The token is stored in `chrome.storage.local`, not sync storage.
+6. Open `chrome://extensions`, enable developer mode, choose Load unpacked, and select the `extension/` folder.
+7. Keep the extension service worker console open while testing.
 
 ## Priority Pages
 - Patagonia shopping page: validates general retail and outdoor merchant context.
@@ -22,7 +24,9 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 ## Checks
 - Content script returns hostname, page title, canonical URL, and visible merchant hints.
 - Background worker calls `POST /api/recommend-card` exactly once per active request.
+- Anonymous mode sends demo top-10 card IDs; signed-in mode sends the bearer token and lets the API use the user's matched card products.
 - Popup shows merchant, category, best card, runner-up if present, and the recommendation reason.
+- Popup status shows either `Demo catalog` or `Signed-in wallet`.
 - Extension handles API errors with a visible fallback state instead of a blank popup.
 - No payment-form text, card numbers, or full page body content is collected.
 

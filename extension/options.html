@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Card Reader Settings</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="options-page">
+    <main>
+      <header>
+        <p class="eyebrow">Card Reader</p>
+        <h1>Settings</h1>
+      </header>
+
+      <section class="panel settings-panel">
+        <label for="apiBaseUrl">API</label>
+        <input id="apiBaseUrl" type="url" placeholder="https://card-reader-xi.vercel.app" />
+
+        <label for="authToken">Supabase bearer token</label>
+        <textarea id="authToken" spellcheck="false" autocomplete="off" placeholder="Paste a Supabase access token"></textarea>
+
+        <div class="button-row">
+          <button id="saveSettings" type="button">Save</button>
+          <button id="clearToken" type="button" class="secondary">Clear token</button>
+        </div>
+
+        <p id="status" class="muted">Settings load automatically.</p>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -55,19 +55,25 @@ function contextFromTab(tab) {
   };
 }
 
-async function apiBaseUrl() {
-  const stored = await chrome.storage.sync.get(['apiBaseUrl']);
-  return stored.apiBaseUrl || DEFAULT_API_BASE_URL;
+async function extensionSettings() {
+  const [syncStored, localStored] = await Promise.all([chrome.storage.sync.get(['apiBaseUrl']), chrome.storage.local.get(['authToken'])]);
+  return {
+    apiBaseUrl: syncStored.apiBaseUrl || DEFAULT_API_BASE_URL,
+    authToken: typeof localStored.authToken === 'string' ? localStored.authToken.trim() : ''
+  };
 }
 
 async function recommend(context) {
-  const baseUrl = await apiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/recommend-card`, {
+  const settings = await extensionSettings();
+  const headers = { 'Content-Type': 'application/json' };
+  if (settings.authToken) headers.Authorization = `Bearer ${settings.authToken}`;
+
+  const response = await fetch(`${settings.apiBaseUrl}/api/recommend-card`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({
       ...context,
-      cardProductIds: DEMO_CARD_IDS
+      ...(settings.authToken ? {} : { cardProductIds: DEMO_CARD_IDS })
     })
   });
 

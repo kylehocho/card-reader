@@ -124,7 +124,8 @@ By default the extension points at production:
 https://card-reader-xi.vercel.app
 ```
 
-For local testing, edit `API_BASE_URL` in `extension/background.js` to `http://localhost:3000`.
+For local testing, open the extension settings page and set the API base URL to `http://localhost:3000`.
+To test signed-in recommendations, paste a Supabase access token into extension settings. The token is stored in `chrome.storage.local`; API URL preferences use `chrome.storage.sync`.
 See `docs/EXTENSION_LOCAL_TEST_PLAN.md` for the browser smoke matrix and evidence to capture.
 
 API smoke test:

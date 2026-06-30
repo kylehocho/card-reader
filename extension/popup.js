@@ -1,6 +1,8 @@
 const merchantEl = document.querySelector('#merchant');
 const stateEl = document.querySelector('#state');
 const apiBaseUrlEl = document.querySelector('#apiBaseUrl');
+const authStatusEl = document.querySelector('#authStatus');
+const openOptionsEl = document.querySelector('#openOptions');
 
 function renderRecommendation(context, recommendation) {
   merchantEl.textContent = recommendation?.merchant || context?.merchant || 'Current merchant';
@@ -22,12 +24,14 @@ function renderError(context, error) {
 }
 
 async function refresh() {
-  const [{ currentContext, currentRecommendation, currentError }, { apiBaseUrl }] = await Promise.all([
+  const [{ currentContext, currentRecommendation, currentError }, { apiBaseUrl }, { authToken }] = await Promise.all([
     chrome.storage.session.get(['currentContext', 'currentRecommendation', 'currentError']),
-    chrome.storage.sync.get(['apiBaseUrl'])
+    chrome.storage.sync.get(['apiBaseUrl']),
+    chrome.storage.local.get(['authToken'])
   ]);
 
   apiBaseUrlEl.value = apiBaseUrl || 'https://card-reader-xi.vercel.app';
+  authStatusEl.textContent = authToken ? 'Signed-in wallet' : 'Demo catalog';
 
   if (currentRecommendation) {
     renderRecommendation(currentContext, currentRecommendation);
@@ -40,6 +44,10 @@ async function refresh() {
 apiBaseUrlEl.addEventListener('change', async () => {
   const value = apiBaseUrlEl.value.trim() || 'https://card-reader-xi.vercel.app';
   await chrome.storage.sync.set({ apiBaseUrl: value });
+});
+
+openOptionsEl.addEventListener('click', () => {
+  chrome.runtime.openOptionsPage();
 });
 
 void refresh();
