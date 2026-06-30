@@ -13,7 +13,8 @@
     "seed:plaid:top10": "node scripts/seed-top-priority-mock-wallet.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.108.1",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.0",
     "framer-motion": "^12.38.0",
     "next": "16.2.4",
     "plaid": "^42.2.0",
