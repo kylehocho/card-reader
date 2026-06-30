@@ -77,6 +77,35 @@ alter table public.merchant_offer_rules enable row level security;
 alter table public.card_reward_rules enable row level security;
 alter table public.recommendation_events enable row level security;
 
+grant select on public.merchant_catalog to authenticated;
+grant select on public.merchant_offer_rules to authenticated;
+grant select on public.card_reward_rules to authenticated;
+
+drop policy if exists "Authenticated users can read active merchants" on public.merchant_catalog;
+create policy "Authenticated users can read active merchants"
+on public.merchant_catalog for select
+to authenticated
+using (is_active = true);
+
+drop policy if exists "Authenticated users can read merchant offer rules" on public.merchant_offer_rules;
+create policy "Authenticated users can read merchant offer rules"
+on public.merchant_offer_rules for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.merchant_catalog merchant
+    where merchant.id = merchant_offer_rules.merchant_id
+      and merchant.is_active = true
+  )
+);
+
+drop policy if exists "Authenticated users can read card reward rules" on public.card_reward_rules;
+create policy "Authenticated users can read card reward rules"
+on public.card_reward_rules for select
+to authenticated
+using (true);
+
 drop policy if exists "Users can read own recommendation events" on public.recommendation_events;
 create policy "Users can read own recommendation events"
 on public.recommendation_events for select

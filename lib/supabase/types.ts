@@ -311,6 +311,158 @@ export type Database = {
           },
         ];
       };
+      merchant_catalog: {
+        Row: {
+          id: string;
+          name: string;
+          domains: string[];
+          aliases: string[];
+          reward_category: string;
+          mcc_codes: string[];
+          is_active: boolean;
+          source: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          domains?: string[];
+          aliases?: string[];
+          reward_category?: string;
+          mcc_codes?: string[];
+          is_active?: boolean;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          domains?: string[];
+          aliases?: string[];
+          reward_category?: string;
+          mcc_codes?: string[];
+          is_active?: boolean;
+          source?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      merchant_offer_rules: {
+        Row: {
+          id: string;
+          merchant_id: string;
+          title: string;
+          issuer: string | null;
+          eligible_card_product_ids: string[];
+          enrollment_required: boolean;
+          activation_required: boolean;
+          starts_at: string | null;
+          ends_at: string | null;
+          confidence: string;
+          source: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          merchant_id: string;
+          title: string;
+          issuer?: string | null;
+          eligible_card_product_ids?: string[];
+          enrollment_required?: boolean;
+          activation_required?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          confidence?: string;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          merchant_id?: string;
+          title?: string;
+          issuer?: string | null;
+          eligible_card_product_ids?: string[];
+          enrollment_required?: boolean;
+          activation_required?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          confidence?: string;
+          source?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'merchant_offer_rules_merchant_id_fkey';
+            columns: ['merchant_id'];
+            isOneToOne: false;
+            referencedRelation: 'merchant_catalog';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      card_reward_rules: {
+        Row: {
+          id: string;
+          card_product_id: string;
+          reward_category: string;
+          multiplier: number;
+          merchant_id: string | null;
+          requires_portal: boolean;
+          cap_value: number | null;
+          cap_window: string | null;
+          starts_at: string | null;
+          ends_at: string | null;
+          source: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          card_product_id: string;
+          reward_category: string;
+          multiplier: number;
+          merchant_id?: string | null;
+          requires_portal?: boolean;
+          cap_value?: number | null;
+          cap_window?: string | null;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          card_product_id?: string;
+          reward_category?: string;
+          multiplier?: number;
+          merchant_id?: string | null;
+          requires_portal?: boolean;
+          cap_value?: number | null;
+          cap_window?: string | null;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          source?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_reward_rules_card_product_id_fkey';
+            columns: ['card_product_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'card_reward_rules_merchant_id_fkey';
+            columns: ['merchant_id'];
+            isOneToOne: false;
+            referencedRelation: 'merchant_catalog';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       recommendation_events: {
         Row: {
           id: string;

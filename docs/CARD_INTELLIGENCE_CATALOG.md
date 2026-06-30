@@ -8,6 +8,8 @@ The recommendation product should treat merchant detection as a thin signal coll
 - `data/merchant-catalog.json` stores normalized merchants, domains, aliases, categories, and merchant-specific offer hints.
 - `lib/recommendation/merchant-context.ts` joins those catalogs in memory for `POST /api/recommend-card`.
 - `card_products` in Supabase stores card catalog rows for signed-in wallet analysis.
+- `merchant_catalog`, `merchant_offer_rules`, and `card_reward_rules` can now be seeded into Supabase with `npm run seed:merchant-intelligence`.
+- `GET /api/merchant-intelligence` returns backend availability/counts for the seeded merchant intelligence tables.
 
 ## Recommendation Flow
 1. Extension sends context: merchant, URL, page title, category hint, and available card product IDs.
@@ -17,7 +19,7 @@ The recommendation product should treat merchant detection as a thin signal coll
 5. Backend attaches any merchant-specific offer hint that applies to the user's cards.
 6. Response includes best card, runner-up, reason, merchant/category normalization, and matched offer.
 
-## Target Supabase Tables
+## Supabase Tables
 - `merchant_catalog`: canonical merchant name, domains, aliases, reward category, MCC/category metadata, and active status.
 - `merchant_offer_rules`: issuer/card-specific merchant offers, enrollment requirements, expiry, geography, and confidence/source.
 - `card_reward_rules`: normalized reward multipliers by card, category, merchant, portal requirement, cap, and effective dates.
@@ -26,7 +28,7 @@ The recommendation product should treat merchant detection as a thin signal coll
 
 ## Near-Term Build Order
 1. Keep expanding `merchant-catalog.json` for the priority merchants used in extension smoke tests.
-2. Move merchant catalog and offer rules into Supabase once admin/import workflows exist.
-3. Add a recommendation decision log so every response can explain which merchant, category, reward rule, and offer rule won.
-4. Add authenticated extension sessions so recommendations use only the user's linked cards instead of the top-10 demo catalog.
-5. Add issuer offer ingestion later; until then, merchant offers should be explicitly labeled as catalog hints.
+2. Seed merchant catalog, offer rules, and top-priority reward rules into Supabase with `npm run seed:merchant-intelligence`.
+3. Keep recommendation execution on the local JSON fallback until the Supabase scorer can be tested against the seeded rules.
+4. Add issuer offer ingestion later; until then, merchant offers should be explicitly labeled as catalog hints.
+5. Normalize `card_benefit_rules` and `user_card_state` after the reward-rule path is stable.

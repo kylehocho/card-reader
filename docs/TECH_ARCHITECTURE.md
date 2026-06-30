@@ -38,7 +38,7 @@
 - `plaid_transactions`: transaction history for analysis.
 - `card_products`: card catalog, rewards, and benefits JSON.
 - `account_card_matches`: per-user account-to-card-product mapping.
-- Target recommendation tables are sketched in `supabase/merchant-intelligence.sql`: `merchant_catalog`, `merchant_offer_rules`, and `card_reward_rules`.
+- Recommendation intelligence tables live in `supabase/merchant-intelligence.sql`: `merchant_catalog`, `merchant_offer_rules`, `card_reward_rules`, and `recommendation_events`.
 
 ## Card Match Hints
 The client scores linked Plaid account names and institution names against the loaded card catalog. Alias matches and product-token overlap can produce a suggestion, but the app does not write the match automatically. If the user accepts the suggestion, the saved row uses `match_status = suggested` and stores the computed confidence. Manual dropdown saves continue to use `match_status = manual`.
@@ -57,6 +57,8 @@ Input:
 ```
 
 The endpoint now normalizes merchant context against `data/merchant-catalog.json` before falling back to text/category inference. The catalog keeps merchant detection thin: the extension sends host/title/category hints, and the backend owns canonical merchant names, reward categories, aliases, and merchant-specific offer hints.
+
+`npm run seed:merchant-intelligence` mirrors the JSON merchant catalog, merchant offer hints, and top-priority card reward rules into Supabase. `GET /api/merchant-intelligence` exposes a server-side availability/count check for those backend tables. Recommendation execution still uses the local JSON fallback until the Supabase-backed scorer is wired and tested.
 
 If the request includes a Supabase bearer token, the endpoint validates the session and replaces any client-supplied `cardProductIds` with the authenticated user's matched `account_card_matches.card_product_id` values. Anonymous requests keep using the top-10 demo catalog for public extension smoke and shareable API demos.
 
