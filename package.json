@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "seed:plaid:sandbox": "node scripts/seed-plaid-sandbox-user.mjs",
     "seed:plaid:top10": "node scripts/seed-top-priority-mock-wallet.mjs"
   },
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }

@@ -14,6 +14,8 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Added Vitest coverage for `analyzeWallet()` and signed-in wallet analysis UI mapping.
+- Fixed grocery category inference so merchants like Whole Foods do not get swallowed by the broader dining/food rule.
 - Wallet home and Opportunities surfaces now consume the authenticated wallet analysis API for signed-in benefit trackers, welcome bonuses, alerts, and missed-value recommendations.
 - User-backed wallets no longer show demo seed cards or global welcome bonus rows.
 - Added top-10 priority card catalog.
@@ -33,13 +35,14 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 ## Active Gaps
 - Browser extension is scaffold-only until installed locally and wired to user auth.
 - Benefits engine has an authenticated API endpoint and the wallet UI consumes it for signed-in analysis surfaces; component-local fallback logic still supports anonymous/demo sessions.
+- Test coverage now protects first-pass wallet analysis and signed-in UI mapping, but API route tests and browser-driven signed-in Plaid smoke are still missing.
 - Merchant offers are rule-based mocks, not issuer-scraped/live offers.
 - Transfer partner optimization is not implemented.
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Add focused tests for `analyzeWallet()` and signed-in analysis UI mapping.
-2. Install/test the browser extension locally against Patagonia/Amazon/airline pages.
+1. Install/test the browser extension locally against Patagonia/Amazon/airline pages.
+2. Add API route tests for `/api/wallet/analysis` auth/error/data-shape behavior.
 3. Add a manual card add flow that persists card-product matches without Plaid.
 4. Add deterministic card-product match hints from Plaid account names and known card catalog aliases.
 5. Add a lightweight admin/catalog editor for card products and benefits.

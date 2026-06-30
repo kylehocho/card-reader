@@ -45,8 +45,9 @@ The Plaid status strip also exposes analysis refresh state:
 - Anonymous demo: seed cards, benefits, alerts, and recommendations remain unchanged.
 
 ## Verification
+- `npm test`
 - `npm run lint`
 - `npm run build`
 
 ## Next Best Action
-Add focused tests around `analyzeWallet()` and the client mapper functions so category breadth, welcome bonus progress, and alert rendering stay stable as the rule catalog grows.
+Add API route tests for `/api/wallet/analysis` auth, error, and response-shape behavior, then run a browser-driven signed-in Plaid smoke against production.

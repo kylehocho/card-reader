@@ -50,8 +50,8 @@ export function inferBenefitCategory(transaction: AnalysisTransaction): RewardCa
   const text = normalizeText(transaction);
 
   if (/rent|apartment|property management|bilt/.test(text)) return 'rent';
-  if (/restaurant|dining|coffee|cafe|chipotle|doordash|uber eats|bar|food|resy/.test(text)) return 'dining';
   if (/grocery|supermarket|whole foods|market|trader joe|kroger|safeway/.test(text)) return 'groceries';
+  if (/restaurant|dining|coffee|cafe|chipotle|doordash|uber eats|bar|food|resy/.test(text)) return 'dining';
   if (/airline|united|delta|american airlines|southwest|flight|airfare|tsa|global entry/.test(text)) return 'flights';
   if (/hotel|hyatt|marriott|hilton|airbnb|lodging/.test(text)) return 'hotel';
   if (/gas|fuel|shell|chevron|exxon|ev charging|chargepoint/.test(text)) return 'gas';

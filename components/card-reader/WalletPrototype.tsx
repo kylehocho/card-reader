@@ -6,7 +6,17 @@ import EmailAuthFlow from '@/components/auth/EmailAuthFlow';
 import ProfileSetupFlow from '@/components/auth/ProfileSetupFlow';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
-import type { BenefitTracker, CardRecommendation, WalletAnalysis } from '@/lib/benefits/types';
+import type { WalletAnalysis } from '@/lib/benefits/types';
+import {
+  alertFromAnalysis,
+  benefitFromTracker,
+  formatWalletAnalysisCurrency,
+  recommendationFromAnalysis,
+  welcomeBonusFromTracker,
+  type BenefitView,
+  type TransactionRecommendationView,
+  type WelcomeBonusView,
+} from '@/lib/benefits/wallet-analysis-view';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { MotionConfig, motion } from 'framer-motion';
@@ -101,13 +111,7 @@ const pageMeta = {
 
 const PLAID_STORAGE_KEY = 'card-reader.plaid-connections.v1';
 
-type Benefit = {
-  id: string;
-  title: string;
-  status: 'available' | 'in-progress' | 'used' | 'expiring';
-  detail: string;
-  progress?: number;
-};
+type Benefit = BenefitView;
 
 type Transaction = {
   id: string;
@@ -170,32 +174,9 @@ type MerchantResult = {
 
 type RewardCategory = 'dining' | 'travel' | 'groceries' | 'flights' | 'hotel' | 'gas' | 'drugstore' | 'rent' | 'streaming' | 'capital_one_travel' | 'rotating_quarterly' | 'general';
 
-type TransactionRecommendation = {
-  id: string;
-  merchant: string;
-  amount: string;
-  date: string;
-  category: RewardCategory;
-  currentCard: string;
-  currentMultiplier: number;
-  bestCard: string;
-  bestMultiplier: number;
-  estimatedLift: string;
-  reason: string;
-};
+type TransactionRecommendation = TransactionRecommendationView;
 
-type WelcomeBonus = {
-  id: string;
-  cardProductId: string;
-  card: string;
-  issuer: string;
-  deadline: string;
-  spent: number;
-  target: number;
-  bonus: string;
-  nextMove: string;
-
-};
+type WelcomeBonus = WelcomeBonusView;
 
 type WalletAnalysisResponse = {
   analysis?: WalletAnalysis;
@@ -770,19 +751,6 @@ function statusProgressTone(status: Benefit['status']) {
   }
 }
 
-function benefitStatusFromTracker(status: BenefitTracker['status']): Benefit['status'] {
-  switch (status) {
-    case 'available':
-      return 'available';
-    case 'used':
-      return 'used';
-    case 'needs-action':
-      return 'expiring';
-    case 'in-progress':
-      return 'in-progress';
-  }
-}
-
 function severityTone(severity: NotificationItem['severity']) {
   switch (severity) {
     case 'info':
@@ -909,46 +877,6 @@ function rewardMultiplier(product: CardProductRow, category: RewardCategory) {
   return Math.max(...aliases[category].map((key) => (typeof rewards[key] === 'number' ? rewards[key] : 0)), 1);
 }
 
-function recommendationFromAnalysis(recommendation: CardRecommendation): TransactionRecommendation {
-  return {
-    id: recommendation.id,
-    merchant: recommendation.merchant,
-    amount: formatTransactionAmount(recommendation.estimatedLift),
-    date: 'Synced analysis',
-    category: recommendation.category,
-    currentCard: recommendation.currentCard,
-    currentMultiplier: recommendation.currentMultiplier,
-    bestCard: recommendation.bestCard,
-    bestMultiplier: recommendation.bestMultiplier,
-    estimatedLift: formatTransactionAmount(recommendation.estimatedLift),
-    reason: recommendation.reason,
-  };
-}
-
-function welcomeBonusFromTracker(tracker: BenefitTracker): WelcomeBonus {
-  return {
-    id: tracker.id,
-    cardProductId: tracker.cardProductId,
-    card: tracker.cardName,
-    issuer: tracker.issuer,
-    deadline: tracker.cadence === 'first_year' ? 'First-year offer' : tracker.cadence,
-    spent: tracker.used,
-    target: tracker.target,
-    bonus: tracker.title,
-    nextMove: tracker.nextAction,
-  };
-}
-
-function benefitFromTracker(tracker: BenefitTracker): Benefit {
-  return {
-    id: tracker.id,
-    title: tracker.title,
-    status: benefitStatusFromTracker(tracker.status),
-    detail: tracker.detail,
-    progress: tracker.progress,
-  };
-}
-
 function inferRewardCategory(transaction: PlaidTransactionRow): RewardCategory {
   const personalFinanceCategory = transaction.personal_finance_category;
   const personalFinanceText =
@@ -957,8 +885,8 @@ function inferRewardCategory(transaction: PlaidTransactionRow): RewardCategory {
       : '';
   const text = [transaction.merchant_name, transaction.name, transaction.category.join(' '), personalFinanceText].filter(Boolean).join(' ').toLowerCase();
 
-  if (/restaurant|dining|coffee|cafe|chipotle|doordash|uber eats|bar|food/.test(text)) return 'dining';
   if (/grocery|supermarket|whole foods|market|trader joe|kroger|safeway/.test(text)) return 'groceries';
+  if (/restaurant|dining|coffee|cafe|chipotle|doordash|uber eats|bar|food/.test(text)) return 'dining';
   if (/airline|united|delta|american airlines|southwest|flight|airfare/.test(text)) return 'flights';
   if (/hotel|travel|airbnb|uber|lyft|taxi|train|rental car/.test(text)) return 'travel';
   return 'general';
@@ -1259,13 +1187,7 @@ export default function WalletPrototype() {
   const visibleNotifications = useMemo<NotificationItem[]>(() => {
     if (!isUserBackedWallet) return notifications;
 
-    return (walletAnalysis?.alerts ?? []).map((alert, index) => ({
-      id: `analysis-alert-${index}`,
-      title: alert.split(':')[0] ?? 'Wallet alert',
-      detail: alert,
-      action: 'Review the matched card and route spend before the next reset.',
-      severity: index === 0 ? 'warning' : 'info',
-    }));
+    return (walletAnalysis?.alerts ?? []).map(alertFromAnalysis);
   }, [isUserBackedWallet, notifications, walletAnalysis]);
   const selectedNotification = useMemo(
     () => visibleNotifications.find((n) => n.id === selectedNotificationId) ?? visibleNotifications[0] ?? null,
@@ -1319,7 +1241,7 @@ export default function WalletPrototype() {
           currentMultiplier,
           bestCard: bestProduct?.name ?? 'Best available card',
           bestMultiplier,
-          estimatedLift: formatTransactionAmount(estimatedLift),
+          estimatedLift: formatWalletAnalysisCurrency(estimatedLift),
           reason:
             bestMultiplier > currentMultiplier
               ? readableRewardCategory(category) + ' spend earns ' + bestMultiplier + 'x on ' + (bestProduct?.name ?? 'the best card') + ', versus ' + currentMultiplier + 'x on the matched card.'

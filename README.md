@@ -27,6 +27,11 @@ npm install
 npm run dev
 ```
 
+## Test
+```bash
+npm test
+```
+
 ## Plaid sandbox setup
 Create `.env.local` from `.env.example`, then fill in the Plaid sandbox values:
 

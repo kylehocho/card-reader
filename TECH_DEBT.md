@@ -8,8 +8,8 @@
 
 ## Medium Priority
 - Convert top-priority catalog JSON into a versioned admin-editable table workflow.
-- Add tests for `analyzeWallet()` categories, credits, welcome bonuses, and recommendations.
-- Wire wallet UI to `/api/wallet/analysis` instead of duplicating analysis projection in `WalletPrototype.tsx`.
+- Add API route tests for `/api/wallet/analysis` and browser-driven signed-in Plaid smoke coverage.
+- Continue extracting presentation projections from `WalletPrototype.tsx`; signed-in analysis mappers now live in `lib/benefits/wallet-analysis-view.ts`.
 - Add merchant normalization aliases and MCC/category confidence.
 - Add real extension auth/session handling.
 
