@@ -12,6 +12,7 @@ Detect merchant context while a user shops and recommend the best linked card or
   - visible merchant hints
 - Background service worker calls Card Reader API.
 - Popup displays current merchant and recommendation.
+- Popup can explicitly request a fresh active-tab recommendation from the background worker, so opening the popup is not dependent on pre-populated session storage.
 
 ## MVP Files
 - `extension/manifest.json`
@@ -34,6 +35,8 @@ The background worker also derives fallback context from `tabs` URL/title when c
 `/api/recommend-card` now supports authenticated recommendations when a Supabase bearer token is present: it validates the user and ranks only the card products matched to that user's linked accounts. Anonymous extension/API calls keep using the top-10 demo catalog.
 
 The extension options page stores the API base URL in `chrome.storage.sync` and the Supabase bearer token in `chrome.storage.local`. Background recommendations attach `Authorization: Bearer <token>` when local token storage is populated; otherwise they send the demo top-10 card IDs.
+
+The popup reads the cached `chrome.storage.session` recommendation first. If no recommendation or error is cached, or if the user clicks Refresh, it sends `CARD_READER_REFRESH_ACTIVE_TAB` to the background worker. The worker queries the active tab, asks the content script for structured context, falls back to tab URL/title context when needed, calls `/api/recommend-card`, updates the badge, stores the result, and returns the recommendation to the popup.
 
 ## Security/Privacy
 - Only send merchant context and page URL for active tab.

@@ -6,7 +6,7 @@
 - Database/auth: Supabase Postgres + Supabase Auth.
 - Financial data: Plaid sandbox for account/transaction sync.
 - Extension: Chrome Manifest V3 static package.
-- Recommendation logic: shared TypeScript library under `lib/benefits`.
+- Recommendation logic: shared TypeScript libraries under `lib/benefits` and `lib/recommendation`.
 
 ## Core Modules
 - `data/top-priority-card-products.json`: canonical MVP catalog.

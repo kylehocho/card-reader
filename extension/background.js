@@ -105,9 +105,71 @@ async function refreshRecommendation(tabId, context) {
   }
 }
 
-chrome.runtime.onMessage.addListener((message, sender) => {
-  if (message?.type !== 'CARD_READER_CONTEXT_CHANGED' || !sender.tab?.id) return;
-  void refreshRecommendation(sender.tab.id, message.context);
+async function contextFromActiveTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) throw new Error('No active tab is available.');
+
+  try {
+    const context = await chrome.tabs.sendMessage(tab.id, { type: 'CARD_READER_GET_CONTEXT' });
+    if (context) return { tabId: tab.id, context };
+  } catch {
+    // Fall back to URL/title context below when the content script is unavailable.
+  }
+
+  const fallbackContext = contextFromTab(tab);
+  if (!fallbackContext) throw new Error('This tab does not expose a merchant URL yet.');
+
+  return { tabId: tab.id, context: fallbackContext };
+}
+
+async function refreshActiveTabRecommendation() {
+  const { tabId, context } = await contextFromActiveTab();
+
+  try {
+    const recommendation = await recommend(context);
+    await chrome.storage.session.set({
+      currentContext: context,
+      currentRecommendation: recommendation,
+      currentError: null
+    });
+    await chrome.action.setBadgeText({ tabId, text: `${recommendation.bestCard.multiplier}x` });
+    await chrome.action.setBadgeBackgroundColor({ tabId, color: '#111827' });
+
+    return { context, recommendation };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Recommendation failed';
+    await chrome.storage.session.set({
+      currentContext: context,
+      currentRecommendation: null,
+      currentError: message
+    });
+    await chrome.action.setBadgeText({ tabId, text: '!' });
+    await chrome.action.setBadgeBackgroundColor({ tabId, color: '#b91c1c' });
+    throw error;
+  }
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === 'CARD_READER_CONTEXT_CHANGED' && sender.tab?.id) {
+    void refreshRecommendation(sender.tab.id, message.context);
+    return false;
+  }
+
+  if (message?.type === 'CARD_READER_REFRESH_ACTIVE_TAB') {
+    refreshActiveTabRecommendation()
+      .then((result) => sendResponse({ ok: true, ...result }))
+      .catch(async (error) => {
+        const message = error instanceof Error ? error.message : 'Recommendation failed';
+        await chrome.storage.session.set({
+          currentRecommendation: null,
+          currentError: message
+        });
+        sendResponse({ ok: false, error: message });
+      });
+    return true;
+  }
+
+  return false;
 });
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {

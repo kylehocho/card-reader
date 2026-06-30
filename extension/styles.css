@@ -133,7 +133,8 @@ button.secondary {
 }
 
 .settings-row,
-.button-row {
+.button-row,
+.popup-actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -143,6 +144,10 @@ button.secondary {
 
 .button-row {
   justify-content: flex-start;
+}
+
+.popup-actions {
+  margin-top: 0;
 }
 
 .auth-status {

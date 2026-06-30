@@ -24,6 +24,8 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 ## Checks
 - Content script returns hostname, page title, canonical URL, and visible merchant hints.
 - Background worker calls `POST /api/recommend-card` exactly once per active request.
+- Popup open can self-refresh the active tab when session storage has not already been populated.
+- Popup Refresh button can re-run the active-tab recommendation without reloading the merchant page.
 - Anonymous mode sends demo top-10 card IDs; signed-in mode sends the bearer token and lets the API use the user's matched card products.
 - Popup shows merchant, category, best card, runner-up if present, and the recommendation reason.
 - Popup status shows either `Demo catalog` or `Signed-in wallet`.
@@ -40,6 +42,18 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 ## Pass Criteria
 The extension passes this MVP smoke when at least three different merchant categories produce non-empty recommendation responses and the popup renders them without service worker errors.
 
+## Popup Refresh Behavior
+The popup should first render any cached `currentRecommendation` from `chrome.storage.session`. If there is no cached recommendation or error, opening the popup sends `CARD_READER_REFRESH_ACTIVE_TAB` to the background service worker. The same message is sent when the tester clicks Refresh. The service worker should:
+
+1. Query the active tab.
+2. Ask the content script for `CARD_READER_GET_CONTEXT`.
+3. Fall back to tab URL/title merchant hints if the content script is unavailable.
+4. Call `/api/recommend-card` with either the saved Supabase bearer token or anonymous demo card IDs.
+5. Store `currentContext`, `currentRecommendation`, and `currentError` in session storage.
+6. Return the recommendation or error to the popup.
+
+For manual smoke, this means the tester can navigate to a priority merchant page, open the popup, and click Refresh if the first render looks stale.
+
 ## 2026-06-29 Automation Attempt
 - Launched an isolated Chrome profile with the unpacked extension loaded from `extension/`.
 - Confirmed the MV3 service worker registered under the unpacked extension id.
@@ -48,3 +62,8 @@ The extension passes this MVP smoke when at least three different merchant categ
 - Patched the extension to make content-script startup messaging safe across Chrome callback/promise variants and to add a background tab URL/title fallback when content-script messaging fails.
 
 Remaining evidence needed: load the extension manually through `chrome://extensions` or use a browser harness with first-class extension popup support, then capture the popup output for the priority page matrix above.
+
+## 2026-06-30 Popup Refresh Hardening
+- Added a popup-triggered active-tab refresh path so popup rendering is no longer entirely dependent on background tab events having already populated session storage.
+- Added a visible Refresh button for repeated smoke checks against the current tab.
+- Remaining evidence needed: run the manual or extension-capable browser smoke matrix and capture output for at least three merchant categories.
