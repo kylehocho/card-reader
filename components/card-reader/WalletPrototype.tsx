@@ -2351,26 +2351,6 @@ export default function WalletPrototype() {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-[28px] border border-emerald-300/16 bg-emerald-300/10 px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.11),transparent_28%)]" />
-                <div className="relative flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-100/62">Plaid Sandbox</p>
-                    <h3 className="mt-2 text-[26px] font-semibold tracking-[-0.03em] text-white">
-                      {plaidAccounts.length > 0 ? 'Match issuer accounts' : 'No issuer connected yet'}
-                    </h3>
-                    <p className="mt-2 text-[14px] leading-6 text-white/70">
-                      {plaidAccounts.length > 0
-                        ? 'Choose the card product behind each Plaid account. Matches save to Supabase and update the wallet card immediately.'
-                        : 'Use the Plaid sandbox flow to mock a real issuer connection and add the returned credit account to the wallet.'}
-                    </p>
-                  </div>
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10 text-[18px] font-semibold text-white">
-                    {plaidAccounts.length}
-                  </div>
-                </div>
-              </div>
-
               {plaidError && (
                 <div className="rounded-[22px] border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm leading-5 text-rose-50/90">
                   {plaidError}
@@ -2387,6 +2367,13 @@ export default function WalletPrototype() {
                     const showMatchEditor = !account.cardProductId || isEditingMatch;
                     const matchStateLabel = accountMatchStateLabel(account, saveState);
                     const matchSuggestion = matchSuggestionByAccountId.get(account.accountId) ?? null;
+                    const displayName = account.cardProductName ?? account.name;
+                    const detailParts = [
+                      account.institutionName,
+                      account.cardProductName ? account.name : null,
+                      account.subtype,
+                      `•••• ${account.mask}`,
+                    ].filter(Boolean);
 
                     return (
                       <div
@@ -2395,9 +2382,9 @@ export default function WalletPrototype() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{account.name}</p>
+                            <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{displayName}</p>
                             <p className="mt-1 text-[13px] text-white/58">
-                              {account.institutionName} · {account.subtype} •••• {account.mask}
+                              {detailParts.join(' · ')}
                             </p>
                           </div>
                           <div className="shrink-0 text-right">
@@ -2426,16 +2413,15 @@ export default function WalletPrototype() {
                           </div>
                         )}
 
-                        <div className="mt-4 rounded-[22px] border border-white/10 bg-black/15 px-3 py-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Matched card product</p>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchToneClass(matchStateLabel)}`}>
-                              {matchStateLabel}
-                            </span>
-                          </div>
-
-                          {showMatchEditor ? (
-                            <>
+                        {showMatchEditor ? (
+                          <div className="mt-4 rounded-[22px] border border-white/10 bg-black/15 px-3 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Card product</p>
+                              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchToneClass(matchStateLabel)}`}>
+                                {matchStateLabel}
+                              </span>
+                            </div>
+                            <div>
                               <MatchSuggestionCard account={account} suggestion={matchSuggestion} saveState={saveState} onAccept={updateCardMatch} />
                               <select
                                 id={`match-${account.accountId}`}
@@ -2463,36 +2449,21 @@ export default function WalletPrototype() {
                                   Cancel edit
                                 </button>
                               )}
-                            </>
-                          ) : (
-                            <div className="mt-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-3">
-                              <p className="text-[15px] font-semibold leading-5 text-white">{account.cardProductName}</p>
-                              <p className="mt-1 text-[12px] text-white/52">{account.cardProductIssuer ?? account.institutionName}</p>
                             </div>
-                          )}
-
-                          <div className="mt-2 flex items-center justify-between gap-3">
-                            <p className="min-w-0 text-[12px] text-white/50">
-                              {saveState === 'saving'
-                                ? 'Saving match...'
-                                : saveState === 'saved'
-                                  ? 'Saved to this Plaid account.'
-                                  : saveState === 'error'
-                                    ? 'Match could not be saved.'
-                                    : account.cardProductName
-                                      ? 'Card rules are attached to this account.'
-                                      : 'Choose a product before recommendations use this account.'}
-                            </p>
+                          </div>
+                        ) : (
+                          <div className="mt-4 flex items-center justify-between gap-3">
+                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchToneClass(matchStateLabel)}`}>
+                              Synced
+                            </span>
                             <div className="flex shrink-0 items-center gap-2">
-                              {account.cardProductId && !showMatchEditor && (
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingMatchAccountIds((current) => [...new Set([...current, account.accountId])])}
-                                  className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white/82"
-                                >
-                                  Edit match
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => setEditingMatchAccountIds((current) => [...new Set([...current, account.accountId])])}
+                                className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white/72"
+                              >
+                                Change
+                              </button>
                               <button
                                 type="button"
                                 disabled={!canViewCard}
@@ -2507,7 +2478,7 @@ export default function WalletPrototype() {
                               </button>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     );
                   })}
@@ -2521,11 +2492,6 @@ export default function WalletPrototype() {
                   </button>
                 </div>
               )}
-
-              <div className="rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] px-4 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Next build step</p>
-                <p className="mt-2 text-[15px] leading-6 text-white/74">Use the saved card product match to drive transaction-category recommendations, benefit trackers, and issuer-specific demo scenarios.</p>
-              </div>
             </section>
           )}
 

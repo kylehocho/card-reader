@@ -86,6 +86,16 @@ SEED_CARD_PRODUCT_ID=chase-sapphire-reserve \
 npm run seed:plaid:sandbox
 ```
 
+To create a full top-10 sandbox wallet with one real Plaid sandbox item/account per priority card, run:
+
+```bash
+APP_BASE_URL=https://card-reader-xi.vercel.app \
+SEED_USER_EMAIL=card.reader.top10.sandbox@example.com \
+npm run seed:plaid:top10:sandbox
+```
+
+That seed path creates 10 Plaid sandbox public tokens, exchanges each through the app API, keeps one credit account per item, labels the saved item/account with the matched card name, syncs transactions, and writes deterministic `account_card_matches` rows with `match_status = seeded_sandbox`.
+
 ## Seed top-priority card analysis data
 The top-priority card catalog lives in `data/top-priority-card-products.json`, with app helpers in `lib/cards/top-priority-cards.ts`. The first-pass pure benefits engine is `lib/benefits/analyze-wallet.ts`, and reusable mock Plaid fixture data is in `lib/plaid/mock-top-priority-wallets.ts`.
 
