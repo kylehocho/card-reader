@@ -28,6 +28,7 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 - Popup Refresh button can re-run the active-tab recommendation without reloading the merchant page.
 - Anonymous mode sends demo top-10 card IDs; signed-in mode sends the bearer token and lets the API use the user's matched card products.
 - `/extension/connect` can sync the current web session into the extension without copying a token manually.
+- Expired signed-in tokens produce a reconnect-needed state instead of silently falling back to demo recommendations.
 - Popup shows merchant, category, best card, runner-up if present, and the recommendation reason.
 - Popup status shows either `Demo catalog` or `Signed-in wallet`.
 - Extension handles API errors with a visible fallback state instead of a blank popup.

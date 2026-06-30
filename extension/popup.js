@@ -4,6 +4,7 @@ const apiBaseUrlEl = document.querySelector('#apiBaseUrl');
 const authStatusEl = document.querySelector('#authStatus');
 const openOptionsEl = document.querySelector('#openOptions');
 const refreshRecommendationEl = document.querySelector('#refreshRecommendation');
+const AUTH_EXPIRY_SKEW_SECONDS = 60;
 
 function renderRecommendation(context, recommendation) {
   merchantEl.textContent = recommendation?.merchant || context?.merchant || 'Current merchant';
@@ -42,14 +43,21 @@ async function refreshActiveTab() {
 }
 
 async function refresh() {
-  const [{ currentContext, currentRecommendation, currentError }, { apiBaseUrl }, { authToken, authUserEmail }] = await Promise.all([
+  const [{ currentContext, currentRecommendation, currentError }, { apiBaseUrl }, { authToken, authUserEmail, authExpiresAt }] = await Promise.all([
     chrome.storage.session.get(['currentContext', 'currentRecommendation', 'currentError']),
     chrome.storage.sync.get(['apiBaseUrl']),
-    chrome.storage.local.get(['authToken', 'authUserEmail'])
+    chrome.storage.local.get(['authToken', 'authUserEmail', 'authExpiresAt'])
   ]);
+  const authExpired = Boolean(authExpiresAt && Date.now() / 1000 >= authExpiresAt - AUTH_EXPIRY_SKEW_SECONDS);
 
   apiBaseUrlEl.value = apiBaseUrl || 'https://card-reader-xi.vercel.app';
-  authStatusEl.textContent = authToken ? `Signed-in wallet${authUserEmail ? `: ${authUserEmail}` : ''}` : 'Demo catalog';
+  authStatusEl.textContent = authExpired ? 'Session expired' : authToken ? `Signed-in wallet${authUserEmail ? `: ${authUserEmail}` : ''}` : 'Demo catalog';
+
+  if (authExpired) {
+    await chrome.storage.local.remove('authToken');
+    renderError(currentContext, 'Signed-in session expired. Reconnect from the Card Reader web app.');
+    return;
+  }
 
   if (currentRecommendation) {
     renderRecommendation(currentContext, currentRecommendation);

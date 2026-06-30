@@ -36,7 +36,7 @@ The background worker also derives fallback context from `tabs` URL/title when c
 
 The web app exposes `/extension/connect` for first-class auth handoff. When a signed-in user clicks Connect, the page posts the current Supabase access token to the page's content script. The content script only accepts messages from the production Card Reader origin or local dev, forwards the token to the background worker, and the worker stores it in `chrome.storage.local`. API base URL preferences use `chrome.storage.sync`. The extension options page still allows manual token paste for debugging.
 
-Background recommendations attach `Authorization: Bearer <token>` when local token storage is populated; otherwise they send the demo top-10 card IDs.
+Background recommendations attach `Authorization: Bearer <token>` when local token storage is populated; otherwise they send the demo top-10 card IDs. The extension also stores the Supabase access-token expiry. If the signed-in token is expired or within the expiry skew window, the background worker clears the bearer token and returns a reconnect-needed error instead of silently making a demo-catalog recommendation.
 
 The popup reads the cached `chrome.storage.session` recommendation first. If no recommendation or error is cached, or if the user clicks Refresh, it sends `CARD_READER_REFRESH_ACTIVE_TAB` to the background worker. The worker queries the active tab, asks the content script for structured context, falls back to tab URL/title context when needed, calls `/api/recommend-card`, updates the badge, stores the result, and returns the recommendation to the popup.
 
@@ -48,7 +48,7 @@ The popup reads the cached `chrome.storage.session` recommendation first. If no 
 - Add user controls before production release.
 
 ## Later
-- Scoped extension token with refresh/expiry handling.
+- Scoped extension refresh-token handling if we later want the extension to renew sessions without a web-app reconnect.
 - Offer match notifications.
 - Airport/lounge context from location or travel booking pages.
 

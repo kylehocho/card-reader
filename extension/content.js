@@ -55,12 +55,13 @@ window.addEventListener('message', (event) => {
       userEmail: message.userEmail
     },
     (response) => {
+      const error = chrome.runtime.lastError?.message || response?.error || null;
       window.postMessage(
         {
           type: 'CARD_READER_AUTH_TOKEN_SAVED',
           requestId: message.requestId,
-          ok: Boolean(response?.ok),
-          error: response?.error || null
+          ok: Boolean(response?.ok) && !error,
+          error
         },
         event.origin
       );

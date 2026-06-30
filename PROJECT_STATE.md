@@ -17,6 +17,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Added extension-side settings for authenticated recommendations: API base URL in sync storage, Supabase bearer token in local storage, signed-in wallet status in the popup, and authenticated `/api/recommend-card` calls from the background worker.
 - Added a popup-triggered active-tab refresh path for the browser extension, including a visible Refresh control, so popup smoke tests can request a fresh recommendation even when session storage was not pre-populated by background tab events.
 - Added first-class web-to-extension auth handoff at `/extension/connect`, so signed-in users can sync the current Supabase session into the extension without pasting tokens manually.
+- Added extension token-expiry handling so expired signed-in sessions surface a reconnect-needed state instead of silently falling back to demo recommendations.
 - Added backend recommendation event logging for successful `/api/recommend-card` calls, with a Supabase `recommendation_events` SQL blueprint and typed route coverage.
 - Added optional Supabase bearer auth to `/api/recommend-card` so authenticated extension clients can rank only the user's matched card products instead of the top-10 demo catalog.
 - Added a first-pass merchant intelligence catalog for the recommendation engine, plus merchant-context tests and a Supabase table blueprint for moving merchant/reward rules out of JSON later.
@@ -56,7 +57,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 
 ## Next Best Actions
 1. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
-2. Add token refresh/expiry handling for long-lived extension sessions.
+2. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production.
 4. Apply the `recommendation_events` migration to production Supabase, then query recent recommendation logs during extension smoke.
 5. Add a manual card add flow that persists card-product matches without Plaid.

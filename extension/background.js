@@ -25,6 +25,7 @@ const DEMO_CARD_IDS = [
   'bilt-mastercard',
   'discover-it-cash-back'
 ];
+const AUTH_EXPIRY_SKEW_SECONDS = 60;
 
 function cleanHost(url) {
   try {
@@ -56,10 +57,22 @@ function contextFromTab(tab) {
 }
 
 async function extensionSettings() {
-  const [syncStored, localStored] = await Promise.all([chrome.storage.sync.get(['apiBaseUrl']), chrome.storage.local.get(['authToken'])]);
+  const [syncStored, localStored] = await Promise.all([
+    chrome.storage.sync.get(['apiBaseUrl']),
+    chrome.storage.local.get(['authToken', 'authExpiresAt', 'authUserEmail'])
+  ]);
+  const authExpiresAt = typeof localStored.authExpiresAt === 'number' ? localStored.authExpiresAt : null;
+  const authExpired = Boolean(authExpiresAt && Date.now() / 1000 >= authExpiresAt - AUTH_EXPIRY_SKEW_SECONDS);
+
+  if (authExpired) {
+    await chrome.storage.local.remove('authToken');
+  }
+
   return {
     apiBaseUrl: syncStored.apiBaseUrl || DEFAULT_API_BASE_URL,
-    authToken: typeof localStored.authToken === 'string' ? localStored.authToken.trim() : ''
+    authToken: authExpired ? '' : typeof localStored.authToken === 'string' ? localStored.authToken.trim() : '',
+    authExpired,
+    authUserEmail: typeof localStored.authUserEmail === 'string' ? localStored.authUserEmail : null
   };
 }
 
@@ -91,6 +104,10 @@ async function saveAuthToken(message) {
 
 async function recommend(context) {
   const settings = await extensionSettings();
+  if (settings.authExpired) {
+    throw new Error('Signed-in session expired. Reconnect from the Card Reader web app.');
+  }
+
   const headers = { 'Content-Type': 'application/json' };
   if (settings.authToken) headers.Authorization = `Bearer ${settings.authToken}`;
 

@@ -5,6 +5,7 @@ const authTokenEl = document.querySelector('#authToken');
 const saveSettingsEl = document.querySelector('#saveSettings');
 const clearTokenEl = document.querySelector('#clearToken');
 const statusEl = document.querySelector('#status');
+const AUTH_EXPIRY_SKEW_SECONDS = 60;
 
 function setStatus(message) {
   statusEl.textContent = message;
@@ -17,6 +18,14 @@ async function loadSettings() {
   ]);
   apiBaseUrlEl.value = apiBaseUrl || DEFAULT_API_BASE_URL;
   authTokenEl.value = authToken || '';
+  const isExpired = Boolean(authExpiresAt && Date.now() / 1000 >= authExpiresAt - AUTH_EXPIRY_SKEW_SECONDS);
+  if (isExpired) {
+    authTokenEl.value = '';
+    await chrome.storage.local.remove('authToken');
+    setStatus(`Session expired${authUserEmail ? ` for ${authUserEmail}` : ''}. Reconnect from the web app.`);
+    return;
+  }
+
   if (!authToken) {
     setStatus('Using demo catalog until a session is connected.');
     return;
