@@ -25,7 +25,7 @@ Ship the first persisted manual-card setup slice so signed-in users can add a ca
 ## Risks
 - Production browser smoke is still needed after deploy.
 - Manual cards have no transaction history until a later import/sync path exists.
-- Notion work-log write was blocked in this cron environment because `ntn` is unavailable, no `NOTION_API_TOKEN` is present, and the Notion web URL redirects without readable content.
+- Follow-up fix completed after the cron run: the scheduled daily job now loads Notion credentials from `/Users/kyleharrison/.openclaw/workspace/secrets/notion.json`, `ntn` is installed on the Mac mini, and the missing Notion work-log page was created under `/Goal CTO/Daily Work Logs`.
 
 ## Next Best Action
 Deploy to production, smoke the signed-in manual-card add/remove path, and verify authenticated recommendations include the manually matched card set.
