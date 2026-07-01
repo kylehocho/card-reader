@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-06-30
+Last updated: 2026-07-01
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Added authenticated manual card entry for signed-in users without Plaid: the Add Card sheet can save a selected catalog product and last four digits through `POST /api/wallet/manual-cards`, creating a manual account/product match that flows into wallet analysis and authenticated extension recommendations.
 - Added extension-side settings for authenticated recommendations: API base URL in sync storage, Supabase bearer token in local storage, signed-in wallet status in the popup, and authenticated `/api/recommend-card` calls from the background worker.
 - Added a popup-triggered active-tab refresh path for the browser extension, including a visible Refresh control, so popup smoke tests can request a fresh recommendation even when session storage was not pre-populated by background tab events.
 - Added first-class web-to-extension auth handoff at `/extension/connect`, so signed-in users can sync the current Supabase session into the extension without pasting tokens manually.
@@ -44,11 +45,13 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Transaction sync and first-pass missed-value recommendations.
 - Top-10 card catalog and mock analysis data.
 - Authenticated wallet analysis API at `GET /api/wallet/analysis`.
+- Authenticated manual card entry at `POST /api/wallet/manual-cards` for users who need a no-Plaid card setup path.
 - Auth-aware merchant recommendation API at `POST /api/recommend-card`.
 - Merchant catalog normalization for known extension smoke merchants and offer hints.
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
+- Manual card entry is now persisted for catalog-backed cards, but it still needs production browser smoke and does not import transaction history.
 - Browser extension can store auth settings, call the auth-aware recommendation API, and refresh the active tab from the popup, but still needs manual or extension-capable browser smoke evidence across the priority merchant matrix.
 - Benefits engine has an authenticated API endpoint and the wallet UI consumes it for signed-in analysis surfaces; component-local fallback logic still supports anonymous/demo sessions.
 - Test coverage now protects first-pass wallet analysis, signed-in UI mapping, `/api/wallet/analysis` route behavior, and card-match hints; browser-driven signed-in Plaid smoke is still missing.
@@ -57,8 +60,8 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
-2. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
-3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
-4. Apply the `recommendation_events` migration to production Supabase, then query recent recommendation logs during extension smoke.
-5. Add a manual card add flow that persists card-product matches without Plaid.
+1. Production-smoke manual card entry: sign in, add a catalog-backed manual card, confirm wallet analysis/recommendations include it, then remove it.
+2. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
+3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
+4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
+5. Apply the `recommendation_events` migration to production Supabase, then query recent recommendation logs during extension smoke.

@@ -17,6 +17,7 @@
 - `app/api/plaid/*`: Plaid linking/sync routes.
 - `app/api/recommend-card`: merchant context recommendation API.
 - `app/api/wallet/analysis`: authenticated wallet analysis API for linked accounts.
+- `app/api/wallet/manual-cards`: authenticated no-Plaid card entry API that creates a manual account and card-product match.
 - `components/card-reader/WalletPrototype.tsx`: mobile-first wallet client; signed-in analysis panels consume `/api/wallet/analysis`.
 - `extension/`: browser extension MVP.
 
@@ -26,10 +27,11 @@
 3. Server exchanges Plaid public token and stores encrypted access token.
 4. Server saves Plaid accounts and transactions.
 5. User maps Plaid account to `card_products`, optionally accepting a deterministic match hint.
-6. Analysis engine combines card product rules + account matches + transactions.
-7. `GET /api/wallet/analysis` exposes wallet trackers, welcome bonuses, alerts, and recommendations for authenticated clients.
-8. Signed-in wallet UI renders API-backed trackers, welcome bonuses, alerts, and missed-value recommendations.
-9. App/extension render recommendation and benefit actions.
+6. Users without Plaid can manually add a catalog-backed card, which creates a synthetic manual account and `account_card_matches` row.
+7. Analysis engine combines card product rules + account matches + transactions.
+8. `GET /api/wallet/analysis` exposes wallet trackers, welcome bonuses, alerts, and recommendations for authenticated clients.
+9. Signed-in wallet UI renders API-backed trackers, welcome bonuses, alerts, and missed-value recommendations.
+10. App/extension render recommendation and benefit actions.
 
 ## Database Tables
 - `profiles`: app profile for each Supabase auth user.
@@ -65,6 +67,11 @@ If the request includes a Supabase bearer token, the endpoint validates the sess
 Successful recommendation calls are also written to `recommendation_events` when Supabase server credentials are available. The event row stores demo vs signed-in mode, user id when present, merchant/category inputs, selected card ids, candidate-card count, and scrubbed request/response snapshots. Logging failures are non-blocking so the recommendation endpoint does not fail if the analytics table has not been applied yet.
 
 `GET /api/recommendation-events` is an authenticated read endpoint for recent signed-in recommendation history. It returns the user's latest event rows and exposes `meta.loggingAvailable=false` when the SQL migration has not been applied yet, which lets extension smoke tooling distinguish "no events" from "logging table unavailable."
+
+## Manual Card API Shape
+`POST /api/wallet/manual-cards` requires a Supabase bearer token. It lets a signed-in user add a known catalog product without Plaid by sending `cardProductId`, `last4`, and an optional `label`.
+
+The route creates or reuses one synthetic `plaid_items` row with `status = manual`, upserts a synthetic `plaid_accounts` credit-card row keyed as `manual:<cardProductId>:<last4>`, and upserts an `account_card_matches` row with `match_status = manual`. The manual item status keeps transaction sync from trying to decrypt or sync a non-Plaid token, while wallet analysis and authenticated merchant recommendations continue to read through the existing account/match tables.
 
 ## Wallet Analysis API Shape
 `GET /api/wallet/analysis` requires a Supabase bearer token. It loads the authenticated user's linked Plaid accounts, card-product matches, recent transactions, and the full card catalog before calling `analyzeWallet()`.

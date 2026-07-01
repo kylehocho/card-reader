@@ -21,7 +21,7 @@ import { suggestCardProductMatch, type CardProductMatchSuggestion } from '@/lib/
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { MotionConfig, motion } from 'framer-motion';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type PlaidLinkMetadata = {
   institution?: {
@@ -78,6 +78,12 @@ type PlaidTransactionRow = Database['public']['Tables']['plaid_transactions']['R
 type CardProductRow = Database['public']['Tables']['card_products']['Row'];
 type AccountCardMatchRow = Database['public']['Tables']['account_card_matches']['Row'];
 type CardProductSuggestion = CardProductMatchSuggestion<CardProductRow>;
+
+type ManualCardResponse = {
+  account?: PlaidAccountRow;
+  product?: Pick<CardProductRow, 'id' | 'issuer' | 'name'>;
+  error?: string;
+};
 
 type PlaidAccountWithRelations = PlaidAccountRow & {
   plaid_items?: { institution_name: string | null } | null;
@@ -1076,6 +1082,7 @@ export default function WalletPrototype() {
   const [screen, setScreen] = useState<Screen>('wallet');
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
   const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999', isBusiness: false });
+  const [manualCardProductId, setManualCardProductId] = useState('');
   const [emailDraft, setEmailDraft] = useState('');
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [merchantQuery, setMerchantQuery] = useState('');
@@ -1091,6 +1098,7 @@ export default function WalletPrototype() {
   const [cardProducts, setCardProducts] = useState<CardProductRow[]>([]);
   const [plaidStatus, setPlaidStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>(() => (initialPlaidConnection?.accounts.length ? 'connected' : 'idle'));
   const [plaidError, setPlaidError] = useState<string | null>(null);
+  const [manualCardStatus, setManualCardStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [matchStatusByAccount, setMatchStatusByAccount] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const [editingMatchAccountIds, setEditingMatchAccountIds] = useState<string[]>([]);
   const [removingAccountIds, setRemovingAccountIds] = useState<string[]>([]);
@@ -1099,6 +1107,7 @@ export default function WalletPrototype() {
   const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
   const [walletAnalysisStatus, setWalletAnalysisStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [walletAnalysisError, setWalletAnalysisError] = useState<string | null>(null);
+  const customCardIdRef = useRef(0);
 
   const [notificationSettings, setNotificationSettings] = useState({
     allowNotifications: true,
@@ -1277,6 +1286,11 @@ export default function WalletPrototype() {
       ]),
     );
   }, [cardProducts, plaidAccounts]);
+  const effectiveManualCardProductId = manualCardProductId || cardProducts[0]?.id || '';
+  const selectedManualCardProduct = useMemo(
+    () => cardProducts.find((product) => product.id === effectiveManualCardProductId) ?? null,
+    [cardProducts, effectiveManualCardProductId],
+  );
 
   const merchantResults = useMemo(() => {
     const normalized = merchantQuery.trim().toLowerCase();
@@ -1438,13 +1452,12 @@ export default function WalletPrototype() {
 
   function finishDemoAdd() {
     if (isUserBackedWallet) {
-      setPlaidError('Manual and camera card entry are still prototype-only. Use Plaid to link cards for signed-in profiles.');
-      setScanStep('plaid');
+      void finishManualCardAdd();
       return;
     }
 
     const newCard: Card = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${++customCardIdRef.current}`,
       issuer: draftCard.issuer,
       name: draftCard.name,
       last4: draftCard.last4,
@@ -1479,6 +1492,78 @@ export default function WalletPrototype() {
       setShowScanner(false);
       setScreen('wallet');
     }, 900);
+  }
+
+  async function finishManualCardAdd() {
+    if (!isUserBackedWallet) {
+      finishDemoAdd();
+      return;
+    }
+
+    const supabase = getBrowserSupabaseClient();
+    if (!supabase) return;
+
+    const cardProductId = selectedManualCardProduct?.id ?? effectiveManualCardProductId;
+    if (!cardProductId) {
+      setPlaidError('Choose a card product before adding it manually.');
+      return;
+    }
+
+    setManualCardStatus('saving');
+    setPlaidError(null);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      if (!accessToken) {
+        setAuthFlow('entry');
+        throw new Error('Sign in before adding a manual card.');
+      }
+
+      const response = await fetch('/api/wallet/manual-cards', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + accessToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cardProductId,
+          last4: draftCard.last4,
+          label: draftCard.name,
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as ManualCardResponse;
+
+      if (!response.ok || !payload.account || !payload.product) {
+        throw new Error(payload.error ?? 'Unable to add manual card.');
+      }
+
+      const addedAccount: PlaidConnectedAccount = {
+        ...accountFromSavedRow(payload.account, 'Manual cards'),
+        cardProductId: payload.product.id,
+        cardProductName: payload.product.name,
+        cardProductIssuer: payload.product.issuer,
+        matchStatus: 'manual',
+      };
+      const nextAccounts = [...plaidAccounts.filter((account) => account.accountId !== addedAccount.accountId), addedAccount];
+
+      syncPlaidAccountsToWallet(nextAccounts);
+      setSelectedId(`plaid-${addedAccount.accountId}`);
+      setWalletPageIndex(0);
+      setManualCardStatus('saved');
+      setPlaidStatus('connected');
+      setScanStep('success');
+      void loadPersistedPlaidState();
+      void loadWalletAnalysis();
+      window.setTimeout(() => {
+        setShowScanner(false);
+        setScreen('wallet');
+        setManualCardStatus('idle');
+      }, 900);
+    } catch (error) {
+      setManualCardStatus('error');
+      setPlaidError(error instanceof Error ? error.message : 'Unable to add manual card.');
+    }
   }
 
   async function connectPlaidSandbox() {
@@ -2993,7 +3078,7 @@ export default function WalletPrototype() {
               </div>
 
               {scanStep !== 'success' && scanStep !== 'match' && (
-                <div className={`mt-5 grid gap-3 ${isUserBackedWallet ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                <div className={`mt-5 grid gap-3 ${isUserBackedWallet ? 'grid-cols-2' : 'grid-cols-3'}`}>
                   <button
                     type="button"
                     onClick={() => setScanStep('plaid')}
@@ -3007,7 +3092,6 @@ export default function WalletPrototype() {
                     </div>
                   </button>
                   {!isUserBackedWallet && (
-                    <>
                       <button
                         type="button"
                         onClick={() => setScanStep('camera')}
@@ -3020,20 +3104,19 @@ export default function WalletPrototype() {
                           <p className="mt-1 text-[11px] text-white/74">Mock</p>
                         </div>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setScanStep('manual')}
-                        className={`relative overflow-hidden rounded-[24px] px-3 pb-3 pt-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)] ${scanStep === 'manual' ? 'ring-2 ring-white/25' : ''}`}
-                      >
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),linear-gradient(135deg,#535862_0%,#20252d_58%,#090b10_100%)]" />
-                        <div className="relative text-white">
-                          <p className="text-[9px] uppercase tracking-[0.18em] text-white/70">Manual</p>
-                          <p className="mt-5 text-[17px] font-semibold tracking-[-0.02em]">Enter</p>
-                          <p className="mt-1 text-[11px] text-white/74">Mock</p>
-                        </div>
-                      </button>
-                    </>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setScanStep('manual')}
+                    className={`relative overflow-hidden rounded-[24px] px-3 pb-3 pt-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)] ${scanStep === 'manual' ? 'ring-2 ring-white/25' : ''}`}
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),linear-gradient(135deg,#535862_0%,#20252d_58%,#090b10_100%)]" />
+                    <div className="relative text-white">
+                      <p className="text-[9px] uppercase tracking-[0.18em] text-white/70">Manual</p>
+                      <p className="mt-5 text-[17px] font-semibold tracking-[-0.02em]">Enter</p>
+                      <p className="mt-1 text-[11px] text-white/74">{isUserBackedWallet ? 'Saved' : 'Mock'}</p>
+                    </div>
+                  </button>
                 </div>
               )}
 
@@ -3212,24 +3295,62 @@ export default function WalletPrototype() {
 
               {scanStep === 'manual' && (
                 <div className="mt-5 space-y-3" style={appleInfoFontStyle}>
-                  <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
-                    <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Issuer</label>
-                    <input value={draftCard.issuer} onChange={(e) => setDraftCard((d) => ({ ...d, issuer: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
-                  </div>
-                  <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
-                    <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Product name</label>
-                    <input value={draftCard.name} onChange={(e) => setDraftCard((d) => ({ ...d, name: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
-                  </div>
+                  {isUserBackedWallet ? (
+                    <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                      <label className="text-[10px] uppercase tracking-[0.24em] text-white/60" htmlFor="manual-card-product">
+                        Card product
+                      </label>
+                      <select
+                        id="manual-card-product"
+                        value={effectiveManualCardProductId}
+                        disabled={cardProducts.length === 0 || manualCardStatus === 'saving'}
+                        onChange={(event) => setManualCardProductId(event.target.value)}
+                        className="mt-2 w-full rounded-2xl border border-white/12 bg-[#11151f] px-4 py-3 text-white outline-none transition focus:border-white/20 disabled:opacity-60"
+                      >
+                        <option value="" disabled>
+                          {cardProducts.length === 0 ? 'Card catalog still loading' : 'Select a card product'}
+                        </option>
+                        {cardProducts.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.issuer} · {product.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                        <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Issuer</label>
+                        <input value={draftCard.issuer} onChange={(e) => setDraftCard((d) => ({ ...d, issuer: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                      </div>
+                      <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
+                        <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Product name</label>
+                        <input value={draftCard.name} onChange={(e) => setDraftCard((d) => ({ ...d, name: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                      </div>
+                    </>
+                  )}
                   <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                     <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Last four</label>
-                    <input value={draftCard.last4} onChange={(e) => setDraftCard((d) => ({ ...d, last4: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                    <input value={draftCard.last4} inputMode="numeric" maxLength={4} onChange={(e) => setDraftCard((d) => ({ ...d, last4: e.target.value.replace(/\D/g, '').slice(0, 4) }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                   </div>
                   <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                     <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Preview</p>
-                    <p className="mt-2 text-[20px] font-semibold tracking-[-0.02em] text-white">{draftCard.issuer} {draftCard.name}</p>
-                    <p className="mt-1 text-sm text-white/74">Will be added to your wallet stack as •••• {draftCard.last4}</p>
+                    <p className="mt-2 text-[20px] font-semibold tracking-[-0.02em] text-white">
+                      {isUserBackedWallet && selectedManualCardProduct
+                        ? `${selectedManualCardProduct.issuer} ${selectedManualCardProduct.name}`
+                        : `${draftCard.issuer} ${draftCard.name}`}
+                    </p>
+                    <p className="mt-1 text-sm text-white/74">
+                      {isUserBackedWallet ? 'Will be saved to this profile as a manually added card' : 'Will be added to your wallet stack'} as •••• {draftCard.last4}
+                    </p>
                   </div>
-                  <button onClick={finishDemoAdd} className="w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95">Add card</button>
+                  <button
+                    onClick={finishDemoAdd}
+                    disabled={manualCardStatus === 'saving' || (isUserBackedWallet && (!effectiveManualCardProductId || cardProducts.length === 0 || draftCard.last4.length !== 4))}
+                    className="w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {manualCardStatus === 'saving' ? 'Saving card...' : 'Add card'}
+                  </button>
                 </div>
               )}
 
