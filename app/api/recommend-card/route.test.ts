@@ -140,7 +140,7 @@ describe('POST /api/recommend-card', () => {
     );
   });
 
-  it('logs anonymous recommendations when server credentials are configured', async () => {
+  it('does not log anonymous demo recommendations when server credentials are configured', async () => {
     const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const originalServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';
@@ -160,21 +160,7 @@ describe('POST /api/recommend-card', () => {
       );
 
       expect(response.status).toBe(200);
-      expect(supabase.recommendationEventsInsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: null,
-          mode: 'demo',
-          merchant: 'Whole Foods',
-          host: 'wholefoodsmarket.com',
-          category: 'groceries',
-          best_card_product_id: 'amex-gold',
-          candidate_card_count: 2,
-          request_context: expect.objectContaining({
-            host: 'wholefoodsmarket.com',
-            requestedCardProductCount: 2,
-          }),
-        }),
-      );
+      expect(supabase.recommendationEventsInsert).not.toHaveBeenCalled();
     } finally {
       if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
       else process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
@@ -208,6 +194,20 @@ describe('POST /api/recommend-card', () => {
     const response = await POST(request({ merchant: 'Patagonia' }, 'valid-token'));
 
     expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({ error: 'matches unavailable' });
+    await expect(response.json()).resolves.toEqual({ error: 'Unable to recommend a card.' });
+  });
+
+  it('returns a controlled response when matched cards are missing from the local catalog', async () => {
+    mocks.getSupabaseAdminClient.mockReturnValue(
+      supabaseForAuth({
+        user: { id: 'user-1' },
+        matches: [{ card_product_id: 'missing-card' }],
+      }),
+    );
+
+    const response = await POST(request({ merchant: 'Patagonia' }, 'valid-token'));
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({ error: 'None of the requested card products are available in the recommendation catalog.' });
   });
 });

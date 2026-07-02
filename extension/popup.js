@@ -5,29 +5,54 @@ const authStatusEl = document.querySelector('#authStatus');
 const openOptionsEl = document.querySelector('#openOptions');
 const refreshRecommendationEl = document.querySelector('#refreshRecommendation');
 const AUTH_EXPIRY_SKEW_SECONDS = 60;
+const DEFAULT_API_BASE_URL = 'https://card-reader-xi.vercel.app';
+
+function cleanApiBaseUrl(value) {
+  if (typeof value !== 'string') return DEFAULT_API_BASE_URL;
+
+  const trimmedValue = value.trim().replace(/\/$/, '');
+  if (trimmedValue === DEFAULT_API_BASE_URL || trimmedValue === 'http://localhost:3000') return trimmedValue;
+  return DEFAULT_API_BASE_URL;
+}
+
+function replaceState(children) {
+  stateEl.replaceChildren(...children);
+}
+
+function textNode(tagName, className, text) {
+  const node = document.createElement(tagName);
+  if (className) node.className = className;
+  node.textContent = text ?? '';
+  return node;
+}
 
 function renderRecommendation(context, recommendation) {
   merchantEl.textContent = recommendation?.merchant || context?.merchant || 'Current merchant';
-  stateEl.innerHTML = `
-    <div class="card">
-      <p class="label">${recommendation.category}</p>
-      <h2>${recommendation.bestCard.name}</h2>
-      <p class="issuer">${recommendation.bestCard.issuer} · ${recommendation.bestCard.multiplier}x ${recommendation.bestCard.rewardCurrency || 'rewards'}</p>
-      <p class="reason">${recommendation.reason}</p>
-      ${recommendation.runnerUp ? `<p class="runner">Runner-up: ${recommendation.runnerUp.name} at ${recommendation.runnerUp.multiplier}x</p>` : ''}
-      ${recommendation.matchedOffer ? `<div class="offer">${recommendation.matchedOffer.title}</div>` : ''}
-    </div>
-  `;
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.append(
+    textNode('p', 'label', recommendation.category),
+    textNode('h2', '', recommendation.bestCard.name),
+    textNode('p', 'issuer', `${recommendation.bestCard.issuer} · ${recommendation.bestCard.multiplier}x ${recommendation.bestCard.rewardCurrency || 'rewards'}`),
+    textNode('p', 'reason', recommendation.reason)
+  );
+  if (recommendation.runnerUp) {
+    card.append(textNode('p', 'runner', `Runner-up: ${recommendation.runnerUp.name} at ${recommendation.runnerUp.multiplier}x`));
+  }
+  if (recommendation.matchedOffer) {
+    card.append(textNode('div', 'offer', recommendation.matchedOffer.title));
+  }
+  replaceState([card]);
 }
 
 function renderError(context, error) {
   merchantEl.textContent = context?.merchant || 'Current merchant';
-  stateEl.innerHTML = `<p class="error">${error || 'No recommendation available yet.'}</p>`;
+  replaceState([textNode('p', 'error', error || 'No recommendation available yet.')]);
 }
 
 function renderLoading(context) {
   merchantEl.textContent = context?.merchant || 'Current merchant';
-  stateEl.innerHTML = '<p class="muted">Checking this page...</p>';
+  replaceState([textNode('p', 'muted', 'Checking this page...')]);
 }
 
 async function refreshActiveTab() {
@@ -50,7 +75,7 @@ async function refresh() {
   ]);
   const authExpired = Boolean(authExpiresAt && Date.now() / 1000 >= authExpiresAt - AUTH_EXPIRY_SKEW_SECONDS);
 
-  apiBaseUrlEl.value = apiBaseUrl || 'https://card-reader-xi.vercel.app';
+  apiBaseUrlEl.value = cleanApiBaseUrl(apiBaseUrl);
   authStatusEl.textContent = authExpired ? 'Session expired' : authToken ? `Signed-in wallet${authUserEmail ? `: ${authUserEmail}` : ''}` : 'Demo catalog';
 
   if (authExpired) {
@@ -73,7 +98,8 @@ async function refresh() {
 }
 
 apiBaseUrlEl.addEventListener('change', async () => {
-  const value = apiBaseUrlEl.value.trim() || 'https://card-reader-xi.vercel.app';
+  const value = cleanApiBaseUrl(apiBaseUrlEl.value);
+  apiBaseUrlEl.value = value;
   await chrome.storage.sync.set({ apiBaseUrl: value });
 });
 

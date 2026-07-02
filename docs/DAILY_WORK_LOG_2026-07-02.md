@@ -11,6 +11,13 @@ Manual card entry lets users get wallet recommendations before Plaid is connecte
 - Return `{ itemCount: 0, totalSaved: 0, items: [] }` when the authenticated user has no active Plaid items.
 - Added route coverage for unauthenticated access, manual/no-active-item sync, and active Plaid credit-card transaction sync.
 - Updated `PROJECT_STATE.md`, `docs/MANUAL_CARD_ENTRY.md`, and `docs/TECH_ARCHITECTURE.md`.
+- Later audit batch:
+  - Narrowed extension content scripts from `<all_urls>` to the known merchant/app allowlist.
+  - Stopped demo/anonymous recommendation-event writes and removed page URL/title from extension demo recommendation payloads.
+  - Allowlisted extension API base URLs before bearer-token use and sanitized popup rendering away from `innerHTML`.
+  - Required explicit `PLAID_TOKEN_ENCRYPTION_KEY` for Plaid token encryption.
+  - Returned controlled 422 responses when authenticated matched card IDs are missing from the local recommendation catalog.
+  - Wired in-app Use Now to `/api/recommend-card`, fixed manual-card labels, renamed Connected Accounts `Sync` to `Add`, and replaced native remove confirm with an in-app confirmation sheet.
 
 ## Implementation Notes
 - Manual cards use a synthetic `plaid_items` row with `status = manual`.
@@ -36,8 +43,9 @@ Manual card entry lets users get wallet recommendations before Plaid is connecte
   - Browser confirm handling timed out on the native remove dialog, so cleanup used Supabase admin deletion of the disposable user; `plaid_accounts` for that user went from one row to zero.
 
 ## Risks
-- Browser screenshot evidence exists for signed-in manual-card add and connected-account display; native dialog automation for remove confirmation was flaky, though API/user cleanup verified no smoke data remained.
+- Browser screenshot evidence exists for signed-in manual-card add and connected-account display; the native dialog risk was removed by replacing it with an in-app confirmation sheet, but the new sheet still needs browser smoke evidence.
 - Manual cards still do not have transaction history until a future CSV/import/manual transaction path exists.
+- Extension content-script scope is now intentionally narrower; adding new auto-detected merchant sites requires updating `extension/manifest.json` and merchant hints.
 
 ## Next Best Action
 Smoke the front-end Use Now demo path across Whole Foods, Patagonia, Delta, Amazon, and Chipotle, then capture extension-capable popup evidence.

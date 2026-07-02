@@ -11,7 +11,9 @@ const MERCHANT_DOMAIN_HINTS = {
   'hilton.com': { merchant: 'Hilton', categoryHint: 'hotel' },
   'wholefoodsmarket.com': { merchant: 'Whole Foods', categoryHint: 'groceries' },
   'uber.com': { merchant: 'Uber', categoryHint: 'travel' },
-  'ubereats.com': { merchant: 'Uber Eats', categoryHint: 'dining' }
+  'ubereats.com': { merchant: 'Uber Eats', categoryHint: 'dining' },
+  'chipotle.com': { merchant: 'Chipotle', categoryHint: 'dining' },
+  'sephora.com': { merchant: 'Sephora', categoryHint: 'shopping' }
 };
 const DEMO_CARD_IDS = [
   'chase-sapphire-reserve',
@@ -50,7 +52,6 @@ function contextFromTab(tab) {
   return {
     merchant,
     title,
-    url: tab.url,
     host,
     categoryHint: hint?.categoryHint || ''
   };
@@ -68,8 +69,13 @@ async function extensionSettings() {
     await chrome.storage.local.remove('authToken');
   }
 
+  const apiBaseUrl = cleanApiBaseUrl(syncStored.apiBaseUrl);
+  if (syncStored.apiBaseUrl && syncStored.apiBaseUrl !== apiBaseUrl) {
+    await chrome.storage.sync.set({ apiBaseUrl });
+  }
+
   return {
-    apiBaseUrl: syncStored.apiBaseUrl || DEFAULT_API_BASE_URL,
+    apiBaseUrl,
     authToken: authExpired ? '' : typeof localStored.authToken === 'string' ? localStored.authToken.trim() : '',
     authExpired,
     authUserEmail: typeof localStored.authUserEmail === 'string' ? localStored.authUserEmail : null
@@ -110,14 +116,19 @@ async function recommend(context) {
 
   const headers = { 'Content-Type': 'application/json' };
   if (settings.authToken) headers.Authorization = `Bearer ${settings.authToken}`;
+  const requestContext = settings.authToken
+    ? context
+    : {
+        merchant: context?.merchant,
+        host: context?.host,
+        categoryHint: context?.categoryHint,
+        cardProductIds: DEMO_CARD_IDS
+      };
 
   const response = await fetch(`${settings.apiBaseUrl}/api/recommend-card`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      ...context,
-      ...(settings.authToken ? {} : { cardProductIds: DEMO_CARD_IDS })
-    })
+    body: JSON.stringify(requestContext)
   });
 
   if (!response.ok) {

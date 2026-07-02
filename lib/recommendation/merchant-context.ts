@@ -36,6 +36,13 @@ export type MerchantRecommendation = {
   } | null;
 };
 
+export class NoEligibleMerchantCardsError extends Error {
+  constructor() {
+    super('None of the requested card products are available in the recommendation catalog.');
+    this.name = 'NoEligibleMerchantCardsError';
+  }
+}
+
 type MerchantCatalogOffer = {
   id: string;
   title: string;
@@ -159,10 +166,18 @@ export function recommendCardForMerchant(context: MerchantContext): MerchantReco
   const inferred = inferMerchant(context);
   const allowedIds = new Set(context.cardProductIds?.filter(Boolean) ?? []);
   const candidateCards = allowedIds.size > 0 ? topPriorityCards.filter((card) => allowedIds.has(card.id)) : topPriorityCards;
+  if (allowedIds.size > 0 && candidateCards.length === 0) {
+    throw new NoEligibleMerchantCardsError();
+  }
+
   const rankedCards = [...candidateCards]
     .map((card) => ({ card, multiplier: multiplierFor(card, inferred.category) }))
     .sort((left, right) => right.multiplier - left.multiplier || left.card.annual_fee - right.card.annual_fee);
-  const best = rankedCards[0] ?? { card: topPriorityCards[0], multiplier: 1 };
+  const best = rankedCards[0];
+  if (!best) {
+    throw new NoEligibleMerchantCardsError();
+  }
+
   const runnerUp = rankedCards[1];
   const matchedOffer = offerFor(inferred.catalogEntry, candidateCards);
 

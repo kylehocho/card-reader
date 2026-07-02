@@ -14,6 +14,8 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Implemented the 2026-07-02 Jazz/Fable audit fix batch: extension content scripts are no longer injected on `<all_urls>`, demo/anonymous recommendations no longer write browsing-context event rows, extension demo requests omit page URL/title, popup rendering no longer uses `innerHTML`, stored API base URLs are allowlisted before bearer-token use, Plaid token encryption now requires `PLAID_TOKEN_ENCRYPTION_KEY`, and authenticated recommendations return a controlled 422 when matched cards are missing from the local catalog.
+- Polished the wallet demo path from the audit: in-app Use Now now calls the same `/api/recommend-card` endpoint as the extension, manual card labels default to the selected card product name, Connected Accounts uses clearer `Add` wording, and account removal uses an in-app confirmation sheet instead of a browser-native confirm.
 - Production-smoked the signed-in manual-card API lifecycle against `https://card-reader-xi.vercel.app`: disposable Supabase user creation/sign-in, manual `amex-gold` add, wallet analysis inclusion, manual-safe zero-item transaction sync, signed-in Whole Foods recommendation/event logging, manual-card removal, post-removal wallet clear, and smoke-user cleanup.
 - Production-smoked the signed-in manual-card browser UI path with screenshot evidence for the empty wallet, manual Amex Gold entry preview, populated wallet/benefit trackers, and Connected Accounts row. Browser native confirm automation for remove timed out, so final cleanup used Supabase admin deletion and confirmed no user accounts remained.
 - Added a front-end demo polish slice for the wallet home and in-app Use Now flow: the wallet now has a visible demo-route CTA, merchant recommendations cover Whole Foods, Patagonia, Delta, Amazon, and Chipotle, merchant results show matched benefit chips, and manual card entry has a richer preview/status state.
@@ -55,10 +57,10 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- The in-app demo path is clearer, but it still needs browser screenshot/video evidence across the priority merchant matrix.
+- The in-app demo path now shares `/api/recommend-card` with the extension and still needs browser screenshot/video evidence across the priority merchant matrix.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
 - Manual-only users can safely trigger transaction sync without Plaid credentials or decrypting synthetic manual items; real transaction history still requires a future import/sync path.
-- Browser extension can store auth settings, call the auth-aware recommendation API, and refresh the active tab from the popup, but still needs manual or extension-capable browser smoke evidence across the priority merchant matrix.
+- Browser extension can store auth settings, call the auth-aware recommendation API, refresh the active tab from the popup, and uses a narrower merchant/app content-script allowlist, but still needs manual or extension-capable browser smoke evidence across the priority merchant matrix.
 - Benefits engine has an authenticated API endpoint and the wallet UI consumes it for signed-in analysis surfaces; component-local fallback logic still supports anonymous/demo sessions.
 - Test coverage now protects first-pass wallet analysis, signed-in UI mapping, `/api/wallet/analysis` route behavior, and card-match hints; browser-driven signed-in Plaid smoke is still missing.
 - Merchant offers are catalog hints, not issuer-scraped/live offers.
@@ -70,4 +72,4 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 2. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
 3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
-5. Improve UI polish around manual-card labels and native remove confirmation automation.
+5. Split `WalletPrototype.tsx` by behavior now that the audit-priority demo and safety fixes are in place.

@@ -180,6 +180,29 @@ type MerchantResult = {
   tags: string[];
 };
 
+type MerchantApiRecommendation = {
+  merchant: string;
+  category: string;
+  bestCard: {
+    id: string;
+    issuer: string;
+    name: string;
+    multiplier: number;
+    rewardCurrency?: string | null;
+  };
+  runnerUp?: {
+    id: string;
+    issuer: string;
+    name: string;
+    multiplier: number;
+    rewardCurrency?: string | null;
+  };
+  reason: string;
+  matchedOffer?: {
+    title: string;
+  } | null;
+};
+
 type RewardCategory = 'dining' | 'travel' | 'groceries' | 'flights' | 'hotel' | 'gas' | 'drugstore' | 'rent' | 'streaming' | 'capital_one_travel' | 'rotating_quarterly' | 'general';
 
 type TransactionRecommendation = TransactionRecommendationView;
@@ -1124,6 +1147,9 @@ export default function WalletPrototype() {
   const [emailDraft, setEmailDraft] = useState('');
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [merchantQuery, setMerchantQuery] = useState('');
+  const [merchantRecommendation, setMerchantRecommendation] = useState<MerchantApiRecommendation | null>(null);
+  const [merchantRecommendationStatus, setMerchantRecommendationStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [merchantRecommendationError, setMerchantRecommendationError] = useState<string | null>(null);
   const [showMerchantSearch, setShowMerchantSearch] = useState(false);
   const [walletPageIndex, setWalletPageIndex] = useState(0);
   const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
@@ -1140,6 +1166,7 @@ export default function WalletPrototype() {
   const [matchStatusByAccount, setMatchStatusByAccount] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const [editingMatchAccountIds, setEditingMatchAccountIds] = useState<string[]>([]);
   const [removingAccountIds, setRemovingAccountIds] = useState<string[]>([]);
+  const [accountPendingRemoval, setAccountPendingRemoval] = useState<PlaidConnectedAccount | null>(null);
   const [transactionSyncStatus, setTransactionSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [plaidTransactions, setPlaidTransactions] = useState<PlaidTransactionRow[]>([]);
   const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
@@ -1330,6 +1357,68 @@ export default function WalletPrototype() {
     [cardProducts, effectiveManualCardProductId],
   );
 
+  useEffect(() => {
+    const merchant = merchantQuery.trim();
+    if (!merchant) return;
+
+    const abortController = new AbortController();
+
+    async function loadMerchantRecommendation() {
+      setMerchantRecommendationStatus('loading');
+      setMerchantRecommendationError(null);
+
+      try {
+        const supabase = getBrowserSupabaseClient();
+        const { data } = supabase && isUserBackedWallet ? await supabase.auth.getSession() : { data: { session: null } };
+        const accessToken = data.session?.access_token;
+        const response = await fetch('/api/recommend-card', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: 'Bearer ' + accessToken } : {}),
+          },
+          body: JSON.stringify({ merchant }),
+          signal: abortController.signal,
+        });
+        const payload = (await response.json().catch(() => ({}))) as MerchantApiRecommendation & { error?: string };
+
+        if (!response.ok || !payload.bestCard) {
+          throw new Error(payload.error ?? 'Unable to load merchant recommendation.');
+        }
+
+        setMerchantRecommendation(payload);
+        setMerchantRecommendationStatus('ready');
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        setMerchantRecommendation(null);
+        setMerchantRecommendationStatus('error');
+        setMerchantRecommendationError(error instanceof Error ? error.message : 'Unable to load merchant recommendation.');
+      }
+    }
+
+    void loadMerchantRecommendation();
+
+    return () => abortController.abort();
+  }, [isUserBackedWallet, merchantQuery]);
+
+  const liveMerchantResult = useMemo<MerchantResult | null>(() => {
+    if (merchantRecommendationStatus !== 'ready' || !merchantRecommendation) return null;
+
+    const offerTitle = merchantRecommendation.matchedOffer?.title;
+    return {
+      id: `live-${merchantRecommendation.merchant.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      merchant: merchantRecommendation.merchant,
+      category: readableRewardCategory(merchantRecommendation.category as RewardCategory),
+      card: merchantRecommendation.bestCard.name,
+      rank: 1,
+      reward: `${merchantRecommendation.bestCard.multiplier}x ${merchantRecommendation.bestCard.rewardCurrency ?? 'rewards'}`,
+      value: 'Live recommendation',
+      reason: merchantRecommendation.reason,
+      matchedBenefits: [offerTitle, merchantRecommendation.runnerUp ? `Runner-up: ${merchantRecommendation.runnerUp.name}` : null].filter((value): value is string => Boolean(value)),
+      tags: [merchantRecommendation.merchant.toLowerCase(), merchantRecommendation.category.toLowerCase()],
+    };
+  }, [merchantRecommendation, merchantRecommendationStatus]);
+
   const merchantResults = useMemo(() => {
     const normalized = merchantQuery.trim().toLowerCase();
     const results = normalized
@@ -1338,8 +1427,11 @@ export default function WalletPrototype() {
         )
       : [];
 
-    return [...results].sort((a, b) => a.rank - b.rank);
-  }, [merchantQuery]);
+    const sortedResults = [...results].sort((a, b) => a.rank - b.rank);
+    if (!liveMerchantResult || !normalized) return sortedResults;
+
+    return [liveMerchantResult, ...sortedResults.filter((result) => result.merchant !== liveMerchantResult.merchant || result.card !== liveMerchantResult.card).map((result) => ({ ...result, rank: result.rank + 1 }))];
+  }, [liveMerchantResult, merchantQuery]);
   const analysisTransactionRecommendations = useMemo(
     () => (walletAnalysis?.recommendations ?? []).map(recommendationFromAnalysis),
     [walletAnalysis],
@@ -1558,6 +1650,7 @@ export default function WalletPrototype() {
         throw new Error('Sign in before adding a manual card.');
       }
 
+      const manualCardLabel = selectedManualCardProduct?.name ?? draftCard.name;
       const response = await fetch('/api/wallet/manual-cards', {
         method: 'POST',
         headers: {
@@ -1567,7 +1660,7 @@ export default function WalletPrototype() {
         body: JSON.stringify({
           cardProductId,
           last4: draftCard.last4,
-          label: draftCard.name,
+          label: manualCardLabel,
         }),
       });
       const payload = (await response.json().catch(() => ({}))) as ManualCardResponse;
@@ -1758,14 +1851,15 @@ export default function WalletPrototype() {
     void loadWalletAnalysis();
   }
 
+  function requestRemoveConnectedAccount(account: PlaidConnectedAccount) {
+    setAccountPendingRemoval(account);
+  }
+
   async function removeConnectedAccount(account: PlaidConnectedAccount) {
     if (!user || !account.dbId) {
       setPlaidError('Sign in again before removing this connected account.');
       return;
     }
-
-    const confirmed = window.confirm(`Remove ${account.cardProductName ?? account.name} from Connected Accounts?`);
-    if (!confirmed) return;
 
     const supabase = getBrowserSupabaseClient();
     if (!supabase) return;
@@ -1809,6 +1903,7 @@ export default function WalletPrototype() {
       setPlaidError(error instanceof Error ? error.message : 'Unable to remove connected account.');
     } finally {
       setRemovingAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
+      setAccountPendingRemoval((current) => (current?.accountId === account.accountId ? null : current));
     }
   }
 
@@ -2014,9 +2109,19 @@ export default function WalletPrototype() {
                     </div>
                   )}
 
-                  {merchantQuery.trim() && (
-                    <div className="mt-4 flex-1 space-y-3 overflow-y-auto pb-4 [scrollbar-width:none]">
-                      {merchantResults.length > 0 ? (
+	                  {merchantQuery.trim() && (
+	                    <div className="mt-4 flex-1 space-y-3 overflow-y-auto pb-4 [scrollbar-width:none]">
+	                      {merchantRecommendationStatus === 'loading' && (
+	                        <div className="rounded-[24px] border border-white/10 bg-white/[0.07] p-4 text-[13px] leading-5 text-white/70">
+	                          Checking live recommendation...
+	                        </div>
+	                      )}
+	                      {merchantRecommendationStatus === 'error' && merchantRecommendationError && (
+	                        <div className="rounded-[24px] border border-amber-300/18 bg-amber-300/10 p-4 text-[13px] leading-5 text-amber-50/86">
+	                          {merchantRecommendationError}
+	                        </div>
+	                      )}
+	                      {merchantResults.length > 0 ? (
                         merchantResults.map((item, index) => (
                           <div key={item.id} className={index === 0 ? 'rounded-[26px] bg-white p-4 text-[#080a0f]' : 'rounded-[24px] border border-white/10 bg-white/[0.07] p-4'}>
                             <div className="flex items-start justify-between gap-3">
@@ -2579,9 +2684,9 @@ export default function WalletPrototype() {
                   <button type="button" onClick={syncPlaidTransactions} disabled={transactionSyncStatus === 'syncing' || plaidAccounts.length === 0} className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-white/82 disabled:cursor-not-allowed disabled:opacity-40">
                     {transactionSyncStatus === 'syncing' ? 'Syncing' : 'Txns'}
                   </button>
-                  <button type="button" onClick={openScanner} className="rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#060816]">
-                    Sync
-                  </button>
+	                  <button type="button" onClick={openScanner} className="rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#060816]">
+	                    Add
+	                  </button>
                 </div>
               </div>
 
@@ -2687,7 +2792,7 @@ export default function WalletPrototype() {
                                   <button
                                     type="button"
                                     disabled={isRemoving}
-                                    onClick={() => void removeConnectedAccount(account)}
+	                                    onClick={() => requestRemoveConnectedAccount(account)}
                                     className="text-[12px] font-medium text-rose-100/76 disabled:opacity-50"
                                   >
                                     {isRemoving ? 'Removing...' : 'Remove'}
@@ -2698,7 +2803,7 @@ export default function WalletPrototype() {
                                 <button
                                   type="button"
                                   disabled={isRemoving}
-                                  onClick={() => void removeConnectedAccount(account)}
+	                                  onClick={() => requestRemoveConnectedAccount(account)}
                                   className="mt-2 text-[12px] font-medium text-rose-100/76 disabled:opacity-50"
                                 >
                                   {isRemoving ? 'Removing...' : 'Remove account'}
@@ -2715,7 +2820,7 @@ export default function WalletPrototype() {
                               <button
                                 type="button"
                                 disabled={isRemoving}
-                                onClick={() => void removeConnectedAccount(account)}
+	                                onClick={() => requestRemoveConnectedAccount(account)}
                                 className="rounded-full bg-rose-300/12 px-3 py-1.5 text-xs font-medium text-rose-50/82 disabled:cursor-not-allowed disabled:opacity-40"
                               >
                                 {isRemoving ? 'Removing' : 'Remove'}
@@ -3040,9 +3145,20 @@ export default function WalletPrototype() {
                     </button>
                   ))}
                 </div>
-              </div>
+	              </div>
 
-              <div className="rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
+	              {merchantQuery.trim() && merchantRecommendationStatus === 'loading' && (
+	                <div className="rounded-[24px] border border-white/12 bg-[#0d1224]/90 p-4 text-sm leading-6 text-white/70 backdrop-blur-xl">
+	                  Checking live recommendation...
+	                </div>
+	              )}
+	              {merchantQuery.trim() && merchantRecommendationStatus === 'error' && merchantRecommendationError && (
+	                <div className="rounded-[24px] border border-amber-300/18 bg-amber-300/10 p-4 text-sm leading-6 text-amber-50/86 backdrop-blur-xl">
+	                  {merchantRecommendationError}
+	                </div>
+	              )}
+
+	              <div className="rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.22em] text-white/50">Top result</p>
@@ -3466,10 +3582,40 @@ export default function WalletPrototype() {
               )}
             </motion.div>
           </div>
-        )}
+	        )}
 
-        <AuthEntrySheet
-          isOpen={authFlow === 'entry'}
+	        {accountPendingRemoval && (
+	          <div className="absolute inset-0 z-40 flex items-end bg-black/48 px-4 pb-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="remove-connected-account-title">
+	            <div className="w-full rounded-[30px] border border-white/12 bg-[#151922] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.42)]" style={appleInfoFontStyle}>
+	              <p id="remove-connected-account-title" className="text-[17px] font-semibold tracking-[-0.02em] text-white">
+	                Remove {accountPendingRemoval.cardProductName ?? accountPendingRemoval.name}?
+	              </p>
+	              <p className="mt-2 text-sm leading-6 text-white/68">
+	                This removes the connected account and its card match from this wallet. You can add it again later from Connected Accounts.
+	              </p>
+	              <div className="mt-4 grid grid-cols-2 gap-2">
+	                <button
+	                  type="button"
+	                  onClick={() => setAccountPendingRemoval(null)}
+	                  className="rounded-full bg-white/10 px-4 py-3 text-sm font-medium text-white/82"
+	                >
+	                  Cancel
+	                </button>
+	                <button
+	                  type="button"
+	                  disabled={removingAccountIds.includes(accountPendingRemoval.accountId)}
+	                  onClick={() => void removeConnectedAccount(accountPendingRemoval)}
+	                  className="rounded-full bg-rose-300 px-4 py-3 text-sm font-semibold text-[#2d0508] disabled:cursor-not-allowed disabled:opacity-60"
+	                >
+	                  {removingAccountIds.includes(accountPendingRemoval.accountId) ? 'Removing' : 'Remove'}
+	                </button>
+	              </div>
+	            </div>
+	          </div>
+	        )}
+
+	        <AuthEntrySheet
+	          isOpen={authFlow === 'entry'}
           isLoading={authStatus === 'loading'}
           onClose={() => setAuthFlow('closed')}
           onContinueWithApple={signInWithApple}

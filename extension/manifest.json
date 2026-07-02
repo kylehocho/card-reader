@@ -10,7 +10,24 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://*.patagonia.com/*",
+        "https://*.amazon.com/*",
+        "https://*.delta.com/*",
+        "https://*.united.com/*",
+        "https://*.aa.com/*",
+        "https://*.airbnb.com/*",
+        "https://*.hyatt.com/*",
+        "https://*.marriott.com/*",
+        "https://*.hilton.com/*",
+        "https://*.wholefoodsmarket.com/*",
+        "https://*.uber.com/*",
+        "https://*.ubereats.com/*",
+        "https://*.chipotle.com/*",
+        "https://*.sephora.com/*",
+        "https://card-reader-xi.vercel.app/*",
+        "http://localhost:3000/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

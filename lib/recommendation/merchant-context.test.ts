@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { recommendCardForMerchant } from './merchant-context';
+import { NoEligibleMerchantCardsError, recommendCardForMerchant } from './merchant-context';
 
 describe('recommendCardForMerchant', () => {
   it('normalizes known merchant domains through the merchant catalog', () => {
@@ -93,5 +93,14 @@ describe('recommendCardForMerchant', () => {
         multiplier: 4,
       },
     });
+  });
+
+  it('rejects explicitly supplied card ids that are not in the catalog', () => {
+    expect(() =>
+      recommendCardForMerchant({
+        merchant: 'Patagonia',
+        cardProductIds: ['missing-card'],
+      }),
+    ).toThrow(NoEligibleMerchantCardsError);
   });
 });

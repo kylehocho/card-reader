@@ -10,7 +10,9 @@ const merchantDomainHints = {
   'hilton.com': { merchant: 'Hilton', categoryHint: 'hotel' },
   'wholefoodsmarket.com': { merchant: 'Whole Foods', categoryHint: 'groceries' },
   'uber.com': { merchant: 'Uber', categoryHint: 'travel' },
-  'ubereats.com': { merchant: 'Uber Eats', categoryHint: 'dining' }
+  'ubereats.com': { merchant: 'Uber Eats', categoryHint: 'dining' },
+  'chipotle.com': { merchant: 'Chipotle', categoryHint: 'dining' },
+  'sephora.com': { merchant: 'Sephora', categoryHint: 'shopping' }
 };
 
 function currentHost() {
@@ -30,7 +32,6 @@ function pageMerchantContext() {
   return {
     merchant,
     title,
-    url: window.location.href,
     host,
     categoryHint: hint?.categoryHint || ''
   };

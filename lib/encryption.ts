@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:
 const ALGORITHM = 'aes-256-gcm';
 
 function getEncryptionKey() {
-  const secret = process.env.PLAID_TOKEN_ENCRYPTION_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secret = process.env.PLAID_TOKEN_ENCRYPTION_KEY;
 
   if (!secret) {
     throw new Error('Missing token encryption secret. Set PLAID_TOKEN_ENCRYPTION_KEY.');

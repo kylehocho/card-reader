@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { recommendCardForMerchant, type MerchantContext } from '@/lib/recommendation/merchant-context';
+import { NoEligibleMerchantCardsError, recommendCardForMerchant, type MerchantContext } from '@/lib/recommendation/merchant-context';
 import { getSupabaseAdminClient } from '@/lib/supabase/server';
 import type { Database, Json } from '@/lib/supabase/types';
 
@@ -51,7 +51,15 @@ function loggingClient(existingClient: SupabaseAdminClient | null) {
   return getSupabaseAdminClient();
 }
 
-function requestSnapshot(context: MerchantContext): Json {
+function requestSnapshot(context: MerchantContext, mode: Database['public']['Tables']['recommendation_events']['Insert']['mode']): Json {
+  if (mode === 'demo') {
+    return {
+      merchant: context.merchant ?? null,
+      categoryHint: context.categoryHint ?? null,
+      requestedCardProductCount: context.cardProductIds?.length ?? null,
+    };
+  }
+
   return {
     merchant: context.merchant ?? null,
     host: context.host ?? null,
@@ -81,6 +89,8 @@ async function logRecommendationEvent(params: {
   candidateCardCount: number;
   recommendation: ReturnType<typeof recommendCardForMerchant>;
 }) {
+  if (params.mode === 'demo') return;
+
   const supabase = loggingClient(params.supabase);
   if (!supabase) return;
 
@@ -96,7 +106,7 @@ async function logRecommendationEvent(params: {
     runner_up_card_product_id: params.recommendation.runnerUp?.id ?? null,
     matched_offer_title: params.recommendation.matchedOffer?.title ?? null,
     candidate_card_count: params.candidateCardCount,
-    request_context: requestSnapshot(params.context),
+    request_context: requestSnapshot(params.context, params.mode),
     response_snapshot: recommendationSnapshot(params.recommendation),
   });
 
@@ -128,7 +138,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json(recommendation);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to recommend a card.';
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (error instanceof NoEligibleMerchantCardsError) {
+      return NextResponse.json({ error: error.message }, { status: 422 });
+    }
+
+    console.error('Unable to recommend a card', error);
+    return NextResponse.json({ error: 'Unable to recommend a card.' }, { status: 500 });
   }
 }
