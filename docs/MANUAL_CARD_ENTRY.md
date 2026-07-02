@@ -50,6 +50,22 @@ Validation:
 - Authentication is required.
 
 ## Smoke Test
+API-level production smoke completed on 2026-07-02 against `https://card-reader-xi.vercel.app` with a disposable signed-in Supabase user:
+- Manual `amex-gold` add created account `manual:amex-gold:4242` and `match_status = manual`.
+- Wallet analysis returned `linkedAccounts = 1`, `matchedAccounts = 1`, `trackerCount = 3`, and `welcomeBonusCount = 1`.
+- Transaction sync returned `{ itemCount: 0, totalSaved: 0, items: [] }` for the manual-only user.
+- Signed-in Whole Foods recommendation selected `amex-gold`, and recommendation events logged `mode = signed_in`.
+- Remove-account cleanup cleared wallet analysis back to zero linked/matched accounts.
+
+Browser UI production smoke completed on 2026-07-02:
+- Signed-in empty wallet rendered without demo cards.
+- Manual entry preview rendered the selected American Express Gold Card.
+- Saved card rendered in the wallet with 3 benefit trackers and the welcome bonus tracker.
+- Connected Accounts rendered one manual account row for American Express Gold Card.
+- UI sync stayed clean, and the sync endpoint returned a zero-item response.
+- Native confirm dialog automation timed out during UI removal, so the disposable user was deleted through Supabase admin and account cleanup was verified.
+
+Manual browser regression path:
 1. Sign in to the app.
 2. Open Add Card.
 3. Choose Manual.
