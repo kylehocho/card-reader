@@ -707,7 +707,45 @@ const seedMerchantResults: MerchantResult[] = [
     matchedBenefits: ['5x airfare', 'Lounge access', 'Airline incidental credit'],
     tags: ['delta', 'flight', 'flights', 'airline', 'travel'],
   },
+  {
+    id: 'patagonia-reserve',
+    merchant: 'Patagonia',
+    category: 'Outdoor retail',
+    card: 'Chase Sapphire Reserve',
+    rank: 1,
+    reward: '1x baseline + premium purchase protections',
+    value: '$8.40 est. value',
+    reason: 'No active merchant credit is known, so the Reserve wins the demo on purchase protection, return protection, and flexible point value.',
+    matchedBenefits: ['Purchase protection', 'Return protection', 'Flexible points'],
+    tags: ['patagonia', 'outdoor', 'retail', 'shopping', 'apparel'],
+  },
+  {
+    id: 'amazon-freedom',
+    merchant: 'Amazon',
+    category: 'Online marketplace',
+    card: 'Chase Freedom Flex',
+    rank: 1,
+    reward: '5x if quarterly category is active',
+    value: '$11.25 est. value',
+    reason: 'This is the clean rotating-category demo: use Freedom Flex when Amazon is active, then fall back to a broad 2x card after the cap is used.',
+    matchedBenefits: ['Rotating quarterly category', 'Category cap tracking', 'Fallback reminder'],
+    tags: ['amazon', 'marketplace', 'online shopping', 'shopping', 'retail'],
+  },
+  {
+    id: 'amazon-venture',
+    merchant: 'Amazon',
+    category: 'Online marketplace',
+    card: 'Capital One Venture X',
+    rank: 2,
+    reward: '2x miles fallback',
+    value: '$5.70 est. value',
+    reason: 'Use this as the simple fallback when rotating categories are inactive or the quarterly cap is exhausted.',
+    matchedBenefits: ['2x floor', 'Purchase protections'],
+    tags: ['amazon', 'marketplace', 'online shopping', 'shopping', 'retail'],
+  },
 ];
+
+const demoMerchantNames = ['Whole Foods', 'Patagonia', 'Delta', 'Amazon', 'Chipotle'];
 
 const seedWelcomeBonuses: WelcomeBonus[] = [
   {
@@ -1922,8 +1960,8 @@ export default function WalletPrototype() {
                 >
                   <div className="mb-4 flex items-center justify-between px-1">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/44">Search</p>
-                      <h2 className="mt-1 text-[28px] font-semibold tracking-[-0.04em] text-white">What should I use?</h2>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/44">Use Now</p>
+                      <h2 className="mt-1 text-[28px] font-semibold tracking-[-0.04em] text-white">Pick the right card</h2>
                     </div>
                     <button
                       type="button"
@@ -1947,7 +1985,7 @@ export default function WalletPrototype() {
                         autoFocus
                         value={merchantQuery}
                         onChange={(event) => setMerchantQuery(event.target.value)}
-                        placeholder="Search Sephora, Chipotle, Delta..."
+                        placeholder="Search Whole Foods, Patagonia, Delta..."
                         className="min-w-0 flex-1 bg-transparent text-[17px] font-semibold outline-none placeholder:text-black/35"
                       />
                       {merchantQuery.trim() && (
@@ -1960,9 +1998,9 @@ export default function WalletPrototype() {
 
                   {!merchantQuery.trim() && (
                     <div className="mt-4">
-                      <p className="px-1 text-[12px] font-medium text-white/54">Try a business</p>
+                      <p className="px-1 text-[12px] font-medium text-white/54">Demo merchants</p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {['Chipotle', 'Sephora', 'Whole Foods', 'Delta'].map((merchant) => (
+                        {demoMerchantNames.map((merchant) => (
                           <button
                             key={merchant}
                             type="button"
@@ -2002,6 +2040,13 @@ export default function WalletPrototype() {
                               </div>
                             </div>
                             <p className={index === 0 ? 'mt-3 text-[13px] leading-5 text-black/62' : 'mt-3 text-[13px] leading-5 text-white/66'}>{item.reason}</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {item.matchedBenefits.map((benefit) => (
+                                <span key={benefit} className={index === 0 ? 'rounded-full bg-black/[0.06] px-2.5 py-1 text-[11px] font-medium text-black/62' : 'rounded-full bg-white/[0.08] px-2.5 py-1 text-[11px] font-medium text-white/66'}>
+                                  {benefit}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -2058,6 +2103,34 @@ export default function WalletPrototype() {
               </div>
 
               <div className="relative z-10 -mt-8 px-2 pt-12">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMerchantQuery(featuredMerchant.merchant);
+                    setShowMerchantSearch(true);
+                    setWalletSelectionExpanded(false);
+                  }}
+                  className="mb-3 w-full rounded-[24px] border border-white/12 bg-white/[0.08] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                  style={appleInfoFontStyle}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/44">Demo route</p>
+                      <p className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-white">Use Now at {featuredMerchant.merchant}</p>
+                      <p className="mt-1 text-[13px] leading-5 text-white/64">
+                        Shows the extension-style recommendation inside the app before extension setup.
+                      </p>
+                    </div>
+                    <div className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#10131a]">
+                      {featuredMerchant.card}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between rounded-[18px] border border-white/10 bg-black/12 px-3 py-2 text-[13px] text-white/72">
+                    <span>{demoMerchantNames.length} demo merchants ready</span>
+                    <span className="text-white/44">Open</span>
+                  </div>
+                </button>
+
                 <div
                   className="rounded-[18px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   style={appleInfoFontStyle}
@@ -3335,15 +3408,45 @@ export default function WalletPrototype() {
                   </div>
                   <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                     <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Preview</p>
-                    <p className="mt-2 text-[20px] font-semibold tracking-[-0.02em] text-white">
-                      {isUserBackedWallet && selectedManualCardProduct
-                        ? `${selectedManualCardProduct.issuer} ${selectedManualCardProduct.name}`
-                        : `${draftCard.issuer} ${draftCard.name}`}
-                    </p>
-                    <p className="mt-1 text-sm text-white/74">
-                      {isUserBackedWallet ? 'Will be saved to this profile as a manually added card' : 'Will be added to your wallet stack'} as •••• {draftCard.last4}
+                    <div className={`mt-3 overflow-hidden rounded-[24px] bg-gradient-to-br ${selectedCard.gradient} p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]`}>
+                      <div className="flex items-start justify-between gap-3 text-white">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.24em] text-white/66">
+                            {isUserBackedWallet && selectedManualCardProduct ? selectedManualCardProduct.issuer : draftCard.issuer}
+                          </p>
+                          <p className="mt-5 text-[20px] font-semibold tracking-[-0.02em]">
+                            {isUserBackedWallet && selectedManualCardProduct ? selectedManualCardProduct.name : draftCard.name}
+                          </p>
+                        </div>
+                        <p className="text-xs text-white/72">•••• {draftCard.last4 || '0000'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div className="rounded-2xl bg-white/[0.06] px-3 py-2">
+                        <p className="text-[11px] text-white/42">Where it saves</p>
+                        <p className="mt-1 text-[13px] font-semibold text-white">{isUserBackedWallet ? 'Profile wallet' : 'Demo wallet'}</p>
+                      </div>
+                      <div className="rounded-2xl bg-white/[0.06] px-3 py-2">
+                        <p className="text-[11px] text-white/42">Used by</p>
+                        <p className="mt-1 text-[13px] font-semibold text-white">Analysis + Use Now</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-white/70">
+                      {isUserBackedWallet
+                        ? 'This creates a manual account match so recommendations can use the card immediately, even before Plaid history exists.'
+                        : 'This adds the card to the prototype stack for a fast demo.'}
                     </p>
                   </div>
+                  {manualCardStatus === 'saved' && (
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 py-2 text-sm leading-5 text-emerald-50/90">
+                      Card saved. Wallet analysis is refreshing and the card is ready for Use Now recommendations.
+                    </div>
+                  )}
+                  {manualCardStatus === 'error' && plaidError && (
+                    <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3 py-2 text-sm leading-5 text-rose-50/90">
+                      {plaidError}
+                    </div>
+                  )}
                   <button
                     onClick={finishDemoAdd}
                     disabled={manualCardStatus === 'saving' || (isUserBackedWallet && (!effectiveManualCardProductId || cardProducts.length === 0 || draftCard.last4.length !== 4))}
@@ -3358,7 +3461,7 @@ export default function WalletPrototype() {
                 <div className="mt-8 rounded-[28px] border border-emerald-400/20 bg-emerald-400/10 p-6 text-center transition-all duration-300">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-300/20 text-2xl text-white">✓</div>
                   <p className="mt-4 text-xl font-semibold text-white">{plaidStatus === 'connected' ? 'Plaid connected' : `${draftCard.name} added`}</p>
-                  <p className="mt-2 text-sm text-white/70">Sliding into your wallet now...</p>
+                  <p className="mt-2 text-sm text-white/70">Ready for wallet analysis and Use Now recommendations.</p>
                 </div>
               )}
             </motion.div>

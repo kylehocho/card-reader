@@ -14,6 +14,7 @@
 - Authenticated wallet-analysis API returns shared-engine trackers, welcome bonuses, alerts, and recommendations.
 - App wallet renders analysis from shared engine.
 - Manual card add persists card-product match for users without Plaid. Shipped first catalog-backed slice on 2026-07-01; production browser smoke remains.
+- In-app Use Now demo surface makes merchant recommendations visible without installing the extension. Initial demo merchants: Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
 
 ## Phase 2 - Benefit Tracking
 - Statement credit usage by reset window.

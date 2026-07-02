@@ -29,3 +29,31 @@ Ship the first persisted manual-card setup slice so signed-in users can add a ca
 
 ## Next Best Action
 Deploy to production, smoke the signed-in manual-card add/remove path, and verify authenticated recommendations include the manually matched card set.
+
+---
+
+# Front-End Demo Polish - 2026-07-01
+
+## Goal
+Make the app easier to demo without relying on extension setup by surfacing an in-app Use Now recommendation path and improving the manual-card setup preview.
+
+## Changed
+- Added a wallet-home Demo route CTA that opens the Use Now recommendation surface.
+- Expanded demo merchant coverage to Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
+- Updated the Use Now surface copy from raw search toward a recommendation/demo workflow.
+- Added matched-benefit chips to merchant recommendation results.
+- Improved manual card entry with a card-style preview, save destination, analysis/recommendation context, and clearer saved/error messaging.
+- Updated `PROJECT_STATE.md` and `ROADMAP.md`.
+
+## Verification
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- Local HTTP smoke: `curl -I http://localhost:3000` returned `200 OK`.
+
+## Risks
+- Browser screenshot/video evidence was not captured because browser automation was blocked in this chat lane.
+- Signed-in production smoke is still needed for the full manual-card add/remove path.
+
+## Next Best Action
+Deploy the UI polish, then capture production screenshots for the wallet-home Demo route, Use Now merchant results, and manual card preview.
