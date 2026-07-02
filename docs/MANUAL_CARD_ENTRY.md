@@ -1,6 +1,6 @@
 # Manual Card Entry
 
-Last updated: 2026-07-01
+Last updated: 2026-07-02
 
 ## Goal
 Signed-in users can add a card without Plaid by choosing a known card product from the MVP catalog and entering the last four digits. The saved card uses the same wallet-analysis and recommendation paths as Plaid-linked cards.
@@ -15,6 +15,9 @@ Signed-in users can add a card without Plaid by choosing a known card product fr
 - Analysis/recommendations:
   - `GET /api/wallet/analysis` sees the manual account through the existing account/match query.
   - Authenticated `POST /api/recommend-card` includes the matched manual card product because it reads `account_card_matches`.
+- Transaction sync:
+  - `POST /api/plaid/sync-transactions` only processes `plaid_items.status = active`.
+  - Manual-only users receive a clean zero-item response instead of initializing Plaid credentials or decrypting the synthetic manual token.
 
 ## API Contract
 Request:
@@ -53,8 +56,9 @@ Validation:
 4. Select a catalog product and enter four digits.
 5. Click Add card.
 6. Confirm the wallet shows the manually added card.
-7. Open Connected Accounts and confirm the card can be removed.
-8. With the same session token, call `POST /api/recommend-card` and confirm recommendations use the manually matched card set.
+7. Trigger transaction sync and confirm it does not error if the user has no active Plaid item.
+8. Open Connected Accounts and confirm the card can be removed.
+9. With the same session token, call `POST /api/recommend-card` and confirm recommendations use the manually matched card set.
 
 ## Limits
 - Manual cards have no transaction history until a later import/sync path exists.

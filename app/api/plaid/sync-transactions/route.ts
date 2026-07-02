@@ -31,7 +31,6 @@ export async function POST(request: Request) {
     startDate.setDate(endDate.getDate() - days);
 
     const supabase = getSupabaseAdminClient();
-    const plaid = getPlaidClient();
     let itemQuery = supabase
       .from('plaid_items')
       .select('id,user_id,access_token_encrypted,status')
@@ -45,10 +44,19 @@ export async function POST(request: Request) {
     const { data: plaidItems, error: itemsError } = await itemQuery;
     if (itemsError) throw new Error(itemsError.message);
 
+    if (!plaidItems || plaidItems.length === 0) {
+      return NextResponse.json({
+        itemCount: 0,
+        totalSaved: 0,
+        items: [],
+      });
+    }
+
+    const plaid = getPlaidClient();
     const itemResults = [];
     let totalSaved = 0;
 
-    for (const item of plaidItems ?? []) {
+    for (const item of plaidItems) {
       const accessToken = decryptSecret(item.access_token_encrypted);
       const [transactionsResponse, { data: accounts, error: accountsError }] = await Promise.all([
         plaid.transactionsGet({

@@ -14,7 +14,7 @@
 - `lib/cards/top-priority-cards.ts`: app helper for priority catalog.
 - `lib/cards/card-match-hints.ts`: deterministic Plaid account-to-card-product suggestion helper.
 - `lib/benefits/analyze-wallet.ts`: pure wallet analysis engine.
-- `app/api/plaid/*`: Plaid linking/sync routes.
+- `app/api/plaid/*`: Plaid linking/sync routes. Transaction sync only processes active Plaid items.
 - `app/api/recommend-card`: merchant context recommendation API.
 - `app/api/wallet/analysis`: authenticated wallet analysis API for linked accounts.
 - `app/api/wallet/manual-cards`: authenticated no-Plaid card entry API that creates a manual account and card-product match.
@@ -72,6 +72,8 @@ Successful recommendation calls are also written to `recommendation_events` when
 `POST /api/wallet/manual-cards` requires a Supabase bearer token. It lets a signed-in user add a known catalog product without Plaid by sending `cardProductId`, `last4`, and an optional `label`.
 
 The route creates or reuses one synthetic `plaid_items` row with `status = manual`, upserts a synthetic `plaid_accounts` credit-card row keyed as `manual:<cardProductId>:<last4>`, and upserts an `account_card_matches` row with `match_status = manual`. The manual item status keeps transaction sync from trying to decrypt or sync a non-Plaid token, while wallet analysis and authenticated merchant recommendations continue to read through the existing account/match tables.
+
+`POST /api/plaid/sync-transactions` filters `plaid_items` to `status = active` before it initializes the Plaid client or decrypts access tokens. A manual-only user receives `{ itemCount: 0, totalSaved: 0, items: [] }`, which keeps the no-Plaid setup path safe when the UI transaction-sync action is triggered before any real Plaid item exists.
 
 ## Wallet Analysis API Shape
 `GET /api/wallet/analysis` requires a Supabase bearer token. It loads the authenticated user's linked Plaid accounts, card-product matches, recent transactions, and the full card catalog before calling `analyzeWallet()`.
