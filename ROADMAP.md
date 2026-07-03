@@ -15,6 +15,7 @@
 - App wallet renders analysis from shared engine.
 - Manual card add persists card-product match for users without Plaid. Shipped first catalog-backed slice on 2026-07-01; signed-in production API and browser UI smoke passed on 2026-07-02.
 - In-app Use Now demo surface makes merchant recommendations visible without installing the extension and now calls the same `/api/recommend-card` path as the extension. Initial demo merchants: Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
+- The Use Now demo merchant matrix is shared between the UI and backend tests so the five demo merchants stay aligned with catalog-backed recommendation behavior.
 - Audit hardening from 2026-07-02 narrowed extension content-script scope, sanitized extension popup rendering, allowlisted extension API base URLs, stopped anonymous recommendation-event logging, and made Plaid token encryption use an explicit secret.
 
 ## Phase 2 - Benefit Tracking
@@ -45,7 +46,7 @@
 - Paid-plan/subscription readiness.
 
 ## Current Sprint
-- Smoke Use Now and extension popup paths with screenshots.
+- Capture Use Now and extension popup screenshot/video evidence after the automated demo-merchant coverage added on 2026-07-03.
 - Split `WalletPrototype.tsx` into smaller behavior-owned components after smoke evidence.
 - Keep extension privacy/security guardrails intact as new merchants are added.
 - Keep docs current after each material decision.

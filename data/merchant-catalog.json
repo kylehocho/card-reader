@@ -19,7 +19,15 @@
     "name": "Amazon",
     "domains": ["amazon.com"],
     "aliases": ["amazon.com", "amazon marketplace"],
-    "category": "general",
+    "category": "rotating_quarterly",
+    "offers": []
+  },
+  {
+    "id": "chipotle",
+    "name": "Chipotle",
+    "domains": ["chipotle.com"],
+    "aliases": ["chipotle mexican grill", "chipotle restaurant"],
+    "category": "dining",
     "offers": []
   },
   {

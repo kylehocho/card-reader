@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Locked the in-app Use Now demo merchant matrix to backend recommendation behavior: shared demo merchant request contexts now drive the UI chips and `/api/recommend-card` calls, Chipotle is cataloged as dining, Amazon is the current rotating-quarterly demo merchant, and tests cover Whole Foods, Patagonia, Delta, Amazon, and Chipotle best-card outputs.
 - Implemented the 2026-07-02 Jazz/Fable audit fix batch: extension content scripts are no longer injected on `<all_urls>`, demo/anonymous recommendations no longer write browsing-context event rows, extension demo requests omit page URL/title, popup rendering no longer uses `innerHTML`, stored API base URLs are allowlisted before bearer-token use, Plaid token encryption now requires `PLAID_TOKEN_ENCRYPTION_KEY`, and authenticated recommendations return a controlled 422 when matched cards are missing from the local catalog.
 - Polished the wallet demo path from the audit: in-app Use Now now calls the same `/api/recommend-card` endpoint as the extension, manual card labels default to the selected card product name, Connected Accounts uses clearer `Add` wording, and account removal uses an in-app confirmation sheet instead of a browser-native confirm.
 - Production-smoked the signed-in manual-card API lifecycle against `https://card-reader-xi.vercel.app`: disposable Supabase user creation/sign-in, manual `amex-gold` add, wallet analysis inclusion, manual-safe zero-item transaction sync, signed-in Whole Foods recommendation/event logging, manual-card removal, post-removal wallet clear, and smoke-user cleanup.
@@ -54,10 +55,11 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Authenticated manual card entry at `POST /api/wallet/manual-cards` for users who need a no-Plaid card setup path.
 - Auth-aware merchant recommendation API at `POST /api/recommend-card`.
 - Merchant catalog normalization for known extension smoke merchants and offer hints.
+- Shared Use Now demo merchant contexts for Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- The in-app demo path now shares `/api/recommend-card` with the extension and still needs browser screenshot/video evidence across the priority merchant matrix.
+- The in-app demo path now shares `/api/recommend-card` with the extension and has automated best-card coverage across the priority merchant matrix, but still needs browser screenshot/video evidence.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
 - Manual-only users can safely trigger transaction sync without Plaid credentials or decrypting synthetic manual items; real transaction history still requires a future import/sync path.
 - Browser extension can store auth settings, call the auth-aware recommendation API, refresh the active tab from the popup, and uses a narrower merchant/app content-script allowlist, but still needs manual or extension-capable browser smoke evidence across the priority merchant matrix.
@@ -68,7 +70,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Production-smoke the front-end Use Now demo path: open wallet, use the Demo route CTA, test Whole Foods/Patagonia/Delta/Amazon/Chipotle recommendations, and capture screenshots.
+1. Capture browser evidence for the front-end Use Now demo path: open wallet, use the Demo route CTA, test Whole Foods/Patagonia/Delta/Amazon/Chipotle recommendations, and save screenshots/video.
 2. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
 3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.

@@ -18,6 +18,7 @@ import {
   type WelcomeBonusView,
 } from '@/lib/benefits/wallet-analysis-view';
 import { suggestCardProductMatch, type CardProductMatchSuggestion } from '@/lib/cards/card-match-hints';
+import { demoMerchantContextForQuery, useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { MotionConfig, motion } from 'framer-motion';
@@ -768,8 +769,6 @@ const seedMerchantResults: MerchantResult[] = [
   },
 ];
 
-const demoMerchantNames = ['Whole Foods', 'Patagonia', 'Delta', 'Amazon', 'Chipotle'];
-
 const seedWelcomeBonuses: WelcomeBonus[] = [
   {
     id: 'gold-welcome',
@@ -1377,7 +1376,7 @@ export default function WalletPrototype() {
             'Content-Type': 'application/json',
             ...(accessToken ? { Authorization: 'Bearer ' + accessToken } : {}),
           },
-          body: JSON.stringify({ merchant }),
+          body: JSON.stringify(demoMerchantContextForQuery(merchant)),
           signal: abortController.signal,
         });
         const payload = (await response.json().catch(() => ({}))) as MerchantApiRecommendation & { error?: string };
@@ -2095,7 +2094,7 @@ export default function WalletPrototype() {
                     <div className="mt-4">
                       <p className="px-1 text-[12px] font-medium text-white/54">Demo merchants</p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {demoMerchantNames.map((merchant) => (
+                        {useNowDemoMerchantNames.map((merchant) => (
                           <button
                             key={merchant}
                             type="button"
@@ -2231,7 +2230,7 @@ export default function WalletPrototype() {
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between rounded-[18px] border border-white/10 bg-black/12 px-3 py-2 text-[13px] text-white/72">
-                    <span>{demoMerchantNames.length} demo merchants ready</span>
+                    <span>{useNowDemoMerchantNames.length} demo merchants ready</span>
                     <span className="text-white/44">Open</span>
                   </div>
                 </button>
@@ -3119,7 +3118,7 @@ export default function WalletPrototype() {
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {['Chipotle', 'Sephora', 'Whole Foods', 'Delta'].map((merchant) => (
+                  {useNowDemoMerchantNames.map((merchant) => (
                     <button
                       key={merchant}
                       type="button"

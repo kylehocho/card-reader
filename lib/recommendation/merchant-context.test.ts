@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { NoEligibleMerchantCardsError, recommendCardForMerchant } from './merchant-context';
+import { useNowDemoMerchants } from './use-now-demo-merchants';
 
 describe('recommendCardForMerchant', () => {
   it('normalizes known merchant domains through the merchant catalog', () => {
@@ -56,6 +57,23 @@ describe('recommendCardForMerchant', () => {
         multiplier: 4,
       },
     });
+  });
+
+  it('covers the in-app Use Now demo merchant matrix with catalog-backed recommendations', () => {
+    const expectedBestCards = new Map([
+      ['whole-foods', 'amex-gold'],
+      ['patagonia', 'capital-one-venture-x'],
+      ['delta', 'amex-platinum'],
+      ['amazon', 'chase-freedom-flex'],
+      ['chipotle', 'amex-gold'],
+    ]);
+
+    for (const merchant of useNowDemoMerchants) {
+      const recommendation = recommendCardForMerchant(merchant.context);
+      expect(recommendation.bestCard.id, merchant.label).toBe(expectedBestCards.get(merchant.id));
+      expect(recommendation.merchant, merchant.label).toBeTruthy();
+      expect(recommendation.reason, merchant.label).toContain('merchant catalog match');
+    }
   });
 
   it('returns merchant-specific offer hints when the user has an eligible card', () => {

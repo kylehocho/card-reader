@@ -58,7 +58,9 @@ Input:
 }
 ```
 
-The endpoint now normalizes merchant context against `data/merchant-catalog.json` before falling back to text/category inference. The catalog keeps merchant detection thin: the extension sends host/title/category hints, and the backend owns canonical merchant names, reward categories, aliases, and merchant-specific offer hints.
+The endpoint now normalizes merchant context against `data/merchant-catalog.json` before falling back to text/category inference. The catalog keeps merchant detection thin: clients send host/title/category hints, and the backend owns canonical merchant names, reward categories, aliases, and merchant-specific offer hints.
+
+The in-app Use Now demo path stores its five priority merchant contexts in `lib/recommendation/use-now-demo-merchants.ts`. `WalletPrototype` uses those labels for demo chips and sends the richer context for exact demo searches, while `lib/recommendation/merchant-context.test.ts` verifies the intended best-card outputs for Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
 
 `npm run seed:merchant-intelligence` mirrors the JSON merchant catalog, merchant offer hints, and top-priority card reward rules into Supabase. `GET /api/merchant-intelligence` exposes a server-side availability/count check for those backend tables. Recommendation execution still uses the local JSON fallback until the Supabase-backed scorer is wired and tested.
 
