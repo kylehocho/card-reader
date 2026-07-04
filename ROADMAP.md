@@ -46,7 +46,7 @@
 - Paid-plan/subscription readiness.
 
 ## Current Sprint
-- Capture Use Now and extension popup screenshot/video evidence after the automated demo-merchant coverage added on 2026-07-03.
+- Capture Use Now and extension popup screenshot/video evidence after the automated demo-merchant coverage added on 2026-07-03 and the direct Use Now demo routes added on 2026-07-04.
 - Split `WalletPrototype.tsx` into smaller behavior-owned components after smoke evidence.
 - Keep extension privacy/security guardrails intact as new merchants are added.
 - Keep docs current after each material decision.

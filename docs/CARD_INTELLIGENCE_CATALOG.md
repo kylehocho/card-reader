@@ -8,6 +8,7 @@ The recommendation product should treat merchant detection as a thin signal coll
 - `data/merchant-catalog.json` stores normalized merchants, domains, aliases, categories, and merchant-specific offer hints.
 - `lib/recommendation/merchant-context.ts` joins those catalogs in memory for `POST /api/recommend-card`.
 - `lib/recommendation/use-now-demo-merchants.ts` stores the in-app Use Now demo merchant matrix and request contexts for Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
+- `lib/recommendation/use-now-route-state.ts` parses shareable Use Now route state so smoke checks can open a specific demo merchant directly.
 - `card_products` in Supabase stores card catalog rows for signed-in wallet analysis.
 - `merchant_catalog`, `merchant_offer_rules`, and `card_reward_rules` can now be seeded into Supabase with `npm run seed:merchant-intelligence`.
 - `GET /api/merchant-intelligence` returns backend availability/counts for the seeded merchant intelligence tables.
@@ -42,3 +43,18 @@ The recommendation product should treat merchant detection as a thin signal coll
 - Chipotle: dining catalog match, best card `amex-gold`.
 
 Amazon is currently a demo catalog hint. Before treating it as production personalization, add issuer activation windows, user enrollment state, and quarterly cap tracking.
+
+## Use Now Deep Links
+The wallet accepts query-string state for the demo recommendation surface:
+
+```text
+/?screen=use-now&merchant=Whole%20Foods
+```
+
+Supported behavior:
+- `screen=use-now` opens the full Use Now screen and preloads the merchant recommendation.
+- `screen=wallet&merchant=Patagonia` opens the wallet merchant-search panel for the merchant.
+- Demo merchant names are normalized back to their canonical labels, so lower-case links such as `merchant=whole%20foods` still render `Whole Foods`.
+- Arbitrary merchant input is capped before being written into React state; it still flows through the existing `/api/recommend-card` fallback path.
+
+This is intentionally a smoke/evidence affordance, not a new routing system. The app still uses the same client component and the same `/api/recommend-card` backend behavior.

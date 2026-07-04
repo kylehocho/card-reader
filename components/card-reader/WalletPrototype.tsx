@@ -19,6 +19,7 @@ import {
 } from '@/lib/benefits/wallet-analysis-view';
 import { suggestCardProductMatch, type CardProductMatchSuggestion } from '@/lib/cards/card-match-hints';
 import { demoMerchantContextForQuery, useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
+import { buildUseNowRouteSearchForMerchant, parseUseNowRouteState } from '@/lib/recommendation/use-now-route-state';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/types';
 import { MotionConfig, motion } from 'framer-motion';
@@ -1182,6 +1183,29 @@ export default function WalletPrototype() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const timeoutId = window.setTimeout(() => {
+      const routeState = parseUseNowRouteState(window.location.search);
+      if (routeState.screen) setScreen(routeState.screen);
+      if (routeState.merchant) setMerchantQuery(routeState.merchant);
+      if (routeState.showMerchantSearch) setShowMerchantSearch(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const openUseNowDemo = useCallback((merchant: string) => {
+    setMerchantQuery(merchant);
+    setScreen('use-now');
+    setShowMerchantSearch(false);
+    setWalletSelectionExpanded(false);
+
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', buildUseNowRouteSearchForMerchant(merchant));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (usesSupabase) {
       window.localStorage.removeItem(PLAID_STORAGE_KEY);
       return;
@@ -2098,7 +2122,7 @@ export default function WalletPrototype() {
                           <button
                             key={merchant}
                             type="button"
-                            onClick={() => setMerchantQuery(merchant)}
+                            onClick={() => openUseNowDemo(merchant)}
                             className="rounded-full border border-white/12 bg-white/[0.07] px-3 py-2 text-xs font-medium text-white/76 transition hover:bg-white/12"
                           >
                             {merchant}
@@ -2209,11 +2233,7 @@ export default function WalletPrototype() {
               <div className="relative z-10 -mt-8 px-2 pt-12">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMerchantQuery(featuredMerchant.merchant);
-                    setShowMerchantSearch(true);
-                    setWalletSelectionExpanded(false);
-                  }}
+                  onClick={() => openUseNowDemo(featuredMerchant.merchant)}
                   className="mb-3 w-full rounded-[24px] border border-white/12 bg-white/[0.08] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
                   style={appleInfoFontStyle}
                 >
@@ -3102,9 +3122,9 @@ export default function WalletPrototype() {
                 <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-white">Use Now</h2>
                 <div className="w-[56px]" />
               </div>
-              <div className="rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
+              <div className="overflow-hidden rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/50">Best card assistant</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">What should I use right now?</h2>
+                <h2 className="mt-2 text-[22px] font-semibold leading-tight text-white">What should I use right now?</h2>
                 <p className="mt-2 text-sm leading-6 text-white/74">Search a business and compare the cards that rank highest for that merchant.</p>
                 <div className="mt-4 rounded-[22px] border border-white/12 bg-white/[0.07] px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -3122,7 +3142,7 @@ export default function WalletPrototype() {
                     <button
                       key={merchant}
                       type="button"
-                      onClick={() => setMerchantQuery(merchant)}
+                      onClick={() => openUseNowDemo(merchant)}
                       className="rounded-full border border-white/12 bg-[#8d949f]/20 px-3 py-2 text-xs text-white/76 transition hover:bg-white/12"
                     >
                       {merchant}
@@ -3157,9 +3177,9 @@ export default function WalletPrototype() {
 	                </div>
 	              )}
 
-	              <div className="rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
+	              <div className="overflow-hidden rounded-[30px] border border-white/12 bg-[#0d1224]/90 p-4 backdrop-blur-xl">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs uppercase tracking-[0.22em] text-white/50">Top result</p>
                     <h3 className="mt-2 text-xl font-semibold text-white">Use {featuredMerchant.card}</h3>
                     <p className="mt-1 text-sm text-white/60">{featuredMerchant.merchant} · {featuredMerchant.category}</p>
@@ -3167,13 +3187,13 @@ export default function WalletPrototype() {
                   <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#111317]">#{featuredMerchant.rank}</span>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl bg-white/[0.06] px-3 py-3">
+                  <div className="min-w-0 rounded-2xl bg-white/[0.06] px-3 py-3">
                     <p className="text-[11px] text-white/46">Reward</p>
-                    <p className="mt-1 text-[14px] font-medium text-white">{featuredMerchant.reward}</p>
+                    <p className="mt-1 truncate text-[14px] font-medium text-white">{featuredMerchant.reward}</p>
                   </div>
-                  <div className="rounded-2xl bg-white/[0.06] px-3 py-3">
+                  <div className="min-w-0 rounded-2xl bg-white/[0.06] px-3 py-3">
                     <p className="text-[11px] text-white/46">Est. value</p>
-                    <p className="mt-1 text-[14px] font-medium text-white">{featuredMerchant.value}</p>
+                    <p className="mt-1 truncate text-[14px] font-medium text-white">{featuredMerchant.value}</p>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-6 text-white/72">{featuredMerchant.reason}</p>

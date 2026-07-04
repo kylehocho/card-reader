@@ -19,6 +19,7 @@
 - `app/api/wallet/analysis`: authenticated wallet analysis API for linked accounts.
 - `app/api/wallet/manual-cards`: authenticated no-Plaid card entry API that creates a manual account and card-product match.
 - `components/card-reader/WalletPrototype.tsx`: mobile-first wallet client; signed-in analysis panels consume `/api/wallet/analysis`.
+- `lib/recommendation/use-now-route-state.ts`: shareable Use Now query-state parser for demo and smoke routes.
 - `extension/`: browser extension MVP.
 
 ## Data Flow
@@ -60,7 +61,7 @@ Input:
 
 The endpoint now normalizes merchant context against `data/merchant-catalog.json` before falling back to text/category inference. The catalog keeps merchant detection thin: clients send host/title/category hints, and the backend owns canonical merchant names, reward categories, aliases, and merchant-specific offer hints.
 
-The in-app Use Now demo path stores its five priority merchant contexts in `lib/recommendation/use-now-demo-merchants.ts`. `WalletPrototype` uses those labels for demo chips and sends the richer context for exact demo searches, while `lib/recommendation/merchant-context.test.ts` verifies the intended best-card outputs for Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
+The in-app Use Now demo path stores its five priority merchant contexts in `lib/recommendation/use-now-demo-merchants.ts`. `WalletPrototype` uses those labels for demo chips and sends the richer context for exact demo searches, while `lib/recommendation/merchant-context.test.ts` verifies the intended best-card outputs for Whole Foods, Patagonia, Delta, Amazon, and Chipotle. Demo chips and the wallet CTA now use the same opener, which updates the URL to a shareable route such as `/?screen=use-now&merchant=Whole%20Foods`; the parser for those links lives in `lib/recommendation/use-now-route-state.ts` with Vitest coverage.
 
 `npm run seed:merchant-intelligence` mirrors the JSON merchant catalog, merchant offer hints, and top-priority card reward rules into Supabase. `GET /api/merchant-intelligence` exposes a server-side availability/count check for those backend tables. Recommendation execution still uses the local JSON fallback until the Supabase-backed scorer is wired and tested.
 
