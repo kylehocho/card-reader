@@ -11,6 +11,7 @@ The Use Now surface is the fastest way to show the product promise: "which card 
 - Added `npm run evidence:use-now`.
 - Captured production screenshots for Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
 - Fixed compact Use Now top-result metric tiles so long labels like `Live recommendation` wrap instead of clipping at the mobile evidence viewport.
+- Added explicit Next viewport metadata so the wallet shell renders at device width on mobile/headless capture instead of overflowing the screenshot viewport.
 - Added `docs/USE_NOW_EVIDENCE.md` with capture commands, artifact paths, maintenance notes, and remaining extension evidence gap.
 - Updated project state and roadmap notes to reflect the in-app evidence matrix.
 
