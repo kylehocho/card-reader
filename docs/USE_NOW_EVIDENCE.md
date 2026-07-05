@@ -20,7 +20,7 @@ Useful overrides:
 APP_BASE_URL=http://localhost:3000 npm run evidence:use-now
 EVIDENCE_DATE=2026-07-05 npm run evidence:use-now
 EVIDENCE_DIR=artifacts/custom-use-now npm run evidence:use-now
-EVIDENCE_VIEWPORT=390,1100 npm run evidence:use-now
+EVIDENCE_VIEWPORT=430,1100 npm run evidence:use-now
 CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run evidence:use-now
 ```
 
@@ -34,6 +34,8 @@ The 2026-07-05 production capture is stored at:
 - `artifacts/use-now-2026-07-05/chipotle.png`
 
 These screenshots verify that each direct link renders the Use Now screen, preserves the selected merchant, and has time to load the recommendation response from `/api/recommend-card`.
+
+The default capture viewport is `430,1100`, which keeps the evidence in a mobile-width frame while avoiding Chrome headless minimum-window cropping at narrower desktop-window sizes. Override `EVIDENCE_VIEWPORT` for narrower spot checks.
 
 ## Maintenance Notes
 - The capture matrix should stay aligned with `lib/recommendation/use-now-demo-merchants.ts`.

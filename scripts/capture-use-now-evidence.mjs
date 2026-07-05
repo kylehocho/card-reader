@@ -26,7 +26,7 @@ const chromeCandidates = [
 const baseUrl = process.env.APP_BASE_URL ?? "https://card-reader-xi.vercel.app";
 const date = process.env.EVIDENCE_DATE ?? new Date().toISOString().slice(0, 10);
 const outputDir = process.env.EVIDENCE_DIR ?? path.join("artifacts", `use-now-${date}`);
-const viewport = process.env.EVIDENCE_VIEWPORT ?? "390,1100";
+const viewport = process.env.EVIDENCE_VIEWPORT ?? "430,1100";
 const waitMs = Number(process.env.EVIDENCE_WAIT_MS ?? 4500);
 
 async function run(command, args, options = {}) {
