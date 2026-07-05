@@ -3184,7 +3184,7 @@ export default function WalletPrototype() {
                     <h3 className="mt-2 text-xl font-semibold text-white">Use {featuredMerchant.card}</h3>
                     <p className="mt-1 text-sm text-white/60">{featuredMerchant.merchant} · {featuredMerchant.category}</p>
                   </div>
-                  <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#111317]">#{featuredMerchant.rank}</span>
+                  <span className="hidden shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#111317] min-[430px]:inline-flex">#{featuredMerchant.rank}</span>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="min-w-0 rounded-2xl bg-white/[0.06] px-3 py-3">
@@ -3216,7 +3216,7 @@ export default function WalletPrototype() {
                           <p className="mt-2 text-base font-medium text-white">{item.card}</p>
                           <p className="mt-1 text-sm text-white/66">{item.reward}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="hidden shrink-0 text-right min-[430px]:block">
                           <p className="text-[11px] text-white/42">Rank</p>
                           <p className="text-[22px] font-semibold text-white">#{item.rank}</p>
                         </div>
