@@ -1977,7 +1977,7 @@ export default function WalletPrototype() {
   return (
     <MotionConfig transition={{ type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}>
       <div className="min-h-screen bg-black text-white">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-8 pt-6">
+        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-8 pt-6">
           {screen === 'wallet' && (
             <section className="flex min-h-[calc(100vh-120px)] flex-col gap-0">
               <div className="relative mb-3 flex items-center justify-between px-2">
