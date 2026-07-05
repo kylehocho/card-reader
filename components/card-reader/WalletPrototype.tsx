@@ -3189,11 +3189,11 @@ export default function WalletPrototype() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="min-w-0 rounded-2xl bg-white/[0.06] px-3 py-3">
                     <p className="text-[11px] text-white/46">Reward</p>
-                    <p className="mt-1 truncate text-[14px] font-medium text-white">{featuredMerchant.reward}</p>
+                    <p className="mt-1 text-[13px] font-medium leading-snug text-white">{featuredMerchant.reward}</p>
                   </div>
                   <div className="min-w-0 rounded-2xl bg-white/[0.06] px-3 py-3">
                     <p className="text-[11px] text-white/46">Est. value</p>
-                    <p className="mt-1 truncate text-[14px] font-medium text-white">{featuredMerchant.value}</p>
+                    <p className="mt-1 text-[13px] font-medium leading-snug text-white">{featuredMerchant.value}</p>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-6 text-white/72">{featuredMerchant.reason}</p>

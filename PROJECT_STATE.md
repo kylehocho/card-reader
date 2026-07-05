@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-04
+Last updated: 2026-07-05
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Added a repeatable production Use Now evidence command: `npm run evidence:use-now` captures the five direct merchant links in headless Chrome and archives screenshots under `artifacts/use-now-YYYY-MM-DD/`. The 2026-07-05 run captured Whole Foods, Patagonia, Delta, Amazon, and Chipotle, and the compact top-result metric tiles now wrap long labels instead of clipping on mobile.
 - Added URL-addressable Use Now demo routes for the in-app recommendation surface: wallet CTA and demo merchant chips now open the full Use Now screen, update the URL to `/?screen=use-now&merchant=<merchant>`, and preload the live `/api/recommend-card` result for Whole Foods, Patagonia, Delta, Amazon, or Chipotle. Route parsing is isolated in `lib/recommendation/use-now-route-state.ts` with Vitest coverage.
 - Locked the in-app Use Now demo merchant matrix to backend recommendation behavior: shared demo merchant request contexts now drive the UI chips and `/api/recommend-card` calls, Chipotle is cataloged as dining, Amazon is the current rotating-quarterly demo merchant, and tests cover Whole Foods, Patagonia, Delta, Amazon, and Chipotle best-card outputs.
 - Implemented the 2026-07-02 Jazz/Fable audit fix batch: extension content scripts are no longer injected on `<all_urls>`, demo/anonymous recommendations no longer write browsing-context event rows, extension demo requests omit page URL/title, popup rendering no longer uses `innerHTML`, stored API base URLs are allowlisted before bearer-token use, Plaid token encryption now requires `PLAID_TOKEN_ENCRYPTION_KEY`, and authenticated recommendations return a controlled 422 when matched cards are missing from the local catalog.
@@ -60,7 +61,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, and supports direct Use Now demo links for smoke/evidence capture, but still needs final browser screenshot/video evidence archived for the full matrix.
+- The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, supports direct Use Now demo links, and has a repeatable production screenshot matrix documented in `docs/USE_NOW_EVIDENCE.md`.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
 - Manual-only users can safely trigger transaction sync without Plaid credentials or decrypting synthetic manual items; real transaction history still requires a future import/sync path.
 - Browser extension can store auth settings, call the auth-aware recommendation API, refresh the active tab from the popup, and uses a narrower merchant/app content-script allowlist, but still needs manual or extension-capable browser smoke evidence across the priority merchant matrix.
@@ -71,8 +72,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Capture and archive browser evidence for the front-end Use Now demo path using direct links like `/?screen=use-now&merchant=Whole%20Foods` across Whole Foods, Patagonia, Delta, Amazon, and Chipotle.
-2. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
-3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
-4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
-5. Split `WalletPrototype.tsx` by behavior now that the audit-priority demo and safety fixes are in place.
+1. Complete manual or extension-capable browser smoke using the popup Refresh path in `docs/EXTENSION_LOCAL_TEST_PLAN.md`.
+2. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
+3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
+4. Split `WalletPrototype.tsx` by behavior now that the audit-priority demo, evidence, and safety fixes are in place.
