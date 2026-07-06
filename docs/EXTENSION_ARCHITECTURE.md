@@ -39,6 +39,8 @@ Background recommendations attach `Authorization: Bearer <token>` when local tok
 
 The popup reads the cached `chrome.storage.session` recommendation first. If no recommendation or error is cached, or if the user clicks Refresh, it sends `CARD_READER_REFRESH_ACTIVE_TAB` to the background worker. The worker queries the active tab, asks the content script for structured context, falls back to tab URL/title context when needed, calls `/api/recommend-card`, updates the badge, stores the result, and returns the recommendation to the popup.
 
+Popup render evidence is captured with `npm run evidence:extension-popup`. The command seeds the actual popup HTML/CSS/JS with production `/api/recommend-card` responses for five priority merchants and stores screenshots under `artifacts/extension-popup-YYYY-MM-DD/`. This verifies the popup render contract, not installed-extension service worker or content-script behavior.
+
 ## Security/Privacy
 - Content scripts are restricted to known merchant domains and Card Reader app origins, not `<all_urls>`.
 - Demo/anonymous recommendation calls do not send page URL/title and do not write recommendation event rows.
@@ -57,3 +59,4 @@ The popup reads the cached `chrome.storage.session` recommendation first. If no 
 
 ## Local Test Plan
 Use `docs/EXTENSION_LOCAL_TEST_PLAN.md` for the current smoke-test matrix across Patagonia, Amazon, airline/travel, grocery, and dining pages.
+Use `docs/EXTENSION_POPUP_EVIDENCE.md` for the repeatable popup render evidence command and current artifact paths.

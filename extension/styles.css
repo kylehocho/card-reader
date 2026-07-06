@@ -5,6 +5,10 @@
   color: #f8fafc;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -55,6 +59,7 @@ h2 {
   color: rgba(248, 250, 252, 0.68);
   font-size: 13px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .offer {
@@ -142,15 +147,23 @@ button.secondary {
   margin-top: 10px;
 }
 
+.settings-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
 .button-row {
   justify-content: flex-start;
 }
 
 .popup-actions {
+  flex: 0 0 auto;
   margin-top: 0;
 }
 
 .auth-status {
+  flex: 1 1 130px;
+  min-width: 0;
   color: rgba(248, 250, 252, 0.62);
   font-size: 12px;
   line-height: 1.3;

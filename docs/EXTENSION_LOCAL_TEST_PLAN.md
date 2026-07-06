@@ -34,7 +34,20 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 - Extension handles API errors with a visible fallback state instead of a blank popup.
 - No payment-form text, card numbers, or full page body content is collected.
 
-## Evidence to Capture
+## Automated Popup Render Evidence
+Run:
+
+```bash
+npm run evidence:extension-popup
+```
+
+This captures the popup render contract for Whole Foods, Patagonia, Delta, Amazon, and Chipotle under `artifacts/extension-popup-YYYY-MM-DD/`. It seeds the actual popup HTML/CSS/JS with production `/api/recommend-card` responses and verifies the popup can render a non-empty recommendation state without clipping.
+
+Current artifact set: `artifacts/extension-popup-2026-07-06/`.
+
+Limit: this command does not prove installed-extension service worker/content-script behavior. Chrome 149 on this Mac rejects CLI unpacked-extension loading with `--load-extension is not allowed in Google Chrome, ignoring.`, so full MV3 automation still needs a compatible browser harness or manual `chrome://extensions` smoke.
+
+## Manual Installed-Extension Evidence to Capture
 - URL tested.
 - Extracted merchant/category signal.
 - API response card and reason.
@@ -42,7 +55,9 @@ Verify the Manifest V3 browser extension can detect merchant context from real s
 - Console/network error if any page fails.
 
 ## Pass Criteria
-The extension passes this MVP smoke when at least three different merchant categories produce non-empty recommendation responses and the popup renders them without service worker errors.
+The popup render contract passes when all five priority merchants produce non-empty recommendation responses and screenshots through `npm run evidence:extension-popup`.
+
+The installed extension passes MVP smoke when at least three different merchant categories produce non-empty recommendation responses from real active tabs and the popup renders them without service worker errors.
 
 ## Popup Refresh Behavior
 The popup should first render any cached `currentRecommendation` from `chrome.storage.session`. If there is no cached recommendation or error, opening the popup sends `CARD_READER_REFRESH_ACTIVE_TAB` to the background service worker. The same message is sent when the tester clicks Refresh. The service worker should:
@@ -69,3 +84,9 @@ Remaining evidence needed: load the extension manually through `chrome://extensi
 - Added a popup-triggered active-tab refresh path so popup rendering is no longer entirely dependent on background tab events having already populated session storage.
 - Added a visible Refresh button for repeated smoke checks against the current tab.
 - Remaining evidence needed: run the manual or extension-capable browser smoke matrix and capture output for at least three merchant categories.
+
+## 2026-07-06 Popup Render Contract Evidence
+- Added `npm run evidence:extension-popup`.
+- Captured production-backed popup screenshots for Whole Foods, Patagonia, Delta, Amazon, and Chipotle under `artifacts/extension-popup-2026-07-06/`.
+- Fixed popup layout clipping by rendering the recommendation directly in the popup card, applying global `box-sizing`, wrapping long recommendation text, and allowing the settings/action row to wrap.
+- Confirmed Google Chrome 149 rejects CLI unpacked-extension loading, so installed-extension automation remains separate from the render-contract capture.

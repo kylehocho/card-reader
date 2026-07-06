@@ -47,7 +47,7 @@
 - Paid-plan/subscription readiness.
 
 ## Current Sprint
-- Complete extension popup screenshot/video evidence after the Use Now production screenshot matrix and direct demo routes.
+- Complete true installed-extension screenshot/video evidence after the Use Now production screenshot matrix and the 2026-07-06 popup render-contract evidence.
 - Split `WalletPrototype.tsx` into smaller behavior-owned components after smoke evidence.
 - Keep extension privacy/security guardrails intact as new merchants are added.
 - Keep docs current after each material decision.

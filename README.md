@@ -128,6 +128,14 @@ For local testing, open the extension settings page and set the API base URL to 
 To test signed-in recommendations, sign in to the web app and open `/extension/connect`. The page sends the current Supabase session to the installed extension, which stores the bearer token in `chrome.storage.local`; API URL preferences use `chrome.storage.sync`. The extension stores the token expiry and asks the user to reconnect instead of silently falling back to demo recommendations after expiry. The options page still accepts a pasted token for debugging.
 See `docs/EXTENSION_LOCAL_TEST_PLAN.md` for the browser smoke matrix and evidence to capture.
 
+Popup render evidence:
+
+```bash
+npm run evidence:extension-popup
+```
+
+This captures production-backed popup screenshots for the priority merchant matrix under `artifacts/extension-popup-YYYY-MM-DD/`. See `docs/EXTENSION_POPUP_EVIDENCE.md` for scope and limitations.
+
 API smoke test:
 
 ```bash

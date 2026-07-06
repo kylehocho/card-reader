@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Card Reader Popup Evidence</title>
+    <link rel="stylesheet" href="file:///Users/kyleharrison/.openclaw/workspace/card-reader/extension/styles.css" />
+    <style>
+      html,
+      body {
+        width: 430px;
+        min-width: 0;
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Card Reader</p>
+        <h1 id="merchant">Current merchant</h1>
+      </header>
+
+      <section id="state" class="panel">
+        <p class="muted">Checking this page...</p>
+      </section>
+
+      <section id="settings" class="settings">
+        <label for="apiBaseUrl">API</label>
+        <input id="apiBaseUrl" type="url" placeholder="https://card-reader-xi.vercel.app" />
+        <div class="settings-row">
+          <span id="authStatus" class="auth-status">Demo catalog</span>
+          <div class="popup-actions">
+            <button id="refreshRecommendation" class="secondary" type="button">Refresh</button>
+            <button id="openOptions" type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const seed = {"currentContext":{"merchant":"Whole Foods","host":"wholefoodsmarket.com","categoryHint":"groceries","title":"Whole Foods"},"currentRecommendation":{"merchant":"Whole Foods","category":"groceries","bestCard":{"id":"amex-gold","issuer":"American Express","name":"American Express Gold Card","multiplier":4,"rewardCurrency":"Membership Rewards"},"runnerUp":{"id":"chase-sapphire-preferred","issuer":"Chase","name":"Chase Sapphire Preferred","multiplier":3,"rewardCurrency":"Ultimate Rewards"},"reason":"groceries context ranks American Express Gold Card highest among 10 available cards at 4x using the Whole Foods merchant catalog match.","matchedOffer":null},"currentError":null,"apiBaseUrl":"https://card-reader-xi.vercel.app","authToken":"","authUserEmail":"","authExpiresAt":null};
+      const pick = (source, keys) => {
+        const result = {};
+        for (const key of Array.isArray(keys) ? keys : [keys]) result[key] = source[key];
+        return result;
+      };
+      window.chrome = {
+        runtime: {
+          sendMessage: async () => ({ ok: true, context: seed.currentContext, recommendation: seed.currentRecommendation }),
+          openOptionsPage: () => {}
+        },
+        storage: {
+          session: { get: async (keys) => pick(seed, keys) },
+          sync: {
+            get: async (keys) => pick(seed, keys),
+            set: async (values) => Object.assign(seed, values)
+          },
+          local: {
+            get: async (keys) => pick(seed, keys),
+            remove: async (key) => { delete seed[key]; }
+          }
+        }
+      };
+    </script>
+    <script src="file:///Users/kyleharrison/.openclaw/workspace/card-reader/extension/popup.js"></script>
+  </body>
+</html>

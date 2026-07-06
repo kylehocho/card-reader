@@ -1,0 +1,105 @@
+{
+  "mode": "popup-render-contract",
+  "apiBaseUrl": "https://card-reader-xi.vercel.app",
+  "extensionDir": "/Users/kyleharrison/.openclaw/workspace/card-reader/extension",
+  "outputDir": "artifacts/extension-popup-2026-07-06",
+  "viewport": "430,620",
+  "note": "This captures the extension popup HTML/CSS/JS with seeded production recommendation responses. It verifies popup rendering, not Chrome's installed-extension service worker.",
+  "captures": [
+    {
+      "merchant": "Whole Foods",
+      "context": {
+        "merchant": "Whole Foods",
+        "host": "wholefoodsmarket.com",
+        "categoryHint": "groceries",
+        "title": "Whole Foods"
+      },
+      "recommendation": {
+        "merchant": "Whole Foods",
+        "category": "groceries",
+        "bestCard": "American Express Gold Card",
+        "multiplier": 4,
+        "runnerUp": "Chase Sapphire Preferred",
+        "reason": "groceries context ranks American Express Gold Card highest among 10 available cards at 4x using the Whole Foods merchant catalog match."
+      },
+      "screenshot": "artifacts/extension-popup-2026-07-06/whole-foods.png",
+      "harness": "artifacts/extension-popup-2026-07-06/whole-foods.html"
+    },
+    {
+      "merchant": "Patagonia",
+      "context": {
+        "merchant": "Patagonia",
+        "host": "patagonia.com",
+        "categoryHint": "shopping",
+        "title": "Patagonia"
+      },
+      "recommendation": {
+        "merchant": "Patagonia",
+        "category": "general",
+        "bestCard": "Capital One Venture X Rewards Credit Card",
+        "multiplier": 2,
+        "runnerUp": "Chase Freedom Unlimited",
+        "reason": "general context ranks Capital One Venture X Rewards Credit Card highest among 10 available cards at 2x using the Patagonia merchant catalog match."
+      },
+      "screenshot": "artifacts/extension-popup-2026-07-06/patagonia.png",
+      "harness": "artifacts/extension-popup-2026-07-06/patagonia.html"
+    },
+    {
+      "merchant": "Delta Air Lines",
+      "context": {
+        "merchant": "Delta Air Lines",
+        "host": "delta.com",
+        "categoryHint": "flights",
+        "title": "Delta Air Lines"
+      },
+      "recommendation": {
+        "merchant": "Delta Air Lines",
+        "category": "flights",
+        "bestCard": "The Platinum Card from American Express",
+        "multiplier": 5,
+        "runnerUp": "Chase Sapphire Reserve",
+        "reason": "flights context ranks The Platinum Card from American Express highest among 10 available cards at 5x using the Delta Air Lines merchant catalog match."
+      },
+      "screenshot": "artifacts/extension-popup-2026-07-06/delta.png",
+      "harness": "artifacts/extension-popup-2026-07-06/delta.html"
+    },
+    {
+      "merchant": "Amazon",
+      "context": {
+        "merchant": "Amazon",
+        "host": "amazon.com",
+        "categoryHint": "shopping",
+        "title": "Amazon"
+      },
+      "recommendation": {
+        "merchant": "Amazon",
+        "category": "rotating_quarterly",
+        "bestCard": "Chase Freedom Flex",
+        "multiplier": 5,
+        "runnerUp": "Discover it Cash Back",
+        "reason": "rotating_quarterly context ranks Chase Freedom Flex highest among 10 available cards at 5x using the Amazon merchant catalog match."
+      },
+      "screenshot": "artifacts/extension-popup-2026-07-06/amazon.png",
+      "harness": "artifacts/extension-popup-2026-07-06/amazon.html"
+    },
+    {
+      "merchant": "Chipotle",
+      "context": {
+        "merchant": "Chipotle",
+        "host": "chipotle.com",
+        "categoryHint": "dining",
+        "title": "Chipotle"
+      },
+      "recommendation": {
+        "merchant": "Chipotle",
+        "category": "dining",
+        "bestCard": "American Express Gold Card",
+        "multiplier": 4,
+        "runnerUp": "Chase Freedom Unlimited",
+        "reason": "dining context ranks American Express Gold Card highest among 10 available cards at 4x using the Chipotle merchant catalog match."
+      },
+      "screenshot": "artifacts/extension-popup-2026-07-06/chipotle.png",
+      "harness": "artifacts/extension-popup-2026-07-06/chipotle.html"
+    }
+  ]
+}

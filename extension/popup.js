@@ -15,7 +15,8 @@ function cleanApiBaseUrl(value) {
   return DEFAULT_API_BASE_URL;
 }
 
-function replaceState(children) {
+function replaceState(children, className = 'panel') {
+  stateEl.className = className;
   stateEl.replaceChildren(...children);
 }
 
@@ -28,21 +29,19 @@ function textNode(tagName, className, text) {
 
 function renderRecommendation(context, recommendation) {
   merchantEl.textContent = recommendation?.merchant || context?.merchant || 'Current merchant';
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.append(
+  const children = [
     textNode('p', 'label', recommendation.category),
     textNode('h2', '', recommendation.bestCard.name),
     textNode('p', 'issuer', `${recommendation.bestCard.issuer} · ${recommendation.bestCard.multiplier}x ${recommendation.bestCard.rewardCurrency || 'rewards'}`),
     textNode('p', 'reason', recommendation.reason)
-  );
+  ];
   if (recommendation.runnerUp) {
-    card.append(textNode('p', 'runner', `Runner-up: ${recommendation.runnerUp.name} at ${recommendation.runnerUp.multiplier}x`));
+    children.push(textNode('p', 'runner', `Runner-up: ${recommendation.runnerUp.name} at ${recommendation.runnerUp.multiplier}x`));
   }
   if (recommendation.matchedOffer) {
-    card.append(textNode('div', 'offer', recommendation.matchedOffer.title));
+    children.push(textNode('div', 'offer', recommendation.matchedOffer.title));
   }
-  replaceState([card]);
+  replaceState(children, 'card');
 }
 
 function renderError(context, error) {

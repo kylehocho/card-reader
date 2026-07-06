@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Card Reader Popup Evidence</title>
+    <link rel="stylesheet" href="file:///Users/kyleharrison/.openclaw/workspace/card-reader/extension/styles.css" />
+    <style>
+      html,
+      body {
+        width: 430px;
+        min-width: 0;
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Card Reader</p>
+        <h1 id="merchant">Current merchant</h1>
+      </header>
+
+      <section id="state" class="panel">
+        <p class="muted">Checking this page...</p>
+      </section>
+
+      <section id="settings" class="settings">
+        <label for="apiBaseUrl">API</label>
+        <input id="apiBaseUrl" type="url" placeholder="https://card-reader-xi.vercel.app" />
+        <div class="settings-row">
+          <span id="authStatus" class="auth-status">Demo catalog</span>
+          <div class="popup-actions">
+            <button id="refreshRecommendation" class="secondary" type="button">Refresh</button>
+            <button id="openOptions" type="button">Settings</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const seed = {"currentContext":{"merchant":"Patagonia","host":"patagonia.com","categoryHint":"shopping","title":"Patagonia"},"currentRecommendation":{"merchant":"Patagonia","category":"general","bestCard":{"id":"capital-one-venture-x","issuer":"Capital One","name":"Capital One Venture X Rewards Credit Card","multiplier":2,"rewardCurrency":"Capital One Miles"},"runnerUp":{"id":"chase-freedom-unlimited","issuer":"Chase","name":"Chase Freedom Unlimited","multiplier":1.5,"rewardCurrency":"Ultimate Rewards"},"reason":"general context ranks Capital One Venture X Rewards Credit Card highest among 10 available cards at 2x using the Patagonia merchant catalog match.","matchedOffer":{"title":"Check issuer merchant offers before checkout.","source":"Merchant catalog rule","confidence":"catalog-rule"}},"currentError":null,"apiBaseUrl":"https://card-reader-xi.vercel.app","authToken":"","authUserEmail":"","authExpiresAt":null};
+      const pick = (source, keys) => {
+        const result = {};
+        for (const key of Array.isArray(keys) ? keys : [keys]) result[key] = source[key];
+        return result;
+      };
+      window.chrome = {
+        runtime: {
+          sendMessage: async () => ({ ok: true, context: seed.currentContext, recommendation: seed.currentRecommendation }),
+          openOptionsPage: () => {}
+        },
+        storage: {
+          session: { get: async (keys) => pick(seed, keys) },
+          sync: {
+            get: async (keys) => pick(seed, keys),
+            set: async (values) => Object.assign(seed, values)
+          },
+          local: {
+            get: async (keys) => pick(seed, keys),
+            remove: async (key) => { delete seed[key]; }
+          }
+        }
+      };
+    </script>
+    <script src="file:///Users/kyleharrison/.openclaw/workspace/card-reader/extension/popup.js"></script>
+  </body>
+</html>
