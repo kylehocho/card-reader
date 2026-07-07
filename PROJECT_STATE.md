@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Started the `WalletPrototype.tsx` decomposition by extracting the in-app Use Now screen into `components/card-reader/UseNowScreen.tsx` while preserving the live `/api/recommend-card` loading, route-state handling, and demo merchant behavior in the parent. Verification passed with lint, Vitest, and production build.
 - Added repeatable production-backed extension popup render evidence: `npm run evidence:extension-popup` calls `/api/recommend-card` for Whole Foods, Patagonia, Delta, Amazon, and Chipotle, seeds the actual popup HTML/CSS/JS with those responses, and captures screenshots plus `summary.json` under `artifacts/extension-popup-2026-07-06/`. The popup now renders recommendations directly in the card, applies global box sizing, wraps long recommendation text, and lets settings actions wrap so evidence screenshots do not clip. Chrome 149 rejects CLI unpacked-extension loading, so full installed-extension service worker/content-script smoke remains separate.
 - Added a repeatable production Use Now evidence command: `npm run evidence:use-now` captures the five direct merchant links in headless Chrome and archives screenshots under `artifacts/use-now-YYYY-MM-DD/`. The 2026-07-05 run captured Whole Foods, Patagonia, Delta, Amazon, and Chipotle; the app now declares device-width viewport metadata, resets the body margin, the wallet shell explicitly fills the viewport, compact top-result metric tiles wrap long labels, and decorative rank pills hide on narrow result cards instead of clipping on mobile.
 - Added URL-addressable Use Now demo routes for the in-app recommendation surface: wallet CTA and demo merchant chips now open the full Use Now screen, update the URL to `/?screen=use-now&merchant=<merchant>`, and preload the live `/api/recommend-card` result for Whole Foods, Patagonia, Delta, Amazon, or Chipotle. Route parsing is isolated in `lib/recommendation/use-now-route-state.ts` with Vitest coverage.
@@ -62,6 +63,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
+- The first Use Now screen component boundary is in place, but `WalletPrototype.tsx` still owns most wallet, Plaid, profile, and recommendation behavior.
 - Extension popup render evidence now covers five priority merchants with seeded production responses, but full installed-extension smoke still needs a compatible browser harness or manual `chrome://extensions` pass because local Google Chrome CLI automation rejects unpacked extension loading.
 - The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, supports direct Use Now demo links, and has a repeatable production screenshot matrix documented in `docs/USE_NOW_EVIDENCE.md`.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
@@ -77,4 +79,4 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 1. Add a true installed-extension smoke path using a browser that permits unpacked extension loading, then verify at least three live merchant tabs through the background refresh flow and popup.
 2. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 3. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
-4. Split `WalletPrototype.tsx` by behavior now that the audit-priority demo, evidence, and safety fixes are in place.
+4. Continue splitting `WalletPrototype.tsx` by behavior; the next low-risk target is Connected Accounts or a Use Now state/derivation hook.

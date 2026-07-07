@@ -48,6 +48,6 @@
 
 ## Current Sprint
 - Complete true installed-extension screenshot/video evidence after the Use Now production screenshot matrix and the 2026-07-06 popup render-contract evidence.
-- Split `WalletPrototype.tsx` into smaller behavior-owned components after smoke evidence.
+- Continue splitting `WalletPrototype.tsx` into smaller behavior-owned pieces. The Use Now screen rendering was extracted on 2026-07-07; next candidates are Connected Accounts or a Use Now state/derivation hook.
 - Keep extension privacy/security guardrails intact as new merchants are added.
 - Keep docs current after each material decision.
