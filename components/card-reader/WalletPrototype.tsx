@@ -4,8 +4,10 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import AuthEntrySheet from '@/components/auth/AuthEntrySheet';
 import EmailAuthFlow from '@/components/auth/EmailAuthFlow';
 import ProfileSetupFlow from '@/components/auth/ProfileSetupFlow';
+import AccountMatchSuggestionCard, { accountMatchStateLabel, matchToneClass } from '@/components/card-reader/AccountMatchSuggestionCard';
 import ConnectedAccountsScreen from '@/components/card-reader/ConnectedAccountsScreen';
 import UseNowScreen from '@/components/card-reader/UseNowScreen';
+import type { PlaidConnectedAccount, Transaction } from '@/components/card-reader/types';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
 import type { WalletAnalysis } from '@/lib/benefits/types';
@@ -19,7 +21,7 @@ import {
   type TransactionRecommendationView,
   type WelcomeBonusView,
 } from '@/lib/benefits/wallet-analysis-view';
-import { suggestCardProductMatch, type CardProductMatchSuggestion } from '@/lib/cards/card-match-hints';
+import { suggestCardProductMatch } from '@/lib/cards/card-match-hints';
 import { demoMerchantContextForQuery, useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
 import { buildUseNowRouteSearchForMerchant, parseUseNowRouteState } from '@/lib/recommendation/use-now-route-state';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
@@ -49,23 +51,6 @@ type PlaidApiAccount = {
   };
 };
 
-export type PlaidConnectedAccount = {
-  dbId?: string;
-  accountId: string;
-  institutionName: string;
-  name: string;
-  mask: string;
-  type: string;
-  subtype: string;
-  currentBalance: number | null;
-  limit: number | null;
-  cardProductId?: string | null;
-  cardProductName?: string | null;
-  cardProductIssuer?: string | null;
-  matchStatus?: string | null;
-  recentTransactions?: Transaction[];
-};
-
 type StoredPlaidConnection = {
   accounts: PlaidConnectedAccount[];
 };
@@ -81,7 +66,6 @@ type PlaidAccountRow = Database['public']['Tables']['plaid_accounts']['Row'];
 type PlaidTransactionRow = Database['public']['Tables']['plaid_transactions']['Row'];
 type CardProductRow = Database['public']['Tables']['card_products']['Row'];
 type AccountCardMatchRow = Database['public']['Tables']['account_card_matches']['Row'];
-type CardProductSuggestion = CardProductMatchSuggestion<CardProductRow>;
 
 type ManualCardResponse = {
   account?: PlaidAccountRow;
@@ -124,14 +108,6 @@ const pageMeta = {
 const PLAID_STORAGE_KEY = 'card-reader.plaid-connections.v1';
 
 type Benefit = BenefitView;
-
-type Transaction = {
-  id: string;
-  merchant: string;
-  amount: string;
-  date: string;
-  category: string;
-};
 
 type NotificationItem = {
   id: string;
@@ -939,21 +915,6 @@ function dedupeNotifications(items: NotificationItem[]) {
   });
 }
 
-function accountMatchStateLabel(account: PlaidConnectedAccount, saveState: 'idle' | 'saving' | 'saved' | 'error') {
-  if (saveState === 'saving') return 'Saving';
-  if (saveState === 'saved') return 'Saved';
-  if (saveState === 'error') return 'Sync issue';
-  if (account.matchStatus === 'suggested') return 'Suggested';
-  return account.cardProductId ? 'Synced' : 'Unassigned';
-}
-
-function matchToneClass(label: string) {
-  if (label === 'Sync issue') return 'bg-rose-300/16 text-rose-50';
-  if (label === 'Unassigned') return 'bg-amber-300/16 text-amber-50';
-  if (label === 'Suggested') return 'bg-sky-300/16 text-sky-50';
-  return 'bg-emerald-300/16 text-emerald-50';
-}
-
 function isRewardMap(value: unknown): value is Record<string, number> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -1084,43 +1045,6 @@ function buildPlaidCard(account: PlaidConnectedAccount): Card {
     benefits: [{ id: `plaid-${account.accountId}-benefit`, title: 'Plaid connection', status: 'available', detail: 'Sandbox account data is available to the app.', progress: 100 }],
     isBusiness: false,
   };
-}
-
-function MatchSuggestionCard({
-  account,
-  suggestion,
-  saveState,
-  onAccept,
-}: {
-  account: PlaidConnectedAccount;
-  suggestion: CardProductSuggestion | null;
-  saveState: 'idle' | 'saving' | 'saved' | 'error';
-  onAccept: (account: PlaidConnectedAccount, cardProductId: string, source: 'manual' | 'suggested', confidence: number) => Promise<void>;
-}) {
-  if (!suggestion || account.cardProductId === suggestion.product.id) return null;
-
-  return (
-    <div className="mt-3 rounded-2xl border border-sky-300/18 bg-sky-300/10 px-3 py-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-sky-100/62">Suggested match</p>
-          <p className="mt-1 text-[14px] font-semibold leading-5 text-white">{suggestion.product.name}</p>
-          <p className="mt-1 text-[12px] leading-5 text-white/58">
-            {suggestion.product.issuer} · {Math.round(suggestion.confidence * 100)}% confidence
-          </p>
-        </div>
-        <button
-          type="button"
-          disabled={saveState === 'saving'}
-          onClick={() => void onAccept(account, suggestion.product.id, 'suggested', suggestion.confidence)}
-          className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#10131a] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Use
-        </button>
-      </div>
-      <p className="mt-2 text-[12px] leading-5 text-white/58">{suggestion.reason}</p>
-    </div>
-  );
 }
 
 export default function WalletPrototype() {
@@ -3129,7 +3053,7 @@ export default function WalletPrototype() {
                                 {matchStateLabel}
                               </span>
                             </div>
-                            <MatchSuggestionCard account={account} suggestion={matchSuggestion} saveState={saveState} onAccept={updateCardMatch} />
+                            <AccountMatchSuggestionCard account={account} suggestion={matchSuggestion} saveState={saveState} onAccept={updateCardMatch} />
                             <select
                               id={`pending-match-${account.accountId}`}
                               value={account.cardProductId ?? ''}

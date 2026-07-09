@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-08
+Last updated: 2026-07-09
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Continued the `WalletPrototype.tsx` decomposition by extracting shared Plaid account matching UI into `components/card-reader/AccountMatchSuggestionCard.tsx` and shared card-reader view types into `components/card-reader/types.ts`. Both the post-Plaid onboarding match step and the signed-in Connected Accounts page now use the same suggested-match display, match labels, and tone classes. Added `docs/WALLET_DECOMPOSITION.md`. Verification passed with lint, Vitest, and production build.
 - Continued the `WalletPrototype.tsx` decomposition by extracting the signed-in Connected Accounts page into `components/card-reader/ConnectedAccountsScreen.tsx`. The new component owns account-list rendering, recent transactions, card-product match controls, sync/error states, and empty-state CTAs while keeping Plaid Link, transaction sync, match persistence, and removal behavior in the parent. Verification passed with lint, Vitest, and production build.
 - Started the `WalletPrototype.tsx` decomposition by extracting the in-app Use Now screen into `components/card-reader/UseNowScreen.tsx` while preserving the live `/api/recommend-card` loading, route-state handling, and demo merchant behavior in the parent. Verification passed with lint, Vitest, and production build.
 - Added repeatable production-backed extension popup render evidence: `npm run evidence:extension-popup` calls `/api/recommend-card` for Whole Foods, Patagonia, Delta, Amazon, and Chipotle, seeds the actual popup HTML/CSS/JS with those responses, and captures screenshots plus `summary.json` under `artifacts/extension-popup-2026-07-06/`. The popup now renders recommendations directly in the card, applies global box sizing, wraps long recommendation text, and lets settings actions wrap so evidence screenshots do not clip. Chrome 149 rejects CLI unpacked-extension loading, so full installed-extension service worker/content-script smoke remains separate.
@@ -64,7 +65,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- The first Use Now and Connected Accounts screen component boundaries are in place, but `WalletPrototype.tsx` still owns most wallet, Plaid, profile, and recommendation behavior.
+- The first Use Now, Connected Accounts, and shared match-suggestion component boundaries are in place, but `WalletPrototype.tsx` still owns most wallet, Plaid, profile, and recommendation behavior.
 - Extension popup render evidence now covers five priority merchants with seeded production responses, but full installed-extension smoke still needs a compatible browser harness or manual `chrome://extensions` pass because local Google Chrome CLI automation rejects unpacked extension loading.
 - The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, supports direct Use Now demo links, and has a repeatable production screenshot matrix documented in `docs/USE_NOW_EVIDENCE.md`.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
@@ -77,7 +78,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Extract the scanner match-step account card or a Connected Accounts state hook so Plaid account matching has one rendering contract across onboarding and the dedicated account-management page.
+1. Extract the post-Plaid onboarding match account card into a reusable component that wraps the shared match suggestion UI and card-product selector.
 2. Add a true installed-extension smoke path using a browser that permits unpacked extension loading, then verify at least three live merchant tabs through the background refresh flow and popup.
 3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.

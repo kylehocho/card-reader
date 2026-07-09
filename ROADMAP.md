@@ -48,6 +48,6 @@
 
 ## Current Sprint
 - Complete true installed-extension screenshot/video evidence after the Use Now production screenshot matrix and the 2026-07-06 popup render-contract evidence.
-- Continue splitting `WalletPrototype.tsx` into smaller behavior-owned pieces. The Use Now screen rendering was extracted on 2026-07-07, and the Connected Accounts page rendering was extracted on 2026-07-08; next candidates are the scanner match-step account card or a Use Now state/derivation hook.
+- Continue splitting `WalletPrototype.tsx` into smaller behavior-owned pieces. The Use Now screen rendering was extracted on 2026-07-07, the Connected Accounts page rendering was extracted on 2026-07-08, and shared Plaid match suggestion UI/types were extracted on 2026-07-09; next candidates are the post-Plaid onboarding match account card or a Use Now state/derivation hook.
 - Keep extension privacy/security guardrails intact as new merchants are added.
 - Keep docs current after each material decision.
