@@ -22,6 +22,9 @@ Plaid account matching is the bridge between a linked issuer account and useful 
 - `npm run lint`
 - `npm test` - 12 files passed, 47 tests passed.
 - `npm run build`
+- Production deploy: `vercel --prod --yes` -> `https://card-reader-724f36ggf-kylehocho-5599s-projects.vercel.app`, aliased to `https://card-reader-xi.vercel.app`.
+- Production homepage smoke: `GET https://card-reader-xi.vercel.app/` returned 200.
+- Production recommendation smoke: `POST https://card-reader-xi.vercel.app/api/recommend-card` for Whole Foods/groceries returned Amex Gold as best card and Capital One Venture X as runner-up.
 
 ## Risks
 - No browser screenshot evidence was captured because this was a behavior-neutral refactor.
