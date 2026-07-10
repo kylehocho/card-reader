@@ -4,8 +4,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import AuthEntrySheet from '@/components/auth/AuthEntrySheet';
 import EmailAuthFlow from '@/components/auth/EmailAuthFlow';
 import ProfileSetupFlow from '@/components/auth/ProfileSetupFlow';
-import AccountMatchSuggestionCard, { accountMatchStateLabel, matchToneClass } from '@/components/card-reader/AccountMatchSuggestionCard';
 import ConnectedAccountsScreen from '@/components/card-reader/ConnectedAccountsScreen';
+import PendingPlaidMatchCard from '@/components/card-reader/PendingPlaidMatchCard';
 import UseNowScreen from '@/components/card-reader/UseNowScreen';
 import type { PlaidConnectedAccount, Transaction } from '@/components/card-reader/types';
 import ProfileHome from '@/components/profile/ProfileHome';
@@ -3030,54 +3030,17 @@ export default function WalletPrototype() {
                     <div className="space-y-3">
                       {pendingLinkedAccounts.map((account) => {
                         const saveState = matchStatusByAccount[account.accountId] ?? 'idle';
-                        const matchStateLabel = accountMatchStateLabel(account, saveState);
                         const matchSuggestion = matchSuggestionByAccountId.get(account.accountId) ?? null;
 
                         return (
-                          <div key={account.accountId} className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-[16px] font-semibold tracking-[-0.02em] text-white">{account.name}</p>
-                                <p className="mt-1 text-[13px] text-white/58">
-                                  {account.institutionName} · {account.subtype} •••• {account.mask}
-                                </p>
-                              </div>
-                              <p className="shrink-0 text-[14px] font-semibold text-white">{formatCurrency(account.currentBalance)}</p>
-                            </div>
-
-                            <div className="mt-4 flex items-center justify-between gap-3">
-                              <label className="text-[11px] uppercase tracking-[0.18em] text-white/42" htmlFor={`pending-match-${account.accountId}`}>
-                                Matched card product
-                              </label>
-                              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${matchToneClass(matchStateLabel)}`}>
-                                {matchStateLabel}
-                              </span>
-                            </div>
-                            <AccountMatchSuggestionCard account={account} suggestion={matchSuggestion} saveState={saveState} onAccept={updateCardMatch} />
-                            <select
-                              id={`pending-match-${account.accountId}`}
-                              value={account.cardProductId ?? ''}
-                              disabled={saveState === 'saving' || cardProducts.length === 0}
-                              onChange={(event) => void updateCardMatch(account, event.target.value)}
-                              className="mt-2 w-full rounded-2xl border border-white/12 bg-[#11151f] px-3 py-3 text-[15px] font-medium text-white outline-none transition focus:border-white/24 disabled:opacity-60"
-                            >
-                              <option value="" disabled>
-                                {cardProducts.length === 0 ? 'Card catalog still loading' : 'Select a card product'}
-                              </option>
-                              {cardProducts.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                  {product.issuer} · {product.name}
-                                </option>
-                              ))}
-                            </select>
-                            <p className="mt-2 text-[12px] text-white/50">
-                              {saveState === 'saving'
-                                ? 'Saving match...'
-                                : account.cardProductName
-                                  ? `Matched to ${account.cardProductName}`
-                                  : 'You can finish without matching, but recommendations stay generic until this is set.'}
-                            </p>
-                          </div>
+                          <PendingPlaidMatchCard
+                            key={account.accountId}
+                            account={account}
+                            cardProducts={cardProducts}
+                            matchSuggestion={matchSuggestion}
+                            saveState={saveState}
+                            onUpdateCardMatch={updateCardMatch}
+                          />
                         );
                       })}
                     </div>
