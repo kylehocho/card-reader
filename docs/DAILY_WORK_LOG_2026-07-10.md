@@ -22,7 +22,9 @@ The Plaid onboarding match step is one of the first moments where a linked issue
 - `npm run lint`
 - `npm test` - 12 files passed, 47 tests passed.
 - `npm run build`
-- Production deploy and smoke checks are required before this cycle is complete.
+- Production deploy: `vercel --prod --yes` -> `https://card-reader-5uwte2maw-kylehocho-5599s-projects.vercel.app`, aliased to `https://card-reader-xi.vercel.app`.
+- Production homepage smoke: `GET https://card-reader-xi.vercel.app/` returned 200.
+- Production recommendation smoke: `POST https://card-reader-xi.vercel.app/api/recommend-card` for Whole Foods/groceries returned American Express Gold Card at 4x with Chase Sapphire Preferred as runner-up.
 
 ## Risks
 - No browser screenshot evidence was captured because this is a behavior-neutral component extraction.
