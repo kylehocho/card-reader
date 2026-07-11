@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -10,6 +10,7 @@ Last updated: 2026-07-10
 - `ConnectedAccountsScreen.tsx` renders the signed-in account-management page. `WalletPrototype.tsx` still owns Plaid account loading, Link, transaction sync, match persistence, and account removal.
 - `AccountMatchSuggestionCard.tsx` renders suggested card-product matches and exports shared match-state labels/tones. It is used by both Connected Accounts and the post-Plaid onboarding match step.
 - `PendingPlaidMatchCard.tsx` renders each newly linked Plaid account during onboarding, including the account summary, shared suggestion card, card-product selector, save status, and helper text. `WalletPrototype.tsx` still owns the pending account list, card products, suggestion map, and `updateCardMatch()` persistence path.
+- `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
 - `types.ts` contains the shared wallet view types needed by multiple card-reader components, starting with `PlaidConnectedAccount` and transaction display rows.
 
 ## Account Matching Contract
@@ -21,11 +22,14 @@ The shared matching UI accepts:
 
 `AccountMatchSuggestionCard` intentionally does not own card-product selection, persistence, or account state. `PendingPlaidMatchCard` owns the onboarding selector presentation, but still delegates all saves to `WalletPrototype.tsx` so onboarding and account-management flows continue to use the same save path.
 
+`usePlaidAccountMatching()` is the current behavior boundary for match suggestions. Its pure `derivePlaidAccountMatchSuggestions()` helper keeps deterministic suggestion indexing testable without rendering the full wallet prototype.
+
 ## Edge Cases
 - Suggested matches hide when there is no suggestion or the account is already matched to that suggested product.
 - The accept button disables while a match save is in progress.
 - The onboarding selector disables while saving or while the card catalog is still loading.
 - Status tones remain shared so `Saving`, `Saved`, `Sync issue`, `Suggested`, `Synced`, and `Unassigned` render consistently across surfaces.
+- Accounts that cannot be confidently matched still remain present in the suggestion map with a `null` value so both matching surfaces can distinguish "loaded but no suggestion" from "account missing."
 
 ## Verification
 - `npm run lint`
@@ -33,6 +37,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Move Plaid account state derivation and match suggestion mapping into a local hook once the visual account-card contract is stable.
+1. Move persisted Plaid account loading and transaction grouping into a tested local data hook after the match suggestion boundary has production mileage.
 2. Extract shared account summary formatting if Connected Accounts and onboarding diverge less after the hook boundary lands.
 3. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.

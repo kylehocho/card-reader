@@ -8,6 +8,7 @@ import ConnectedAccountsScreen from '@/components/card-reader/ConnectedAccountsS
 import PendingPlaidMatchCard from '@/components/card-reader/PendingPlaidMatchCard';
 import UseNowScreen from '@/components/card-reader/UseNowScreen';
 import type { PlaidConnectedAccount, Transaction } from '@/components/card-reader/types';
+import { usePlaidAccountMatching } from '@/components/card-reader/usePlaidAccountMatching';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
 import type { WalletAnalysis } from '@/lib/benefits/types';
@@ -21,7 +22,6 @@ import {
   type TransactionRecommendationView,
   type WelcomeBonusView,
 } from '@/lib/benefits/wallet-analysis-view';
-import { suggestCardProductMatch } from '@/lib/cards/card-match-hints';
 import { demoMerchantContextForQuery, useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
 import { buildUseNowRouteSearchForMerchant, parseUseNowRouteState } from '@/lib/recommendation/use-now-route-state';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
@@ -1289,18 +1289,7 @@ export default function WalletPrototype() {
     () => filteredRecommendations.find((r) => r.id === selectedRecommendationId) ?? filteredRecommendations[0],
     [filteredRecommendations, selectedRecommendationId],
   );
-  const matchSuggestionByAccountId = useMemo(() => {
-    return new Map(
-      plaidAccounts.map((account) => [
-        account.accountId,
-        suggestCardProductMatch({
-          accountName: account.name,
-          institutionName: account.institutionName,
-          products: cardProducts,
-        }),
-      ]),
-    );
-  }, [cardProducts, plaidAccounts]);
+  const { matchSuggestionByAccountId } = usePlaidAccountMatching(plaidAccounts, cardProducts);
   const effectiveManualCardProductId = manualCardProductId || cardProducts[0]?.id || '';
   const selectedManualCardProduct = useMemo(
     () => cardProducts.find((product) => product.id === effectiveManualCardProductId) ?? null,
