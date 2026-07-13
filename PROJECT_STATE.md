@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Continued the `WalletPrototype.tsx` decomposition by extracting local missed-value transaction recommendation derivation into `components/card-reader/transactionRecommendations.ts`. The wallet still prefers API-backed analysis when available, while the fallback Plaid selector now owns category inference, reward multiplier aliases, best-card comparison, unmatched-account handling, recommendation formatting, and de-duplication. Added focused tests for grocery/personal-finance inference, reward aliases, stronger-card recommendations, unmatched accounts, and ignored pending/refund/already-optimal rows. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-13.md`. Verification passed with targeted selector tests, lint, full Vitest, and production build.
 - Continued the `WalletPrototype.tsx` decomposition by extracting signed-in persisted Plaid data hydration into `components/card-reader/usePersistedPlaidData.ts`. The hook now owns card-product catalog loading, persisted credit-card account loading, account-card-match relation projection, recent transaction row state, and five-row transaction preview grouping while keeping Plaid Link, manual card entry, transaction sync actions, match persistence, account removal, and wallet-analysis rendering in the parent. Added focused tests for transaction grouping and persisted account projection. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-12.md`. Verification passed with targeted hook tests, lint, full Vitest, and production build.
 - Continued the `WalletPrototype.tsx` decomposition by extracting Plaid account match suggestion derivation into `components/card-reader/usePlaidAccountMatching.ts`. Connected Accounts and post-Plaid onboarding still receive the same `matchSuggestionByAccountId` map, while the deterministic mapping now has focused Vitest coverage for known-product suggestions and unmatched accounts. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-11.md`. Verification passed with targeted hook tests, lint, full Vitest, production build, Vercel production deploy, homepage smoke, and Whole Foods recommendation smoke.
 - Continued the `WalletPrototype.tsx` decomposition by extracting the post-Plaid onboarding match account card into `components/card-reader/PendingPlaidMatchCard.tsx`. The match step now reuses a focused component for account summary, suggested match, status pill, card-product selector, and save helper text while keeping Plaid Link, match persistence, card-product loading, and suggestion derivation in `WalletPrototype.tsx`. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-10.md`. Verification passed with lint, Vitest, production build, Vercel production deploy, homepage smoke, and Whole Foods recommendation smoke.
@@ -68,7 +69,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- The first Use Now, Connected Accounts, post-Plaid match-card, shared match-suggestion component, Plaid match suggestion hook, and persisted Plaid data hook boundaries are in place, but `WalletPrototype.tsx` still owns most wallet, Plaid mutation, profile, and recommendation behavior.
+- The first Use Now, Connected Accounts, post-Plaid match-card, shared match-suggestion component, Plaid match suggestion hook, persisted Plaid data hook, and local transaction recommendation selector boundaries are in place, but `WalletPrototype.tsx` still owns most wallet, Plaid mutation, profile, and recommendation-loading behavior.
 - Extension popup render evidence now covers five priority merchants with seeded production responses, but full installed-extension smoke still needs a compatible browser harness or manual `chrome://extensions` pass because local Google Chrome CLI automation rejects unpacked extension loading.
 - The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, supports direct Use Now demo links, and has a repeatable production screenshot matrix documented in `docs/USE_NOW_EVIDENCE.md`.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
@@ -81,7 +82,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Extract local transaction recommendation derivation into a tested selector so recent Plaid transactions, matched card products, and reward-rule comparison can be verified without rendering the full wallet prototype.
+1. Extract Plaid mutation/action state into a workflow hook so transaction sync, account removal, and card-match persistence can be tested without the full wallet prototype.
 2. Add a true installed-extension smoke path using a browser that permits unpacked extension loading, then verify at least three live merchant tabs through the background refresh flow and popup.
 3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
