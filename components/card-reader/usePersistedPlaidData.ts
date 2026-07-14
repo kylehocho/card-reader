@@ -24,6 +24,8 @@ type UsePersistedPlaidDataOptions = {
   initialStatus: PlaidStatus;
   syncPlaidAccountsToWallet: (accounts: PlaidConnectedAccount[]) => void;
   loadWalletAnalysis: () => Promise<void>;
+  onPlaidErrorChange?: (error: string | null) => void;
+  onPlaidStatusChange?: (status: PlaidStatus) => void;
 };
 
 export function formatTransactionAmount(value: number) {
@@ -106,6 +108,8 @@ export function usePersistedPlaidData({
   initialStatus,
   syncPlaidAccountsToWallet,
   loadWalletAnalysis,
+  onPlaidErrorChange,
+  onPlaidStatusChange,
 }: UsePersistedPlaidDataOptions) {
   const [cardProducts, setCardProducts] = useState<CardProductRow[]>([]);
   const [plaidStatus, setPlaidStatus] = useState<PlaidStatus>(initialStatus);
@@ -135,7 +139,9 @@ export function usePersistedPlaidData({
 
     if (productsError || accountsError || transactionsError) {
       console.error('Unable to load Plaid account matching state', productsError ?? accountsError ?? transactionsError);
-      setPlaidError(productsError?.message ?? accountsError?.message ?? transactionsError?.message ?? 'Unable to load connected accounts.');
+      const message = productsError?.message ?? accountsError?.message ?? transactionsError?.message ?? 'Unable to load connected accounts.';
+      setPlaidError(message);
+      onPlaidErrorChange?.(message);
       return;
     }
 
@@ -146,9 +152,11 @@ export function usePersistedPlaidData({
     setCardProducts(products ?? []);
     setPlaidTransactions(transactionRows);
     syncPlaidAccountsToWallet(connectedAccounts);
-    setPlaidStatus(connectedAccounts.length > 0 ? 'connected' : 'idle');
+    const nextStatus = connectedAccounts.length > 0 ? 'connected' : 'idle';
+    setPlaidStatus(nextStatus);
+    onPlaidStatusChange?.(nextStatus);
     void loadWalletAnalysis();
-  }, [enabled, loadWalletAnalysis, syncPlaidAccountsToWallet]);
+  }, [enabled, loadWalletAnalysis, onPlaidErrorChange, onPlaidStatusChange, syncPlaidAccountsToWallet]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {

@@ -11,11 +11,9 @@ import UseNowScreen from '@/components/card-reader/UseNowScreen';
 import type { PlaidConnectedAccount, Transaction } from '@/components/card-reader/types';
 import { usePlaidAccountMatching } from '@/components/card-reader/usePlaidAccountMatching';
 import {
-  accountFromSavedRow,
-  type CardProductRow,
-  type PlaidAccountRow,
   usePersistedPlaidData,
 } from '@/components/card-reader/usePersistedPlaidData';
+import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
 import type { RewardCategory, WalletAnalysis } from '@/lib/benefits/types';
@@ -34,61 +32,9 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { MotionConfig, motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-type PlaidLinkMetadata = {
-  institution?: {
-    institution_id?: string | null;
-    name?: string | null;
-  } | null;
-};
-
-type PlaidApiAccount = {
-  account_id: string;
-  name: string;
-  official_name: string | null;
-  mask: string | null;
-  type: string;
-  subtype: string | null;
-  balances: {
-    available: number | null;
-    current: number | null;
-    limit: number | null;
-    iso_currency_code: string | null;
-  };
-};
-
 type StoredPlaidConnection = {
   accounts: PlaidConnectedAccount[];
 };
-
-type PlaidExchangeResponse = {
-  itemId: string;
-  accounts: PlaidApiAccount[];
-  savedAccounts?: PlaidAccountRow[];
-  error?: string;
-};
-
-type ManualCardResponse = {
-  account?: PlaidAccountRow;
-  product?: Pick<CardProductRow, 'id' | 'issuer' | 'name'>;
-  error?: string;
-};
-
-type PlaidHandler = {
-  open: () => void;
-  exit: () => void;
-};
-
-declare global {
-  interface Window {
-    Plaid?: {
-      create: (options: {
-        token: string;
-        onSuccess: (publicToken: string, metadata: PlaidLinkMetadata) => void;
-        onExit?: (error: unknown) => void;
-      }) => PlaidHandler;
-    };
-  }
-}
 
 const pageMeta = {
   benefits: { title: 'Benefits', icon: '✦' },
@@ -936,13 +882,6 @@ export default function WalletPrototype() {
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<CategoryKey>('groceries');
 
   const [plaidAccounts, setPlaidAccounts] = useState<PlaidConnectedAccount[]>(() => initialPlaidConnection?.accounts ?? []);
-  const [pendingLinkedAccounts, setPendingLinkedAccounts] = useState<PlaidConnectedAccount[]>([]);
-  const [manualCardStatus, setManualCardStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [matchStatusByAccount, setMatchStatusByAccount] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
-  const [editingMatchAccountIds, setEditingMatchAccountIds] = useState<string[]>([]);
-  const [removingAccountIds, setRemovingAccountIds] = useState<string[]>([]);
-  const [accountPendingRemoval, setAccountPendingRemoval] = useState<PlaidConnectedAccount | null>(null);
-  const [transactionSyncStatus, setTransactionSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
   const [walletAnalysisStatus, setWalletAnalysisStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [walletAnalysisError, setWalletAnalysisError] = useState<string | null>(null);
@@ -1056,6 +995,62 @@ export default function WalletPrototype() {
     initialStatus: initialPlaidConnection?.accounts.length ? 'connected' : 'idle',
     syncPlaidAccountsToWallet,
     loadWalletAnalysis,
+  });
+
+  const {
+    accountPendingRemoval,
+    connectPlaidSandbox,
+    editingMatchAccountIds,
+    finishManualCardAdd: saveManualCard,
+    manualCardStatus,
+    matchStatusByAccount,
+    pendingLinkedAccounts,
+    removingAccountIds,
+    requestRemoveConnectedAccount,
+    removeConnectedAccount,
+    setAccountPendingRemoval,
+    setEditingMatchAccountIds,
+    setManualCardStatus,
+    setPendingLinkedAccounts,
+    syncPlaidTransactions,
+    transactionSyncStatus,
+    updateCardMatch,
+  } = usePlaidWalletActions({
+    user,
+    plaidAccounts,
+    cardProducts,
+    syncPlaidAccountsToWallet,
+    loadPersistedPlaidState,
+    loadWalletAnalysis,
+    setAuthFlow,
+    setPlaidError,
+    setPlaidStatus,
+    onManualCardAdded: (account) => {
+      setSelectedId(`plaid-${account.accountId}`);
+      setWalletPageIndex(0);
+      setScanStep('success');
+      window.setTimeout(() => {
+        setShowScanner(false);
+        setScreen('wallet');
+        setManualCardStatus('idle');
+      }, 900);
+    },
+    onPlaidAccountsLinked: (accounts) => {
+      const firstAddedAccount = accounts[0];
+      if (firstAddedAccount) {
+        setSelectedId(`plaid-${firstAddedAccount.accountId}`);
+      }
+      setWalletPageIndex(0);
+      setScanStep('match');
+    },
+    onCardMatchSaved: (account) => {
+      setSelectedId(`plaid-${account.accountId}`);
+    },
+    onConnectedAccountRemoved: (account, nextAccounts) => {
+      if (selectedId === `plaid-${account.accountId}`) {
+        setSelectedId(nextAccounts[0] ? `plaid-${nextAccounts[0].accountId}` : seedCards[0].id);
+      }
+    },
   });
 
   useEffect(() => {
@@ -1345,281 +1340,12 @@ export default function WalletPrototype() {
       return;
     }
 
-    const supabase = getBrowserSupabaseClient();
-    if (!supabase) return;
-
     const cardProductId = selectedManualCardProduct?.id ?? effectiveManualCardProductId;
-    if (!cardProductId) {
-      setPlaidError('Choose a card product before adding it manually.');
-      return;
-    }
-
-    setManualCardStatus('saving');
-    setPlaidError(null);
-
-    try {
-      const { data } = await supabase.auth.getSession();
-      const accessToken = data.session?.access_token;
-      if (!accessToken) {
-        setAuthFlow('entry');
-        throw new Error('Sign in before adding a manual card.');
-      }
-
-      const manualCardLabel = selectedManualCardProduct?.name ?? draftCard.name;
-      const response = await fetch('/api/wallet/manual-cards', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + accessToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cardProductId,
-          last4: draftCard.last4,
-          label: manualCardLabel,
-        }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as ManualCardResponse;
-
-      if (!response.ok || !payload.account || !payload.product) {
-        throw new Error(payload.error ?? 'Unable to add manual card.');
-      }
-
-      const addedAccount: PlaidConnectedAccount = {
-        ...accountFromSavedRow(payload.account, 'Manual cards'),
-        cardProductId: payload.product.id,
-        cardProductName: payload.product.name,
-        cardProductIssuer: payload.product.issuer,
-        matchStatus: 'manual',
-      };
-      const nextAccounts = [...plaidAccounts.filter((account) => account.accountId !== addedAccount.accountId), addedAccount];
-
-      syncPlaidAccountsToWallet(nextAccounts);
-      setSelectedId(`plaid-${addedAccount.accountId}`);
-      setWalletPageIndex(0);
-      setManualCardStatus('saved');
-      setPlaidStatus('connected');
-      setScanStep('success');
-      void loadPersistedPlaidState();
-      void loadWalletAnalysis();
-      window.setTimeout(() => {
-        setShowScanner(false);
-        setScreen('wallet');
-        setManualCardStatus('idle');
-      }, 900);
-    } catch (error) {
-      setManualCardStatus('error');
-      setPlaidError(error instanceof Error ? error.message : 'Unable to add manual card.');
-    }
-  }
-
-  async function connectPlaidSandbox() {
-    setPlaidStatus('loading');
-    setPlaidError(null);
-    setPendingLinkedAccounts([]);
-
-    try {
-      const supabase = getBrowserSupabaseClient();
-      const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-      const accessToken = data.session?.access_token;
-
-      if (!accessToken) {
-        setAuthFlow('entry');
-        throw new Error('Sign in before connecting Plaid.');
-      }
-
-      const authHeaders = { Authorization: 'Bearer ' + accessToken };
-      const linkTokenResponse = await fetch('/api/plaid/link-token', { method: 'POST', headers: authHeaders });
-      const linkTokenData = (await linkTokenResponse.json()) as { linkToken?: string; error?: string };
-
-      if (!linkTokenResponse.ok || !linkTokenData.linkToken) {
-        throw new Error(linkTokenData.error ?? 'Unable to create Plaid Link token.');
-      }
-
-      await loadPlaidLinkScript();
-
-      if (!window.Plaid) throw new Error('Plaid Link did not load.');
-
-      const handler = window.Plaid.create({
-        token: linkTokenData.linkToken,
-        onSuccess: async (publicToken, metadata) => {
-          try {
-            const exchangeResponse = await fetch('/api/plaid/exchange-token', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...authHeaders },
-              body: JSON.stringify({
-                publicToken,
-                institutionId: metadata.institution?.institution_id ?? null,
-                institutionName: metadata.institution?.name ?? null,
-              }),
-            });
-            const exchangeData = (await exchangeResponse.json()) as PlaidExchangeResponse;
-
-            if (!exchangeResponse.ok) {
-              throw new Error(exchangeData.error ?? 'Unable to exchange Plaid token.');
-            }
-
-            const institutionName = metadata.institution?.name ?? 'Plaid Sandbox';
-            const connectedAccounts = exchangeData.savedAccounts?.length
-              ? exchangeData.savedAccounts.map((account) => accountFromSavedRow(account, institutionName))
-              : exchangeData.accounts.map((account) => ({
-                  accountId: account.account_id,
-                  institutionName,
-                  name: account.official_name ?? account.name,
-                  mask: account.mask ?? '0000',
-                  type: account.type,
-                  subtype: account.subtype ?? 'account',
-                  currentBalance: account.balances.current,
-                  limit: account.balances.limit,
-                }));
-            const accountsToAdd = connectedAccounts.filter((account) => account.type === 'credit' && account.subtype === 'credit card');
-
-            syncPlaidAccountsToWallet(accountsToAdd);
-            setPendingLinkedAccounts(accountsToAdd);
-
-            const firstAddedAccount = accountsToAdd[0];
-            if (firstAddedAccount) {
-              setSelectedId(`plaid-${firstAddedAccount.accountId}`);
-            }
-
-            setWalletPageIndex(0);
-            setPlaidStatus('connected');
-            void loadPersistedPlaidState();
-            setScanStep('match');
-          } catch (error) {
-            setPlaidStatus('error');
-            setPlaidError(error instanceof Error ? error.message : 'Plaid token exchange failed.');
-          }
-        },
-        onExit: (error) => {
-          setPlaidStatus(error ? 'error' : 'idle');
-          if (error) setPlaidError('Plaid Link was closed before the connection finished.');
-        },
-      });
-
-      handler.open();
-    } catch (error) {
-      setPlaidStatus('error');
-      setPlaidError(error instanceof Error ? error.message : 'Plaid connection failed.');
-    }
-  }
-
-  async function updateCardMatch(account: PlaidConnectedAccount, cardProductId: string, source: 'manual' | 'suggested' = 'manual', confidence = 1) {
-    if (!user || !account.dbId) {
-      setPlaidError('Reconnect this Plaid account before saving a card match.');
-      return;
-    }
-
-    const supabase = getBrowserSupabaseClient();
-    if (!supabase) return;
-
-    setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saving' }));
-    setPlaidError(null);
-
-    const selectedProduct = cardProducts.find((product) => product.id === cardProductId) ?? null;
-    const { error } = await supabase.from('account_card_matches').upsert(
-      {
-        user_id: user.id,
-        plaid_account_id: account.dbId,
-        card_product_id: cardProductId,
-        match_status: source,
-        match_confidence: confidence,
-      },
-      { onConflict: 'user_id,plaid_account_id' },
-    );
-
-    if (error) {
-      console.error('Unable to save card match', error);
-      setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'error' }));
-      setPlaidError(error.message);
-      return;
-    }
-
-    const nextAccounts = plaidAccounts.map((currentAccount) =>
-      currentAccount.accountId === account.accountId
-        ? {
-            ...currentAccount,
-            cardProductId,
-            cardProductName: selectedProduct?.name ?? null,
-            cardProductIssuer: selectedProduct?.issuer ?? null,
-            matchStatus: source,
-          }
-        : currentAccount,
-    );
-
-    syncPlaidAccountsToWallet(nextAccounts);
-    setPendingLinkedAccounts((currentAccounts) =>
-      currentAccounts.map((currentAccount) =>
-        currentAccount.accountId === account.accountId
-          ? {
-              ...currentAccount,
-              cardProductId,
-              cardProductName: selectedProduct?.name ?? null,
-              cardProductIssuer: selectedProduct?.issuer ?? null,
-              matchStatus: source,
-            }
-          : currentAccount,
-      ),
-    );
-    setSelectedId(`plaid-${account.accountId}`);
-    setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
-    setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saved' }));
-    void loadWalletAnalysis();
-  }
-
-  function requestRemoveConnectedAccount(account: PlaidConnectedAccount) {
-    setAccountPendingRemoval(account);
-  }
-
-  async function removeConnectedAccount(account: PlaidConnectedAccount) {
-    if (!user || !account.dbId) {
-      setPlaidError('Sign in again before removing this connected account.');
-      return;
-    }
-
-    const supabase = getBrowserSupabaseClient();
-    if (!supabase) return;
-
-    setRemovingAccountIds((current) => [...new Set([...current, account.accountId])]);
-    setPlaidError(null);
-
-    try {
-      const { data } = await supabase.auth.getSession();
-      const accessToken = data.session?.access_token;
-      if (!accessToken) throw new Error('Sign in again before removing this connected account.');
-
-      const response = await fetch('/api/plaid/remove-account', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + accessToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plaidAccountId: account.dbId }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? 'Unable to remove connected account.');
-      }
-
-      const nextAccounts = plaidAccounts.filter((currentAccount) => currentAccount.accountId !== account.accountId);
-      syncPlaidAccountsToWallet(nextAccounts);
-      setPendingLinkedAccounts((currentAccounts) => currentAccounts.filter((currentAccount) => currentAccount.accountId !== account.accountId));
-      setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
-      setMatchStatusByAccount((current) => {
-        const next = { ...current };
-        delete next[account.accountId];
-        return next;
-      });
-      if (selectedId === `plaid-${account.accountId}`) {
-        setSelectedId(nextAccounts[0] ? `plaid-${nextAccounts[0].accountId}` : seedCards[0].id);
-      }
-      void loadWalletAnalysis();
-    } catch (error) {
-      setPlaidError(error instanceof Error ? error.message : 'Unable to remove connected account.');
-    } finally {
-      setRemovingAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
-      setAccountPendingRemoval((current) => (current?.accountId === account.accountId ? null : current));
-    }
+    await saveManualCard({
+      cardProductId,
+      selectedProduct: selectedManualCardProduct,
+      draftCard,
+    });
   }
 
   function finishLinkedCardSetup() {
@@ -1627,43 +1353,6 @@ export default function WalletPrototype() {
     setShowScanner(false);
     setScreen('wallet');
     setWalletPageIndex(0);
-  }
-
-  async function syncPlaidTransactions() {
-    const supabase = getBrowserSupabaseClient();
-    const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-    const accessToken = data.session?.access_token;
-
-    if (!accessToken) {
-      setAuthFlow('entry');
-      return;
-    }
-
-    setTransactionSyncStatus('syncing');
-    setPlaidError(null);
-
-    try {
-      const response = await fetch('/api/plaid/sync-transactions', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + accessToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ days: 90 }),
-      });
-      const body = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(body.error ?? 'Unable to sync Plaid transactions.');
-      }
-
-      await loadPersistedPlaidState();
-      void loadWalletAnalysis();
-      setTransactionSyncStatus('idle');
-    } catch (error) {
-      setTransactionSyncStatus('error');
-      setPlaidError(error instanceof Error ? error.message : 'Unable to sync Plaid transactions.');
-    }
   }
 
   return (
@@ -2772,7 +2461,7 @@ export default function WalletPrototype() {
 
                   <button
                     type="button"
-                    onClick={connectPlaidSandbox}
+                    onClick={() => void connectPlaidSandbox(loadPlaidLinkScript)}
                     disabled={plaidStatus === 'loading'}
                     className="mt-4 w-full rounded-full bg-white px-4 py-3 text-sm font-medium text-[#060816] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                   >
