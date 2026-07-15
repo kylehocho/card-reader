@@ -1,12 +1,12 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
 
 ## Current Boundaries
-- `UseNowScreen.tsx` renders the in-app merchant recommendation surface. `WalletPrototype.tsx` still owns route parsing, demo merchant selection, API loading, and selected result state.
+- `UseNowScreen.tsx` renders the in-app merchant recommendation surface. `useMerchantRecommendation.ts` owns route parsing, demo merchant selection, `/api/recommend-card` loading state, live result projection, seeded fallback filtering, and full-screen Use Now deep-link URL updates.
 - `ConnectedAccountsScreen.tsx` renders the signed-in account-management page. Plaid transaction sync, match persistence, and account removal now route through `usePlaidWalletActions.ts`; `WalletPrototype.tsx` still owns navigation outcomes and selected-card state.
 - `AccountMatchSuggestionCard.tsx` renders suggested card-product matches and exports shared match-state labels/tones. It is used by both Connected Accounts and the post-Plaid onboarding match step.
 - `PendingPlaidMatchCard.tsx` renders each newly linked Plaid account during onboarding, including the account summary, shared suggestion card, card-product selector, save status, and helper text. `WalletPrototype.tsx` still owns the pending account list, card products, suggestion map, and `updateCardMatch()` persistence path.
@@ -15,6 +15,23 @@ Last updated: 2026-07-14
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook takes parent callbacks for screen transitions, selected-card updates, and wallet card projection so the extraction does not move presentation/navigation responsibilities prematurely.
 - `transactionRecommendations.ts` owns the local fallback selector for missed-value transaction recommendations. `WalletPrototype.tsx` still chooses between API-backed wallet analysis and the local fallback, but category inference, reward multiplier lookup, best-card comparison, recommendation formatting, and recommendation de-duplication are now testable without rendering the full wallet shell.
 - `types.ts` contains the shared wallet view types needed by multiple card-reader components, starting with `PlaidConnectedAccount` and transaction display rows.
+
+## Merchant Recommendation Contract
+The merchant recommendation hook accepts:
+- the signed-in/user-backed wallet flag;
+- the seed merchant result matrix used as local fallback copy;
+- parent callbacks for screen state, compact search visibility, and wallet stack expansion.
+
+It owns:
+- initial route parsing for `?screen=use-now&merchant=...` and compact wallet search routes;
+- demo merchant open behavior, including canonical Use Now search-param updates;
+- live `/api/recommend-card` fetch state with optional Supabase bearer auth for user-backed wallets;
+- live API recommendation projection into the `MerchantResult` contract consumed by the wallet overlay and `UseNowScreen`;
+- seeded fallback result filtering and rank merging when live and local results overlap.
+
+The pure helpers exported by `useMerchantRecommendation.ts` keep the behavior testable without rendering the wallet shell:
+- `merchantApiRecommendationToResult()` maps API responses into display-ready Use Now cards.
+- `merchantResultsForQuery()` filters local seeded results, keeps live recommendations first, and bumps fallback ranks after the live result.
 
 ## Transaction Recommendation Contract
 The local selector accepts:
@@ -91,8 +108,11 @@ The shared matching UI accepts:
 - Removing a selected connected account falls back to the next connected account when available, otherwise the seed demo card.
 - Local transaction recommendations still surface for unmatched persisted accounts as long as a catalog card can beat the 1x baseline.
 - Pending, refund, and already-optimal transactions do not create local missed-value recommendations.
+- Clearing the merchant query resets live recommendation status to `idle` at the query boundary, avoiding stale loading/error states in both Use Now surfaces.
+- Live merchant results de-duplicate only the same merchant/card pair, so alternate seeded cards for the same merchant remain visible as ranked fallbacks.
 
 ## Verification
+- `npm test -- components/card-reader/useMerchantRecommendation.test.ts lib/recommendation/use-now-route-state.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts components/card-reader/usePersistedPlaidData.test.ts components/card-reader/usePlaidAccountMatching.test.ts`
 - `npm test -- components/card-reader/transactionRecommendations.test.ts`
@@ -102,6 +122,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Extract merchant recommendation loading and Use Now route-state effects into a focused hook so `/api/recommend-card` loading can be tested outside the full wallet shell.
+1. Extract selected-card and wallet-page state into a focused wallet navigation hook so card selection, stack expansion, and tab reset behavior can be tested outside the full wallet shell.
 2. Extract shared account summary formatting if Connected Accounts and onboarding diverge less after the workflow-hook boundary lands.
 3. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.

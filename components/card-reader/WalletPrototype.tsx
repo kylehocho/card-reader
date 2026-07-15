@@ -14,9 +14,10 @@ import {
   usePersistedPlaidData,
 } from '@/components/card-reader/usePersistedPlaidData';
 import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
+import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
-import type { RewardCategory, WalletAnalysis } from '@/lib/benefits/types';
+import type { WalletAnalysis } from '@/lib/benefits/types';
 import {
   alertFromAnalysis,
   benefitFromTracker,
@@ -26,8 +27,7 @@ import {
   type TransactionRecommendationView,
   type WelcomeBonusView,
 } from '@/lib/benefits/wallet-analysis-view';
-import { demoMerchantContextForQuery, useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
-import { buildUseNowRouteSearchForMerchant, parseUseNowRouteState } from '@/lib/recommendation/use-now-route-state';
+import { useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { MotionConfig, motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -84,42 +84,6 @@ type ConciergeAccess = {
   contact: string;
   detail: string;
   channel: string;
-};
-
-export type MerchantResult = {
-  id: string;
-  merchant: string;
-  category: string;
-  card: string;
-  rank: number;
-  reward: string;
-  value: string;
-  reason: string;
-  matchedBenefits: string[];
-  tags: string[];
-};
-
-type MerchantApiRecommendation = {
-  merchant: string;
-  category: RewardCategory;
-  bestCard: {
-    id: string;
-    issuer: string;
-    name: string;
-    multiplier: number;
-    rewardCurrency?: string | null;
-  };
-  runnerUp?: {
-    id: string;
-    issuer: string;
-    name: string;
-    multiplier: number;
-    rewardCurrency?: string | null;
-  };
-  reason: string;
-  matchedOffer?: {
-    title: string;
-  } | null;
 };
 
 type TransactionRecommendation = TransactionRecommendationView;
@@ -870,10 +834,6 @@ export default function WalletPrototype() {
   const [manualCardProductId, setManualCardProductId] = useState('');
   const [emailDraft, setEmailDraft] = useState('');
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
-  const [merchantQuery, setMerchantQuery] = useState('');
-  const [merchantRecommendation, setMerchantRecommendation] = useState<MerchantApiRecommendation | null>(null);
-  const [merchantRecommendationStatus, setMerchantRecommendationStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const [merchantRecommendationError, setMerchantRecommendationError] = useState<string | null>(null);
   const [showMerchantSearch, setShowMerchantSearch] = useState(false);
   const [walletPageIndex, setWalletPageIndex] = useState(0);
   const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
@@ -893,29 +853,6 @@ export default function WalletPrototype() {
     benefitExpiring: true,
     spendMilestones: false,
   });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const timeoutId = window.setTimeout(() => {
-      const routeState = parseUseNowRouteState(window.location.search);
-      if (routeState.screen) setScreen(routeState.screen);
-      if (routeState.merchant) setMerchantQuery(routeState.merchant);
-      if (routeState.showMerchantSearch) setShowMerchantSearch(true);
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  const openUseNowDemo = useCallback((merchant: string) => {
-    setMerchantQuery(merchant);
-    setScreen('use-now');
-    setShowMerchantSearch(false);
-    setWalletSelectionExpanded(false);
-
-    if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', buildUseNowRouteSearchForMerchant(merchant));
-    }
-  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1062,6 +999,21 @@ export default function WalletPrototype() {
   }, [loadWalletAnalysis]);
 
   const isUserBackedWallet = usesSupabase && authStatus === 'authenticated' && profileStatus === 'ready';
+  const {
+    featuredMerchant,
+    merchantQuery,
+    merchantRecommendationError,
+    merchantRecommendationStatus,
+    merchantResults,
+    openUseNowDemo,
+    setMerchantQuery,
+  } = useMerchantRecommendation<Screen>({
+    isUserBackedWallet,
+    seedMerchantResults,
+    setScreen,
+    setShowMerchantSearch,
+    setWalletSelectionExpanded,
+  });
   const visibleCards = useMemo(() => (isUserBackedWallet ? cards.filter((card) => card.id.startsWith('plaid-')) : cards), [cards, isUserBackedWallet]);
   const visibleCardIds = useMemo(() => new Set(visibleCards.map((card) => card.id)), [visibleCards]);
   const isEmptyUserWallet = isUserBackedWallet && visibleCards.length === 0;
@@ -1102,81 +1054,6 @@ export default function WalletPrototype() {
     [cardProducts, effectiveManualCardProductId],
   );
 
-  useEffect(() => {
-    const merchant = merchantQuery.trim();
-    if (!merchant) return;
-
-    const abortController = new AbortController();
-
-    async function loadMerchantRecommendation() {
-      setMerchantRecommendationStatus('loading');
-      setMerchantRecommendationError(null);
-
-      try {
-        const supabase = getBrowserSupabaseClient();
-        const { data } = supabase && isUserBackedWallet ? await supabase.auth.getSession() : { data: { session: null } };
-        const accessToken = data.session?.access_token;
-        const response = await fetch('/api/recommend-card', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(accessToken ? { Authorization: 'Bearer ' + accessToken } : {}),
-          },
-          body: JSON.stringify(demoMerchantContextForQuery(merchant)),
-          signal: abortController.signal,
-        });
-        const payload = (await response.json().catch(() => ({}))) as MerchantApiRecommendation & { error?: string };
-
-        if (!response.ok || !payload.bestCard) {
-          throw new Error(payload.error ?? 'Unable to load merchant recommendation.');
-        }
-
-        setMerchantRecommendation(payload);
-        setMerchantRecommendationStatus('ready');
-      } catch (error) {
-        if (abortController.signal.aborted) return;
-        setMerchantRecommendation(null);
-        setMerchantRecommendationStatus('error');
-        setMerchantRecommendationError(error instanceof Error ? error.message : 'Unable to load merchant recommendation.');
-      }
-    }
-
-    void loadMerchantRecommendation();
-
-    return () => abortController.abort();
-  }, [isUserBackedWallet, merchantQuery]);
-
-  const liveMerchantResult = useMemo<MerchantResult | null>(() => {
-    if (merchantRecommendationStatus !== 'ready' || !merchantRecommendation) return null;
-
-    const offerTitle = merchantRecommendation.matchedOffer?.title;
-    return {
-      id: `live-${merchantRecommendation.merchant.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-      merchant: merchantRecommendation.merchant,
-      category: readableRewardCategory(merchantRecommendation.category),
-      card: merchantRecommendation.bestCard.name,
-      rank: 1,
-      reward: `${merchantRecommendation.bestCard.multiplier}x ${merchantRecommendation.bestCard.rewardCurrency ?? 'rewards'}`,
-      value: 'Live recommendation',
-      reason: merchantRecommendation.reason,
-      matchedBenefits: [offerTitle, merchantRecommendation.runnerUp ? `Runner-up: ${merchantRecommendation.runnerUp.name}` : null].filter((value): value is string => Boolean(value)),
-      tags: [merchantRecommendation.merchant.toLowerCase(), merchantRecommendation.category.toLowerCase()],
-    };
-  }, [merchantRecommendation, merchantRecommendationStatus]);
-
-  const merchantResults = useMemo(() => {
-    const normalized = merchantQuery.trim().toLowerCase();
-    const results = normalized
-      ? seedMerchantResults.filter((result) =>
-          [result.merchant, result.category, result.card, ...result.tags].some((value) => value.toLowerCase().includes(normalized)),
-        )
-      : [];
-
-    const sortedResults = [...results].sort((a, b) => a.rank - b.rank);
-    if (!liveMerchantResult || !normalized) return sortedResults;
-
-    return [liveMerchantResult, ...sortedResults.filter((result) => result.merchant !== liveMerchantResult.merchant || result.card !== liveMerchantResult.card).map((result) => ({ ...result, rank: result.rank + 1 }))];
-  }, [liveMerchantResult, merchantQuery]);
   const analysisTransactionRecommendations = useMemo(
     () => (walletAnalysis?.recommendations ?? []).map(recommendationFromAnalysis),
     [walletAnalysis],
@@ -1188,7 +1065,6 @@ export default function WalletPrototype() {
   const expiringValueRecommendations = useMemo(() => dedupeTransactionRecommendations(transactionRecommendations).slice(0, 4), [transactionRecommendations]);
   const expiringValueAlerts = useMemo(() => dedupeNotifications(visibleNotifications).slice(0, 4), [visibleNotifications]);
   const featuredTransactionRecommendation = transactionRecommendations[0] ?? null;
-  const featuredMerchant = merchantResults[0] ?? seedMerchantResults[0];
   const walletStackItems = useMemo(
     () => (isEmptyUserWallet ? [{ id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' as const }] : [...visibleCards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' as const }]),
     [isEmptyUserWallet, selectedId, visibleCards],

@@ -1,7 +1,8 @@
 'use client';
 
 import { useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
-import type { MerchantResult, PurchaseCategory, RecommendationItem } from './WalletPrototype';
+import type { MerchantResult } from './useMerchantRecommendation';
+import type { PurchaseCategory, RecommendationItem } from './WalletPrototype';
 
 type UseNowScreenProps = {
   merchantQuery: string;
