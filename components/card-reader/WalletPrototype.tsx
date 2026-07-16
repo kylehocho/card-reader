@@ -1721,6 +1721,52 @@ export default function WalletPrototype() {
               </div>
               )}
 
+              <div className="relative z-10 mt-3" style={appleInfoFontStyle}>
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/44">Cards</p>
+                    <p className="mt-0.5 text-[13px] text-white/70">{visibleCards.length} saved</p>
+                  </div>
+                  <button type="button" onClick={openScanner} className="rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-medium text-white/82">
+                    Add
+                  </button>
+                </div>
+                <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+                  {visibleCards.map((card) => (
+                    <button
+                      key={card.id}
+                      type="button"
+                      onClick={() => selectCard(card.id)}
+                      className={`relative min-w-[58%] snap-start overflow-hidden rounded-[22px] border px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition ${
+                        selectedId === card.id ? 'border-white/38' : 'border-white/10'
+                      } bg-gradient-to-br ${card.gradient}`}
+                    >
+                      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),transparent_42%,rgba(0,0,0,0.3))]" />
+                      <div className="relative flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[9px] uppercase tracking-[0.24em] text-white/64">{card.issuer}</p>
+                          <p className="mt-5 truncate text-[16px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-black/18 px-2.5 py-1 text-[11px] text-white/78">•••• {card.last4}</span>
+                      </div>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={openScanner}
+                    className="min-w-[42%] snap-start rounded-[22px] border border-dashed border-white/16 bg-white/[0.06] px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/84">
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M10 4.7v10.6M4.7 10h10.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <p className="mt-5 text-[15px] font-semibold tracking-[-0.02em] text-white">Add card</p>
+                    <p className="mt-1 text-[12px] text-white/54">Plaid or manual</p>
+                  </button>
+                </div>
+              </div>
+
               {plaidAccounts.length > 0 && (
                 <div className="relative z-10 mt-3">
                   <div className="rounded-[22px] border border-emerald-300/16 bg-emerald-300/10 px-4 py-3" style={appleInfoFontStyle}>
