@@ -942,6 +942,8 @@ export default function WalletPrototype() {
     shiftWalletPage,
     resetToWallet,
     walletPageIndex,
+    walletSelectionExpanded,
+    walletStackItems,
   } = useWalletNavigation({
     emptyCard: emptyWalletCard,
     fallbackCard: seedCards[0],
@@ -1721,49 +1723,54 @@ export default function WalletPrototype() {
               </div>
               )}
 
-              <div className="relative z-10 mt-3" style={appleInfoFontStyle}>
-                <div className="mb-2 flex items-center justify-between px-1">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/44">Cards</p>
-                    <p className="mt-0.5 text-[13px] text-white/70">{visibleCards.length} saved</p>
-                  </div>
-                  <button type="button" onClick={openScanner} className="rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-medium text-white/82">
-                    Add
-                  </button>
-                </div>
-                <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
-                  {visibleCards.map((card) => (
-                    <button
-                      key={card.id}
-                      type="button"
-                      onClick={() => selectCard(card.id)}
-                      className={`relative min-w-[58%] snap-start overflow-hidden rounded-[22px] border px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition ${
-                        selectedId === card.id ? 'border-white/38' : 'border-white/10'
-                      } bg-gradient-to-br ${card.gradient}`}
-                    >
-                      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),transparent_42%,rgba(0,0,0,0.3))]" />
-                      <div className="relative flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-[9px] uppercase tracking-[0.24em] text-white/64">{card.issuer}</p>
-                          <p className="mt-5 truncate text-[16px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
+              <div className="relative z-10 mt-3 pb-2 pt-0">
+                <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
+                  {walletStackItems.map((card, index) => {
+                    const isAddCard = card.id === 'add-card';
+                    const top = walletSelectionExpanded ? 12 + index * 62 : 18 + index * 18;
+                    const scale = walletSelectionExpanded ? 1 : 1 - index * 0.024;
+                    const opacity = walletSelectionExpanded ? 1 : 1 - index * 0.05;
+                    const zIndex = walletSelectionExpanded ? walletStackItems.length - index : 20 - index;
+                    const cardClassName = isAddCard
+                      ? 'absolute inset-x-0 rounded-[30px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]'
+                      : `absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${(card as Card).gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`;
+                    return (
+                      <motion.button
+                        key={card.id}
+                        layout
+                        type="button"
+                        onClick={() => {
+                          if (!walletSelectionExpanded) {
+                            setWalletSelectionExpanded(true);
+                            return;
+                          }
+                          if (isAddCard) {
+                            openScanner();
+                            return;
+                          }
+                          selectCard(card.id);
+                        }}
+                        whileTap={{ scale: walletSelectionExpanded ? 0.988 : scale - 0.012 }}
+                        className={cardClassName}
+                        style={{ top, zIndex }}
+                        animate={{
+                          scale,
+                          opacity,
+                          y: walletSelectionExpanded ? 0 : index * 1.5,
+                        }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+                      >
+                        {!isAddCard && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />}
+                        <div className={`relative flex items-start justify-between ${isAddCard ? 'text-white/92' : 'text-white'}`}>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">{card.issuer}</p>
+                            <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
+                          </div>
+                          <p className="mt-1 text-xs text-white/74">{isAddCard ? 'Scan or enter' : `•••• ${card.last4}`}</p>
                         </div>
-                        <span className="shrink-0 rounded-full bg-black/18 px-2.5 py-1 text-[11px] text-white/78">•••• {card.last4}</span>
-                      </div>
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={openScanner}
-                    className="min-w-[42%] snap-start rounded-[22px] border border-dashed border-white/16 bg-white/[0.06] px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/84">
-                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path d="M10 4.7v10.6M4.7 10h10.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <p className="mt-5 text-[15px] font-semibold tracking-[-0.02em] text-white">Add card</p>
-                    <p className="mt-1 text-[12px] text-white/54">Plaid or manual</p>
-                  </button>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 
