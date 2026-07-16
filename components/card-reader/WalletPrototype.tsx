@@ -1230,17 +1230,21 @@ export default function WalletPrototype() {
 
   return (
     <MotionConfig transition={{ type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}>
-      <div className="min-h-screen bg-black text-white">
-        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-8 pt-6">
+      <div className="min-h-screen bg-[#080b13] text-white">
+        <div className="flex min-h-screen w-full max-w-none flex-col px-0 pb-8 pt-0 sm:mx-auto sm:max-w-[390px] sm:px-3 sm:pt-5">
           {screen === 'wallet' && (
-            <section className="flex min-h-[calc(100vh-120px)] flex-col gap-0">
-              <div className="relative mb-3 flex items-center justify-between px-2">
+            <section
+              className="relative flex min-h-screen flex-col gap-0 overflow-hidden rounded-none border border-white/8 bg-black px-4 pb-5 pt-5 shadow-[0_34px_90px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.05)] sm:min-h-[calc(100vh-40px)] sm:rounded-[34px]"
+              style={appleInfoFontStyle}
+            >
+              <div className="pointer-events-none absolute inset-x-10 top-0 h-28 rounded-full bg-white/[0.035] blur-3xl" />
+              <div className="relative mb-4 flex items-start justify-between">
                 {walletPageIndex > 0 ? (
                   <button
                     type="button"
                     aria-label="Back to wallet overview"
                     onClick={() => setWalletPageIndex(0)}
-                    className="flex h-9 items-center gap-1.5 rounded-full bg-[#2c2c2e] px-3 text-sm font-medium text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    className="flex h-9 items-center gap-1.5 rounded-full bg-white/10 px-3 text-sm font-medium text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                   >
                     <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                       <path d="m12.4 4.8-5.2 5.2 5.2 5.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1248,17 +1252,10 @@ export default function WalletPrototype() {
                     Back
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    aria-label="Wallet options"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <circle cx="5" cy="10" r="1.35" fill="currentColor" />
-                      <circle cx="10" cy="10" r="1.35" fill="currentColor" />
-                      <circle cx="15" cy="10" r="1.35" fill="currentColor" />
-                    </svg>
-                  </button>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.36em] text-white/44">Card Reader</p>
+                    <h1 className="mt-1 text-[30px] font-semibold tracking-[-0.045em] text-white">Wallet</h1>
+                  </div>
                 )}
                 <div className="relative flex items-center gap-2.5">
                   <button
@@ -1271,7 +1268,7 @@ export default function WalletPrototype() {
                       });
                       setWalletSelectionExpanded(false);
                     }}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                   >
                     <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                       <circle cx="8.7" cy="8.7" r="4.6" stroke="currentColor" strokeWidth="1.55" />
@@ -1282,7 +1279,7 @@ export default function WalletPrototype() {
                     type="button"
                     aria-label="Add pass"
                     onClick={openScanner}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                   >
                     <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                       <path d="M10 4.7v10.6M4.7 10h10.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
@@ -1292,7 +1289,7 @@ export default function WalletPrototype() {
                     type="button"
                     aria-label="Profile or passes"
                     onClick={() => setShowProfileMenu((value) => !value)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                   >
                     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                       <circle cx="10" cy="7.1" r="2.6" stroke="currentColor" strokeWidth="1.5" />
@@ -1327,7 +1324,7 @@ export default function WalletPrototype() {
                       setShowMerchantSearch(false);
                     }
                   }}
-                  className="flex min-h-[calc(100vh-116px)] flex-col px-2"
+                  className="flex min-h-[calc(100vh-116px)] flex-col"
                   style={appleInfoFontStyle}
                 >
                   <div className="mb-4 flex items-center justify-between px-1">
@@ -1441,7 +1438,7 @@ export default function WalletPrototype() {
                 </motion.div>
               ) : (
                 <>
-              <div className="relative z-20 px-1 pt-1">
+              <div className="relative z-20">
                 <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2 [scrollbar-width:none]">
 
                   <motion.div
@@ -1455,23 +1452,24 @@ export default function WalletPrototype() {
                         setWalletSelectionExpanded(false);
                       }
                     }}
-                    className={`relative aspect-[1.586/1] min-w-full snap-center overflow-hidden rounded-[28px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_70px_rgba(0,0,0,0.34)]`}
+                    className={`relative aspect-[1.586/1] min-w-full snap-center overflow-hidden rounded-[24px] bg-gradient-to-br ${selectedCard.gradient} px-5 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_30px_64px_rgba(0,0,0,0.42)]`}
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.18),transparent_35%,rgba(0,0,0,0.28))]" />
                     <div className="absolute inset-x-4 top-3 h-px bg-white/15" />
 
                     <div className="relative flex h-full flex-col justify-between text-white">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-[10px] uppercase tracking-[0.28em] text-white/72">{selectedCard.issuer}</p>
-                          <h2 className="mt-2 text-[27px] font-semibold tracking-[-0.03em]">{selectedCard.name}</h2>
+                          <h2 className="mt-2 text-[15px] font-medium tracking-[-0.01em] text-white/80">{selectedCard.name}</h2>
                         </div>
-                        <div className="rounded-full border border-white/18 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">•••• {selectedCard.last4}</div>
+                        <div className="rounded-full border border-white/14 bg-black/22 px-3 py-1 text-xs text-white/82 backdrop-blur">•••• {selectedCard.last4}</div>
                       </div>
 
                       <div>
                         <p className="text-[10px] uppercase tracking-[0.28em] text-white/50">Current balance</p>
-                        <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em]">{selectedCard.pointsValue}</p>
+                        <p className="mt-1 text-[30px] font-semibold tracking-[-0.04em]">{selectedCard.pointsValue}</p>
                         <div className="mt-1 flex items-center justify-between gap-3">
                           <p className="text-[12px] text-white/74">{selectedCard.pointsLabel}</p>
                           <div className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white/84">
@@ -1484,41 +1482,30 @@ export default function WalletPrototype() {
                 </div>
               </div>
 
-              <div className="relative z-10 -mt-8 px-2 pt-12">
+              <div className="relative z-10 pt-3">
                 <button
                   type="button"
                   onClick={() => openUseNowDemo(featuredMerchant.merchant)}
-                  className="mb-3 w-full rounded-[24px] border border-white/12 bg-white/[0.08] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                  className="mb-3 flex w-full items-center justify-center rounded-full bg-white px-5 py-3.5 text-center text-[15px] font-semibold tracking-[-0.02em] text-[#05070c] shadow-[0_16px_32px_rgba(0,0,0,0.24)]"
                   style={appleInfoFontStyle}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/44">Demo route</p>
-                      <p className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-white">Use Now at {featuredMerchant.merchant}</p>
-                      <p className="mt-1 text-[13px] leading-5 text-white/64">
-                        Shows the extension-style recommendation inside the app before extension setup.
-                      </p>
-                    </div>
-                    <div className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#10131a]">
-                      {featuredMerchant.card}
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between rounded-[18px] border border-white/10 bg-black/12 px-3 py-2 text-[13px] text-white/72">
-                    <span>{useNowDemoMerchantNames.length} demo merchants ready</span>
-                    <span className="text-white/44">Open</span>
-                  </div>
+                  Use now - find the best card
                 </button>
 
                 <div
-                  className="rounded-[18px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  className="rounded-[24px] border border-white/10 bg-white/[0.07] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
                   style={appleInfoFontStyle}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-white/92">
-                      <span className="text-sm text-white/70">{pageMeta[walletPages[walletPageIndex]].icon}</span>
-                      <p className="text-[13px] font-medium tracking-[-0.01em] capitalize">{pageMeta[walletPages[walletPageIndex]].title}</p>
+                      <p className="text-[18px] font-semibold tracking-[-0.03em] capitalize">{pageMeta[walletPages[walletPageIndex]].title}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => shiftWalletPage(-1)} className="mr-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/7 text-white/70" aria-label="Previous wallet panel">
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                          <path d="m12.2 5-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
                       {walletPages.map((page, index) => (
                         <button
                           key={page}
@@ -1528,9 +1515,13 @@ export default function WalletPrototype() {
                           aria-label={page}
                         />
                       ))}
+                      <button type="button" onClick={() => shiftWalletPage(1)} className="ml-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/7 text-white/70" aria-label="Next wallet panel">
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                          <path d="m7.8 5 5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                </div>
 
                 <motion.div
                   drag="x"
@@ -1540,24 +1531,27 @@ export default function WalletPrototype() {
                     if (info.offset.x < -60) shiftWalletPage(1);
                     if (info.offset.x > 60) shiftWalletPage(-1);
                   }}
-                  className="mt-3 cursor-grab active:cursor-grabbing"
+                  className="mt-2 cursor-grab active:cursor-grabbing"
                 >
                   <div
-                    className="min-h-[252px] rounded-[26px] border border-white/10 bg-[rgba(118,118,128,0.24)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    className="min-h-[216px] px-1 py-1"
                     style={appleInfoFontStyle}
                   >
                     {walletPages[walletPageIndex] === 'benefits' && (
                       <div>
-                        <div className="mb-1 flex items-center justify-between px-1 pb-3">
+                        <div className="mb-1 flex items-center justify-between px-1 pb-2">
                           <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Available now</p>
                           <p className="text-xs text-white/70">{displayedBenefits.length} benefits</p>
                         </div>
                         <div className="divide-y divide-white/10">
                           {displayedBenefits.map((benefit) => (
                             <motion.div layout key={benefit.id} className="px-1 py-4 first:pt-0 last:pb-1">
-                              <div>
-                                <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">{benefit.title}</p>
-                                <p className="mt-1 text-[13px] leading-[1.35rem] text-white/72">{benefit.detail}</p>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-[15px] font-semibold tracking-[-0.02em] text-white">{benefit.title}</p>
+                                  <p className="mt-1 text-[12px] leading-5 text-white/58">{benefit.detail}</p>
+                                </div>
+                                <span className="shrink-0 text-[12px] text-white/58">{benefit.progress ?? 0}%</span>
                               </div>
                               {typeof benefit.progress === 'number' && (
                                 <div className="mt-3 h-2 rounded-full bg-white/8">
@@ -1688,10 +1682,11 @@ export default function WalletPrototype() {
                       )}
                     </div>
                   </motion.div>
+                </div>
 
               </div>
 
-              <div className="relative z-10 mt-3 px-2" style={appleInfoFontStyle}>
+              <div className="relative z-10 mt-3" style={appleInfoFontStyle}>
                 <button
                   type="button"
                   onClick={() => setScreen('opportunities')}
@@ -1719,11 +1714,11 @@ export default function WalletPrototype() {
               </div>
 
               {welcomeBonuses.length > 0 && (
-              <div className="relative z-10 mt-3 px-2" style={appleInfoFontStyle}>
+              <div className="relative z-10 mt-3" style={appleInfoFontStyle}>
                 <div className="mb-2 flex items-center justify-between px-1">
                   <div>
-                    <p className="text-[11px] font-medium tracking-[0.01em] text-white/58">Welcome bonus tracker</p>
-                    <p className="mt-0.5 text-[13px] text-white/70">Temporary goals while offers are active</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/44">Welcome bonuses</p>
+                    <p className="mt-0.5 text-[13px] text-white/70">{welcomeBonuses.length} in progress</p>
                   </div>
                   <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-white/72">Swipe</span>
                 </div>
@@ -1731,7 +1726,7 @@ export default function WalletPrototype() {
                   {welcomeBonuses.map((bonus) => {
                     const progress = Math.min(100, Math.round((bonus.spent / bonus.target) * 100));
                     return (
-                      <div key={bonus.id} className="min-w-[78%] snap-start rounded-[26px] border border-white/10 bg-[rgba(118,118,128,0.24)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      <div key={bonus.id} className="min-w-[78%] snap-start rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-[10px] uppercase tracking-[0.2em] text-white/44">{bonus.issuer}</p>
@@ -1757,7 +1752,7 @@ export default function WalletPrototype() {
               )}
 
               {plaidAccounts.length > 0 && (
-                <div className="relative z-10 mt-3 px-2">
+                <div className="relative z-10 mt-3">
                   <div className="rounded-[22px] border border-emerald-300/16 bg-emerald-300/10 px-4 py-3" style={appleInfoFontStyle}>
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -1779,7 +1774,7 @@ export default function WalletPrototype() {
                 </div>
               )}
 
-              <div className="relative z-10 mt-3 px-2 pb-2 pt-0">
+              <div className="relative z-10 mt-3 pb-2 pt-0">
                 <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
                   {walletStackItems.map((card, index) => {
                     const isAddCard = card.id === 'add-card';
