@@ -163,11 +163,11 @@ const seedCards: Card[] = [
     id: 'amex-gold',
     issuer: 'American Express',
     name: 'Gold Card',
-    last4: '2219',
+    last4: '3007',
     gradient: 'from-[#f3d59f] via-[#cb9d62] to-[#704624]',
     accent: '#2b1908',
-    pointsLabel: 'Membership Rewards',
-    pointsValue: '128,440 pts',
+    pointsLabel: '48,230 pts ~= $482',
+    pointsValue: '$1,284.20',
     recommendation: 'Use for dining tonight to pair 4x points with your unused monthly dining credit.',
     spendSummary: '$642 left to unlock your next dining milestone this month.',
     categories: ['Dining', 'Groceries', 'Flights', 'Amex Travel'],
@@ -195,9 +195,9 @@ const seedCards: Card[] = [
       { id: 'g3', merchant: 'Resy @ Horses', amount: '$132.50', date: 'May 2', category: 'Dining' },
     ],
     benefits: [
-      { id: 'gold-dining', title: '$10 Dining Credit', status: 'available', detail: 'Unused for May · expires in 26 days', progress: 0 },
-      { id: 'gold-resy', title: 'Resy credit', status: 'in-progress', detail: '$28 of $50 used this half-year', progress: 56 },
-      { id: 'gold-welcome', title: 'Welcome bonus tracker', status: 'in-progress', detail: '$5,358 of $6,000 spent · 19 days left', progress: 89 },
+      { id: 'gold-dining', title: 'Dining credit', status: 'available', detail: '$10 monthly - Grubhub, Cheesecake Factory, Resy', progress: 0 },
+      { id: 'gold-uber', title: 'Uber Cash', status: 'in-progress', detail: '$4 of $10 used - auto-loads to your Uber account', progress: 40 },
+      { id: 'gold-resy', title: 'Resy credit', status: 'used', detail: '$100 annual, paid in semi-annual halves', progress: 100 },
     ],
   },
   {
@@ -648,15 +648,15 @@ const seedMerchantResults: MerchantResult[] = [
 
 const seedWelcomeBonuses: WelcomeBonus[] = [
   {
-    id: 'gold-welcome',
-    cardProductId: 'amex-gold',
-    card: 'Gold Card',
-    issuer: 'American Express',
-    deadline: '19 days left',
-    spent: 5358,
-    target: 6000,
-    bonus: '90k Membership Rewards',
-    nextMove: 'Route dining and groceries here until complete.',
+    id: 'venture-welcome',
+    cardProductId: 'capital-one-venture-x',
+    card: 'Venture X',
+    issuer: 'Capital One',
+    deadline: '18 days left',
+    spent: 2500,
+    target: 4000,
+    bonus: '75,000 miles after $4,000',
+    nextMove: 'Move general spend here until this offer closes.',
   },
   {
     id: 'reserve-welcome',
@@ -666,20 +666,19 @@ const seedWelcomeBonuses: WelcomeBonus[] = [
     deadline: '42 days left',
     spent: 3180,
     target: 6000,
-    bonus: '125k Ultimate Rewards',
+    bonus: '60,000 points after $6,000',
     nextMove: 'Use for travel, dining, and large protected purchases.',
   },
   {
-    id: 'venture-welcome',
-    cardProductId: 'capital-one-venture-x',
-    card: 'Venture X',
-    issuer: 'Capital One',
-    deadline: '68 days left',
-    spent: 1850,
-    target: 4000,
-    bonus: '75k Capital One miles',
-    nextMove: 'Move general spend here after the Gold bonus closes.',
-
+    id: 'gold-welcome',
+    cardProductId: 'amex-gold',
+    card: 'Gold Card',
+    issuer: 'American Express',
+    deadline: '19 days left',
+    spent: 5358,
+    target: 6000,
+    bonus: '90k Membership Rewards',
+    nextMove: 'Route dining and groceries here until complete.',
   },
 ];
 
@@ -943,12 +942,10 @@ export default function WalletPrototype() {
     shiftWalletPage,
     resetToWallet,
     walletPageIndex,
-    walletSelectionExpanded,
-    walletStackItems,
   } = useWalletNavigation({
     emptyCard: emptyWalletCard,
     fallbackCard: seedCards[0],
-    initialSelectedId: 'chase-sapphire-reserve',
+    initialSelectedId: 'amex-gold',
     isEmptyWallet: isEmptyUserWallet,
     visibleCards,
   });
@@ -1686,33 +1683,6 @@ export default function WalletPrototype() {
 
               </div>
 
-              <div className="relative z-10 mt-3" style={appleInfoFontStyle}>
-                <button
-                  type="button"
-                  onClick={() => setScreen('opportunities')}
-                  className="w-full rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/44">Recommendations</p>
-                      <p className="mt-1 text-[19px] font-semibold tracking-[-0.03em] text-white">
-                        {transactionRecommendations.length > 0 ? transactionRecommendations.length + ' missed-value ideas' : visibleNotifications.length > 0 ? 'Expiring value' : 'No expiring value'}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[12px] font-semibold text-white/80">!</span>
-                  </div>
-                  <p className="mt-3 text-[13px] leading-5 text-white/68">
-                    {featuredTransactionRecommendation
-                      ? featuredTransactionRecommendation.merchant + ' could have earned more on ' + featuredTransactionRecommendation.bestCard + '.'
-                      : selectedCard.alerts[0]}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between rounded-[18px] border border-white/10 bg-white/[0.06] px-3 py-2 text-[13px] text-white/72">
-                    <span>{transactionRecommendations.length > 0 ? transactionRecommendations.length + ' transaction ideas' : visibleNotifications.length + ' active alerts'}</span>
-                    <span className="text-white/44">{visibleNotifications.length > 0 || transactionRecommendations.length > 0 ? 'Review' : 'Set up'}</span>
-                  </div>
-                </button>
-              </div>
-
               {welcomeBonuses.length > 0 && (
               <div className="relative z-10 mt-3" style={appleInfoFontStyle}>
                 <div className="mb-2 flex items-center justify-between px-1">
@@ -1774,56 +1744,6 @@ export default function WalletPrototype() {
                 </div>
               )}
 
-              <div className="relative z-10 mt-3 pb-2 pt-0">
-                <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
-                  {walletStackItems.map((card, index) => {
-                    const isAddCard = card.id === 'add-card';
-                    const top = walletSelectionExpanded ? 12 + index * 62 : 18 + index * 18;
-                    const scale = walletSelectionExpanded ? 1 : 1 - index * 0.024;
-                    const opacity = walletSelectionExpanded ? 1 : 1 - index * 0.05;
-                    const zIndex = walletSelectionExpanded ? walletStackItems.length - index : 20 - index;
-                    const cardClassName = isAddCard
-                      ? 'absolute inset-x-0 rounded-[30px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]'
-                      : `absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${(card as Card).gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`;
-                    return (
-                      <motion.button
-                        key={card.id}
-                        layout
-                        type="button"
-                        onClick={() => {
-                          if (!walletSelectionExpanded) {
-                            setWalletSelectionExpanded(true);
-                            return;
-                          }
-                          if (isAddCard) {
-                            openScanner();
-                            return;
-                          }
-                          selectCard(card.id);
-                        }}
-                        whileTap={{ scale: walletSelectionExpanded ? 0.988 : scale - 0.012 }}
-                        className={cardClassName}
-                        style={{ top, zIndex }}
-                        animate={{
-                          scale,
-                          opacity,
-                          y: walletSelectionExpanded ? 0 : index * 1.5,
-                        }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-                      >
-                        {!isAddCard && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />}
-                        <div className={`relative flex items-start justify-between ${isAddCard ? 'text-white/92' : 'text-white'}`}>
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">{card.issuer}</p>
-                            <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
-                          </div>
-                          <p className="mt-1 text-xs text-white/74">{isAddCard ? 'Scan or enter' : `•••• ${card.last4}`}</p>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
                 </>
               )}
             </section>
