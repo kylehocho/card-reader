@@ -15,6 +15,7 @@ import {
 } from '@/components/card-reader/usePersistedPlaidData';
 import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
+import { useWalletNavigation, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
 import type { WalletAnalysis } from '@/lib/benefits/types';
@@ -124,10 +125,8 @@ type Card = {
 
 
 type ScanStep = 'camera' | 'manual' | 'plaid' | 'match' | 'success';
-type Screen = 'wallet' | 'profile' | 'connected-accounts' | 'card-details' | 'notifications' | 'opportunities' | 'use-now' | 'category-guide' | 'concierge';
 
 export type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
-type WalletPage = 'benefits' | 'multipliers' | 'rewards' | 'progress' | 'recommendations';
 
 type CategoryChip = {
   key: CategoryKey;
@@ -146,8 +145,6 @@ type CategoryGuide = {
   reason: string;
   runnerUp?: string;
 };
-
-const walletPages: WalletPage[] = ['benefits', 'multipliers', 'rewards', 'progress', 'recommendations'];
 
 const appleInfoFontStyle = {
   fontFamily: '"SF Pro Text", "SF Pro Display", "SF Pro Icons", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif',
@@ -825,18 +822,14 @@ export default function WalletPrototype() {
   });
   const [notifications] = useState(seedNotifications);
   const [recommendations] = useState(seedRecommendations);
-  const [selectedId, setSelectedId] = useState('chase-sapphire-reserve');
   const [showScanner, setShowScanner] = useState(false);
   const [scanStep, setScanStep] = useState<ScanStep>('camera');
-  const [screen, setScreen] = useState<Screen>('wallet');
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
   const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999', isBusiness: false });
   const [manualCardProductId, setManualCardProductId] = useState('');
   const [emailDraft, setEmailDraft] = useState('');
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [showMerchantSearch, setShowMerchantSearch] = useState(false);
-  const [walletPageIndex, setWalletPageIndex] = useState(0);
-  const [walletSelectionExpanded, setWalletSelectionExpanded] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<CategoryKey>('groceries');
@@ -934,6 +927,32 @@ export default function WalletPrototype() {
     loadWalletAnalysis,
   });
 
+  const isUserBackedWallet = usesSupabase && authStatus === 'authenticated' && profileStatus === 'ready';
+  const visibleCards = useMemo(() => (isUserBackedWallet ? cards.filter((card) => card.id.startsWith('plaid-')) : cards), [cards, isUserBackedWallet]);
+  const visibleCardIds = useMemo(() => new Set(visibleCards.map((card) => card.id)), [visibleCards]);
+  const isEmptyUserWallet = isUserBackedWallet && visibleCards.length === 0;
+  const {
+    screen,
+    selectedCard,
+    selectedId,
+    selectCard: selectWalletCard,
+    setScreen,
+    setSelectedId,
+    setWalletPageIndex,
+    setWalletSelectionExpanded,
+    shiftWalletPage,
+    resetToWallet,
+    walletPageIndex,
+    walletSelectionExpanded,
+    walletStackItems,
+  } = useWalletNavigation({
+    emptyCard: emptyWalletCard,
+    fallbackCard: seedCards[0],
+    initialSelectedId: 'chase-sapphire-reserve',
+    isEmptyWallet: isEmptyUserWallet,
+    visibleCards,
+  });
+
   const {
     accountPendingRemoval,
     connectPlaidSandbox,
@@ -963,8 +982,7 @@ export default function WalletPrototype() {
     setPlaidError,
     setPlaidStatus,
     onManualCardAdded: (account) => {
-      setSelectedId(`plaid-${account.accountId}`);
-      setWalletPageIndex(0);
+      selectWalletCard(`plaid-${account.accountId}`);
       setScanStep('success');
       window.setTimeout(() => {
         setShowScanner(false);
@@ -998,7 +1016,6 @@ export default function WalletPrototype() {
     return () => window.clearTimeout(timeoutId);
   }, [loadWalletAnalysis]);
 
-  const isUserBackedWallet = usesSupabase && authStatus === 'authenticated' && profileStatus === 'ready';
   const {
     featuredMerchant,
     merchantQuery,
@@ -1014,9 +1031,6 @@ export default function WalletPrototype() {
     setShowMerchantSearch,
     setWalletSelectionExpanded,
   });
-  const visibleCards = useMemo(() => (isUserBackedWallet ? cards.filter((card) => card.id.startsWith('plaid-')) : cards), [cards, isUserBackedWallet]);
-  const visibleCardIds = useMemo(() => new Set(visibleCards.map((card) => card.id)), [visibleCards]);
-  const isEmptyUserWallet = isUserBackedWallet && visibleCards.length === 0;
   const selectedPlaidAccount = useMemo(
     () => plaidAccounts.find((account) => `plaid-${account.accountId}` === selectedId) ?? null,
     [plaidAccounts, selectedId],
@@ -1032,7 +1046,6 @@ export default function WalletPrototype() {
     const linkedCardProductIds = new Set(plaidAccounts.map((account) => account.cardProductId).filter(Boolean));
     return seedWelcomeBonuses.filter((bonus) => linkedCardProductIds.has(bonus.cardProductId));
   }, [isUserBackedWallet, plaidAccounts, walletAnalysis]);
-  const selectedCard = useMemo(() => visibleCards.find((card) => card.id === selectedId) ?? (isEmptyUserWallet ? emptyWalletCard : visibleCards[0] ?? seedCards[0]), [isEmptyUserWallet, selectedId, visibleCards]);
   const displayedBenefits = useMemo(
     () => (isUserBackedWallet && selectedAnalysisTrackers.length > 0 ? selectedAnalysisTrackers.map(benefitFromTracker) : selectedCard.benefits),
     [isUserBackedWallet, selectedAnalysisTrackers, selectedCard.benefits],
@@ -1065,10 +1078,6 @@ export default function WalletPrototype() {
   const expiringValueRecommendations = useMemo(() => dedupeTransactionRecommendations(transactionRecommendations).slice(0, 4), [transactionRecommendations]);
   const expiringValueAlerts = useMemo(() => dedupeNotifications(visibleNotifications).slice(0, 4), [visibleNotifications]);
   const featuredTransactionRecommendation = transactionRecommendations[0] ?? null;
-  const walletStackItems = useMemo(
-    () => (isEmptyUserWallet ? [{ id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' as const }] : [...visibleCards.filter((card) => card.id !== selectedId), { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' as const }]),
-    [isEmptyUserWallet, selectedId, visibleCards],
-  );
   const selectedCategoryGuide = useMemo(
     () => categoryGuides.find((guide) => guide.key === selectedCategoryKey) ?? categoryGuides[0],
     [selectedCategoryKey],
@@ -1101,18 +1110,8 @@ export default function WalletPrototype() {
   }
 
   function selectCard(cardId: string) {
-    setSelectedId(cardId);
-    setWalletPageIndex(0);
-    setWalletSelectionExpanded(false);
+    selectWalletCard(cardId);
     setShowProfileMenu(false);
-  }
-
-  function shiftWalletPage(direction: 1 | -1) {
-    setWalletPageIndex((current) => {
-      const next = current + direction;
-      if (next < 0 || next >= walletPages.length) return current;
-      return next;
-    });
   }
 
   function openProfileEntry() {
@@ -1153,7 +1152,6 @@ export default function WalletPrototype() {
   async function handleSignOut() {
     await signOut();
     setCards(seedCards);
-    setSelectedId('chase-sapphire-reserve');
     setPlaidAccounts([]);
     setPendingLinkedAccounts([]);
     setPlaidTransactions([]);
@@ -1163,7 +1161,7 @@ export default function WalletPrototype() {
     setPlaidStatus('idle');
     setPlaidError(null);
     setShowProfileMenu(false);
-    setScreen('wallet');
+    resetToWallet();
   }
 
   function finishDemoAdd() {
@@ -1201,8 +1199,7 @@ export default function WalletPrototype() {
       isBusiness: draftCard.isBusiness,
     };
     setCards((prev) => [...prev, newCard]);
-    setSelectedId(newCard.id);
-    setWalletPageIndex(0);
+    selectWalletCard(newCard.id);
     setScanStep('success');
     window.setTimeout(() => {
       setShowScanner(false);

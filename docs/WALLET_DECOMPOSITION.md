@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -13,8 +13,30 @@ Last updated: 2026-07-15
 - `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook takes parent callbacks for screen transitions, selected-card updates, and wallet card projection so the extraction does not move presentation/navigation responsibilities prematurely.
+- `useWalletNavigation.ts` owns the top-level wallet navigation state that is independent from persistence: selected card id, current screen, wallet page index, stack expansion, selected-card fallback, page shifting, reset-to-wallet behavior, and the non-selected card stack plus add-card action.
 - `transactionRecommendations.ts` owns the local fallback selector for missed-value transaction recommendations. `WalletPrototype.tsx` still chooses between API-backed wallet analysis and the local fallback, but category inference, reward multiplier lookup, best-card comparison, recommendation formatting, and recommendation de-duplication are now testable without rendering the full wallet shell.
 - `types.ts` contains the shared wallet view types needed by multiple card-reader components, starting with `PlaidConnectedAccount` and transaction display rows.
+
+## Wallet Navigation Contract
+The navigation hook accepts:
+- the current visible wallet cards;
+- the empty-wallet card used for signed-in users with no linked accounts;
+- the global fallback seed card;
+- the initial selected card id;
+- the empty-wallet flag.
+
+It owns:
+- selected card id and selected-card fallback resolution;
+- current screen;
+- wallet page index and clamped left/right page shifts;
+- wallet stack expansion state;
+- the derived wallet stack that omits the currently selected card and appends the add-card action;
+- reset-to-wallet behavior used by sign-out and similar cleanup paths.
+
+The pure helpers exported by `useWalletNavigation.ts` keep the behavior testable without rendering the wallet shell:
+- `resolveSelectedWalletCard()` picks the selected visible card, empty-wallet placeholder, first visible card, or fallback seed card in that order.
+- `shiftWalletPageIndex()` clamps page shifts to the available wallet page bounds.
+- `buildWalletStackItems()` returns non-selected visible cards plus the add-card action, or only the add-card action for an empty signed-in wallet.
 
 ## Merchant Recommendation Contract
 The merchant recommendation hook accepts:
@@ -110,8 +132,13 @@ The shared matching UI accepts:
 - Pending, refund, and already-optimal transactions do not create local missed-value recommendations.
 - Clearing the merchant query resets live recommendation status to `idle` at the query boundary, avoiding stale loading/error states in both Use Now surfaces.
 - Live merchant results de-duplicate only the same merchant/card pair, so alternate seeded cards for the same merchant remain visible as ranked fallbacks.
+- Selected-card fallback prefers the signed-in empty-wallet placeholder only when there are no visible user cards; otherwise missing selected ids fall back to the first visible card before the seed fallback.
+- Wallet page swipes clamp at the first and last wallet pages so a drag cannot move the details panel out of range.
+- The wallet stack excludes the currently selected card and always leaves an add-card action; an empty signed-in wallet shows only the add-card action.
 
 ## Verification
+- `npm test -- components/card-reader/useWalletNavigation.test.ts`
+- `npm test -- components/card-reader/useWalletNavigation.test.ts components/card-reader/useMerchantRecommendation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useMerchantRecommendation.test.ts lib/recommendation/use-now-route-state.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts components/card-reader/usePersistedPlaidData.test.ts components/card-reader/usePlaidAccountMatching.test.ts`
@@ -122,6 +149,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Extract selected-card and wallet-page state into a focused wallet navigation hook so card selection, stack expansion, and tab reset behavior can be tested outside the full wallet shell.
+1. Extract scanner/manual-card presentation state so add-card, Plaid match, manual card entry, and success-step transitions can be tested outside the full wallet shell.
 2. Extract shared account summary formatting if Connected Accounts and onboarding diverge less after the workflow-hook boundary lands.
 3. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.
