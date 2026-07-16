@@ -26,6 +26,9 @@ The wallet home is the app's central consumer workflow. Card selection, page res
 - `npm run lint`
 - `npm test` - 18 files passed, 73 tests passed.
 - `npm run build`
+- `vercel --prod --yes` - deployed `dpl_2mXd9QygyvxDfVgDQLnvmz1Y3TaM` to `https://card-reader-4od5vjssf-kylehocho-5599s-projects.vercel.app` and aliased `https://card-reader-xi.vercel.app`.
+- `curl -sS -o /tmp/card-reader-home-2026-07-16.html -w '%{http_code} %{url_effective}\n' https://card-reader-xi.vercel.app` - returned `200 https://card-reader-xi.vercel.app/`.
+- `POST https://card-reader-xi.vercel.app/api/recommend-card` for Whole Foods - returned American Express Gold Card at 4x with Chase Sapphire Preferred as runner-up.
 
 ## Risks
 - This is intended as a behavior-neutral decomposition slice; no browser screenshot evidence was captured before deployment.
