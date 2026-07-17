@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -13,6 +13,7 @@ Last updated: 2026-07-16
 - `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook takes parent callbacks for screen transitions, selected-card updates, and wallet card projection so the extraction does not move presentation/navigation responsibilities prematurely.
+- `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `useWalletNavigation.ts` owns the top-level wallet navigation state that is independent from persistence: selected card id, current screen, wallet page index, stack expansion, selected-card fallback, page shifting, reset-to-wallet behavior, and the non-selected card stack plus add-card action.
 - `transactionRecommendations.ts` owns the local fallback selector for missed-value transaction recommendations. `WalletPrototype.tsx` still chooses between API-backed wallet analysis and the local fallback, but category inference, reward multiplier lookup, best-card comparison, recommendation formatting, and recommendation de-duplication are now testable without rendering the full wallet shell.
 - `types.ts` contains the shared wallet view types needed by multiple card-reader components, starting with `PlaidConnectedAccount` and transaction display rows.
@@ -106,6 +107,20 @@ The pure helpers exported by `usePlaidWalletActions.ts` keep workflow transforma
 - `applyCardProductMatch()` attaches selected card-product metadata to the matching connected-account view model.
 - `removeAccountFromList()` and `removeAccountStatus()` keep account removal and match-state cleanup deterministic.
 
+## Add-Card Presentation Contract
+The add-card presentation hook owns:
+- whether the add-card sheet is visible;
+- the active add-card step (`camera`, `manual`, `plaid`, `match`, or `success`);
+- anonymous/manual card draft fields;
+- the signed-in manual card-product selector value;
+- open, close, and success-close transitions used by manual-card and Plaid outcomes.
+
+`WalletPrototype.tsx` still decides when a user is allowed into the sheet, which step to open first, how anonymous demo cards are created, how signed-in manual cards are saved, and which app screen to show after success. This keeps auth, persistence, and navigation concerns outside the presentation hook.
+
+The pure helpers exported by `useAddCardPresentation.ts` keep the behavior testable without rendering the wallet shell:
+- `defaultManualCardDraft` preserves the existing anonymous demo defaults.
+- `normalizeManualCardLast4()` strips non-digits and caps the manual last-four input at four digits.
+
 ## Account Matching Contract
 The shared matching UI accepts:
 - a `PlaidConnectedAccount` view model;
@@ -130,6 +145,8 @@ The shared matching UI accepts:
 - Removing a selected connected account falls back to the next connected account when available, otherwise the seed demo card.
 - Local transaction recommendations still surface for unmatched persisted accounts as long as a catalog card can beat the 1x baseline.
 - Pending, refund, and already-optimal transactions do not create local missed-value recommendations.
+- Manual card last-four input strips non-digits and caps at four characters before the draft reaches either the anonymous demo-card creator or the signed-in manual-card API path.
+- Add-card success transitions close the sheet after the same short delay for anonymous manual cards and signed-in manual-card saves.
 - Clearing the merchant query resets live recommendation status to `idle` at the query boundary, avoiding stale loading/error states in both Use Now surfaces.
 - Live merchant results de-duplicate only the same merchant/card pair, so alternate seeded cards for the same merchant remain visible as ranked fallbacks.
 - Selected-card fallback prefers the signed-in empty-wallet placeholder only when there are no visible user cards; otherwise missing selected ids fall back to the first visible card before the seed fallback.
@@ -137,6 +154,8 @@ The shared matching UI accepts:
 - The wallet stack excludes the currently selected card and always leaves an add-card action; an empty signed-in wallet shows only the add-card action.
 
 ## Verification
+- `npm test -- components/card-reader/useAddCardPresentation.test.ts`
+- `npm test -- components/card-reader/useAddCardPresentation.test.ts components/card-reader/useWalletNavigation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useWalletNavigation.test.ts`
 - `npm test -- components/card-reader/useWalletNavigation.test.ts components/card-reader/useMerchantRecommendation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useMerchantRecommendation.test.ts lib/recommendation/use-now-route-state.test.ts`
@@ -149,6 +168,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Extract scanner/manual-card presentation state so add-card, Plaid match, manual card entry, and success-step transitions can be tested outside the full wallet shell.
+1. Extract the add-card sheet rendering into a component once the presentation hook has a little more UI evidence, leaving the parent with only workflow callbacks.
 2. Extract shared account summary formatting if Connected Accounts and onboarding diverge less after the workflow-hook boundary lands.
 3. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.

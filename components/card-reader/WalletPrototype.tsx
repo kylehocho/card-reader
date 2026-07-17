@@ -14,6 +14,7 @@ import {
   usePersistedPlaidData,
 } from '@/components/card-reader/usePersistedPlaidData';
 import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
+import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
 import { useWalletNavigation, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
 import ProfileHome from '@/components/profile/ProfileHome';
@@ -123,8 +124,6 @@ type Card = {
   isBusiness?: boolean;
 };
 
-
-type ScanStep = 'camera' | 'manual' | 'plaid' | 'match' | 'success';
 
 export type PurchaseCategory = 'Dining' | 'Travel' | 'General spend';
 
@@ -821,11 +820,7 @@ export default function WalletPrototype() {
   });
   const [notifications] = useState(seedNotifications);
   const [recommendations] = useState(seedRecommendations);
-  const [showScanner, setShowScanner] = useState(false);
-  const [scanStep, setScanStep] = useState<ScanStep>('camera');
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(recommendations[0].id);
-  const [draftCard, setDraftCard] = useState({ issuer: 'American Express', name: 'Black Card', last4: '9999', isBusiness: false });
-  const [manualCardProductId, setManualCardProductId] = useState('');
   const [emailDraft, setEmailDraft] = useState('');
   const [purchaseCategory, setPurchaseCategory] = useState<PurchaseCategory>('Dining');
   const [showMerchantSearch, setShowMerchantSearch] = useState(false);
@@ -845,6 +840,22 @@ export default function WalletPrototype() {
     benefitExpiring: true,
     spendMilestones: false,
   });
+
+  const {
+    closeAddCardSheet,
+    draftCard,
+    manualCardProductId,
+    openAddCardSheet,
+    scanStep,
+    setDraftBusiness,
+    setDraftIssuer,
+    setDraftLast4,
+    setDraftName,
+    setManualCardProductId,
+    setScanStep,
+    showScanner,
+    showSuccessThenClose,
+  } = useAddCardPresentation();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -982,12 +993,10 @@ export default function WalletPrototype() {
     setPlaidStatus,
     onManualCardAdded: (account) => {
       selectWalletCard(`plaid-${account.accountId}`);
-      setScanStep('success');
-      window.setTimeout(() => {
-        setShowScanner(false);
+      showSuccessThenClose(() => {
         setScreen('wallet');
         setManualCardStatus('idle');
-      }, 900);
+      });
     },
     onPlaidAccountsLinked: (accounts) => {
       const firstAddedAccount = accounts[0];
@@ -1104,8 +1113,7 @@ export default function WalletPrototype() {
       return;
     }
 
-    setShowScanner(true);
-    setScanStep('plaid');
+    openAddCardSheet('plaid');
   }
 
   function selectCard(cardId: string) {
@@ -1199,11 +1207,9 @@ export default function WalletPrototype() {
     };
     setCards((prev) => [...prev, newCard]);
     selectWalletCard(newCard.id);
-    setScanStep('success');
-    window.setTimeout(() => {
-      setShowScanner(false);
+    showSuccessThenClose(() => {
       setScreen('wallet');
-    }, 900);
+    });
   }
 
   async function finishManualCardAdd() {
@@ -1222,7 +1228,7 @@ export default function WalletPrototype() {
 
   function finishLinkedCardSetup() {
     setPendingLinkedAccounts([]);
-    setShowScanner(false);
+    closeAddCardSheet();
     setScreen('wallet');
     setWalletPageIndex(0);
   }
@@ -2203,7 +2209,7 @@ export default function WalletPrototype() {
                   </h2>
                 </div>
                 {scanStep !== 'success' && (
-                  <button type="button" onClick={() => setShowScanner(false)} className="shrink-0 rounded-full border border-white/15 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">
+                  <button type="button" onClick={closeAddCardSheet} className="shrink-0 rounded-full border border-white/15 bg-black/15 px-3 py-1 text-xs text-white/80 backdrop-blur">
                     Close
                   </button>
                 )}
@@ -2262,7 +2268,7 @@ export default function WalletPrototype() {
                       <button
                         key={option.label}
                         type="button"
-                        onClick={() => setDraftCard((draft) => ({ ...draft, isBusiness: option.value }))}
+                        onClick={() => setDraftBusiness(option.value)}
                         className={`rounded-[20px] px-3 py-3 text-sm font-medium transition ${draftCard.isBusiness === option.value ? 'bg-white text-[#060816]' : 'bg-white/[0.06] text-white/70'}`}
                       >
                         {option.label}
@@ -2357,7 +2363,7 @@ export default function WalletPrototype() {
                       type="button"
                       onClick={() => {
                         setPendingLinkedAccounts([]);
-                        setShowScanner(false);
+                        closeAddCardSheet();
                         setScreen('connected-accounts');
                       }}
                       className="rounded-full bg-white/10 px-4 py-3 text-sm font-medium text-white/82 transition hover:bg-white/14"
@@ -2416,17 +2422,17 @@ export default function WalletPrototype() {
                     <>
                       <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                         <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Issuer</label>
-                        <input value={draftCard.issuer} onChange={(e) => setDraftCard((d) => ({ ...d, issuer: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                        <input value={draftCard.issuer} onChange={(e) => setDraftIssuer(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                       </div>
                       <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                         <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Product name</label>
-                        <input value={draftCard.name} onChange={(e) => setDraftCard((d) => ({ ...d, name: e.target.value }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                        <input value={draftCard.name} onChange={(e) => setDraftName(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                       </div>
                     </>
                   )}
                   <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                     <label className="text-[10px] uppercase tracking-[0.24em] text-white/60">Last four</label>
-                    <input value={draftCard.last4} inputMode="numeric" maxLength={4} onChange={(e) => setDraftCard((d) => ({ ...d, last4: e.target.value.replace(/\D/g, '').slice(0, 4) }))} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
+                    <input value={draftCard.last4} inputMode="numeric" maxLength={4} onChange={(e) => setDraftLast4(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/12 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/20" />
                   </div>
                   <div className="rounded-[28px] border border-white/12 bg-[rgba(118,118,128,0.24)] p-4">
                     <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Preview</p>
