@@ -1,9 +1,6 @@
 'use client';
 
 import { useAuth } from '@/components/auth/AuthProvider';
-import AuthEntrySheet from '@/components/auth/AuthEntrySheet';
-import EmailAuthFlow from '@/components/auth/EmailAuthFlow';
-import ProfileSetupFlow from '@/components/auth/ProfileSetupFlow';
 import AddCardSheet from '@/components/card-reader/AddCardSheet';
 import ConnectedAccountsScreen from '@/components/card-reader/ConnectedAccountsScreen';
 import { dedupeTransactionRecommendations, deriveLocalTransactionRecommendations, readableRewardCategory } from '@/components/card-reader/transactionRecommendations';
@@ -17,6 +14,7 @@ import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletAc
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
 import { useWalletNavigation, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
+import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
 import type { WalletAnalysis } from '@/lib/benefits/types';
@@ -2256,33 +2254,18 @@ export default function WalletPrototype() {
 	          </div>
 	        )}
 
-	        <AuthEntrySheet
-	          isOpen={authFlow === 'entry'}
-          isLoading={authStatus === 'loading'}
-          onClose={() => setAuthFlow('closed')}
+        <ProfileAccessBoundary
+          authFlow={authFlow}
+          authStatus={authStatus}
+          emailDraft={emailDraft}
+          user={user}
+          onAuthFlowChange={setAuthFlow}
+          onEmailDraftChange={setEmailDraft}
           onContinueWithApple={signInWithApple}
           onContinueWithGoogle={signInWithGoogle}
-          onContinueWithEmail={() => setAuthFlow('email')}
-        />
-
-        <EmailAuthFlow
-          isOpen={authFlow === 'email' || authFlow === 'verify'}
-          mode={authFlow === 'verify' ? 'verify' : 'email'}
-          email={emailDraft}
-          isLoading={authStatus === 'loading'}
-          onEmailChange={setEmailDraft}
-          onBack={() => setAuthFlow(authFlow === 'verify' ? 'email' : 'entry')}
-          onClose={() => setAuthFlow('closed')}
-          onSubmitEmail={() => signInWithEmail(emailDraft)}
-          onConfirmVerification={confirmEmail}
-        />
-
-        <ProfileSetupFlow
-          key={user?.id ?? 'anonymous-setup'}
-          isOpen={authFlow === 'setup'}
-          user={user}
-          isLoading={authStatus === 'loading'}
-          onSubmit={completeProfileSetup}
+          onContinueWithEmail={signInWithEmail}
+          onConfirmEmail={confirmEmail}
+          onCompleteProfileSetup={completeProfileSetup}
         />
       </div>
     </MotionConfig>
