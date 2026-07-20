@@ -31,6 +31,10 @@ Manual card entry, Plaid account matching, sign-in, email verification, and prof
 - `npm test`
 - `APP_BASE_URL=http://localhost:3010 EVIDENCE_DATE=2026-07-20 npm run evidence:onboarding`
 - Visual/file sanity check for the five generated PNGs in `artifacts/onboarding-ui-2026-07-20/`
+- `vercel --prod --yes`
+- `curl -sS -o /tmp/card-reader-home-2026-07-20.html -w '%{http_code} %{url_effective}\n' https://card-reader-xi.vercel.app`
+- `curl -sS -o /tmp/card-reader-evidence-auth-2026-07-20.html -w '%{http_code} %{url_effective}\n' 'https://card-reader-xi.vercel.app/evidence/onboarding?state=auth-entry'`
+- `POST https://card-reader-xi.vercel.app/api/recommend-card` for Whole Foods returned Amex Gold at 4x
 
 ## Risks
 - The evidence route is intentionally fixture-backed; it does not prove live Supabase auth, Plaid Link, or signed-in persistence.
