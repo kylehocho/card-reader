@@ -26,7 +26,7 @@ export default function AuthEntrySheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/55 px-3 pb-3 pt-10 backdrop-blur-sm" style={appleInfoFontStyle}>
       <button type="button" aria-label="Close auth" onClick={onClose} className="absolute inset-0" />
-      <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(20,20,24,0.92)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <div className="relative mx-auto w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(20,20,24,0.92)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] sm:max-w-md">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.13),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.12),transparent_32%)]" />
         <div className="flex items-start justify-between gap-4">
           <div className="relative">
@@ -60,12 +60,12 @@ export default function AuthEntrySheet({
             disabled={isLoading}
             className="flex w-full items-center justify-between rounded-[24px] bg-white px-4 py-4 text-left text-[#0f1115] transition hover:opacity-95 disabled:opacity-60"
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-[15px] font-semibold">Continue with Apple</p>
               <p className="mt-1 text-[13px] text-[#0f1115]/65">Fastest path for iPhone-native sign-in</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-black/6 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-black/55">Recommended</span>
+            <div className="ml-3 flex shrink-0 items-center gap-2">
+              <span className="hidden rounded-full bg-black/6 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-black/55 min-[380px]:inline">Recommended</span>
               <span className="text-xl"></span>
             </div>
           </button>
@@ -76,7 +76,7 @@ export default function AuthEntrySheet({
             disabled={isLoading}
             className="flex w-full items-center justify-between rounded-[24px] border border-white/12 bg-white/6 px-4 py-4 text-left text-white transition hover:bg-white/10 disabled:opacity-60"
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-[15px] font-semibold">Continue with Google</p>
               <p className="mt-1 text-[13px] text-white/62">Import identity cleanly and keep setup short</p>
             </div>
@@ -89,7 +89,7 @@ export default function AuthEntrySheet({
             disabled={isLoading}
             className="flex w-full items-center justify-between rounded-[24px] border border-dashed border-white/16 bg-white/[0.03] px-4 py-4 text-left text-white transition hover:bg-white/[0.06] disabled:opacity-60"
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-[15px] font-semibold">Continue with email</p>
               <p className="mt-1 text-[13px] text-white/62">Manual entry with magic link or code later</p>
             </div>

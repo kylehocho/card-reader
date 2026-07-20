@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-19
+Last updated: 2026-07-20
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -16,6 +16,7 @@ Last updated: 2026-07-19
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning auth gates, anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
+- `/evidence/onboarding` renders deterministic Add Card and profile/auth fixture states for visual baseline captures. The current evidence matrix is documented in `docs/ONBOARDING_UI_EVIDENCE.md`.
 - `useWalletNavigation.ts` owns the top-level wallet navigation state that is independent from persistence: selected card id, current screen, wallet page index, stack expansion, selected-card fallback, page shifting, reset-to-wallet behavior, and the non-selected card stack plus add-card action.
 - `transactionRecommendations.ts` owns the local fallback selector for missed-value transaction recommendations. `WalletPrototype.tsx` still chooses between API-backed wallet analysis and the local fallback, but category inference, reward multiplier lookup, best-card comparison, recommendation formatting, and recommendation de-duplication are now testable without rendering the full wallet shell.
 - `types.ts` contains the shared wallet view types needed by multiple card-reader components, starting with `PlaidConnectedAccount` and transaction display rows.
@@ -179,6 +180,7 @@ The shared matching UI accepts:
 - Add-card success transitions close the sheet after the same short delay for anonymous manual cards and signed-in manual-card saves.
 - Add-card sheet rendering remains behavior-neutral: the extracted component receives the existing Plaid/manual callbacks instead of creating its own persistence or navigation state.
 - Profile access rendering remains behavior-neutral: the extracted boundary receives existing auth callbacks and keeps wallet workflow gates in `WalletPrototype.tsx`.
+- Auth/profile sheet containers cap to the viewport and social sign-in row content can shrink, preventing right-edge clipping in narrow evidence captures.
 - Clearing the merchant query resets live recommendation status to `idle` at the query boundary, avoiding stale loading/error states in both Use Now surfaces.
 - Live merchant results de-duplicate only the same merchant/card pair, so alternate seeded cards for the same merchant remain visible as ranked fallbacks.
 - Selected-card fallback prefers the signed-in empty-wallet placeholder only when there are no visible user cards; otherwise missing selected ids fall back to the first visible card before the seed fallback.
@@ -187,6 +189,7 @@ The shared matching UI accepts:
 
 ## Verification
 - `npm test -- components/profile/ProfileAccessBoundary.test.ts components/card-reader/AddCardSheet.test.ts components/card-reader/useAddCardPresentation.test.ts`
+- `APP_BASE_URL=http://localhost:3010 EVIDENCE_DATE=2026-07-20 npm run evidence:onboarding`
 - `npm test -- components/card-reader/AddCardSheet.test.ts components/card-reader/useAddCardPresentation.test.ts`
 - `npm test -- components/card-reader/useAddCardPresentation.test.ts`
 - `npm test -- components/card-reader/useAddCardPresentation.test.ts components/card-reader/useWalletNavigation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
@@ -202,6 +205,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Capture focused UI evidence for the extracted add-card and profile-access sheet states so future final selected-card extractions have a visual baseline.
-2. Extract final selected-card outcomes from Plaid/manual-card mutation callbacks after the visual baseline is captured.
+1. Extract final selected-card outcomes from Plaid/manual-card mutation callbacks now that Add Card and profile-access visual baselines exist.
+2. Expand the evidence harness or add a browser-driven test when the project needs live signed-in Plaid/auth proof instead of fixture screenshots.
 3. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.

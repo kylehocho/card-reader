@@ -25,7 +25,7 @@ export default function ProfileSetupFlow({ isOpen, user, isLoading = false, onSu
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/55 px-3 pb-3 pt-10 backdrop-blur-sm" style={appleInfoFontStyle}>
-      <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(20,20,24,0.96)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <div className="relative mx-auto w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(20,20,24,0.96)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] sm:max-w-md">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.08),transparent_30%)]" />
         <div className="relative">
           <div className="flex items-center justify-between gap-3">

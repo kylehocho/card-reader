@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "evidence:onboarding": "node scripts/capture-onboarding-evidence.mjs",
     "evidence:extension-popup": "node scripts/capture-extension-popup-evidence.mjs",
     "evidence:use-now": "node scripts/capture-use-now-evidence.mjs",
     "seed:merchant-intelligence": "node scripts/seed-merchant-intelligence.mjs",

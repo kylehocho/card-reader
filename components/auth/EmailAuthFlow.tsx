@@ -34,7 +34,7 @@ export default function EmailAuthFlow({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/55 px-3 pb-3 pt-10 backdrop-blur-sm" style={appleInfoFontStyle}>
       <button type="button" aria-label="Close email auth" onClick={onClose} className="absolute inset-0" />
-      <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(20,20,24,0.95)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <div className="relative mx-auto w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(20,20,24,0.95)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] sm:max-w-md">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(52,211,153,0.10),transparent_28%)]" />
         <div className="flex items-center justify-between">
           <button type="button" onClick={onBack} className="relative rounded-full bg-white/8 px-3 py-1.5 text-sm text-white/80">Back</button>
