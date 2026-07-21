@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Extracted final selected-card mutation outcomes from `WalletPrototype.tsx` into the wallet navigation boundary. `useWalletSelectionOutcomes()` now centralizes post-manual-card, Plaid-link, match-save, and connected-account-removal card selection transitions while `usePlaidWalletActions.ts` keeps persistence and mutation status ownership. Added pure helper coverage for connected-account card ids and removal fallback behavior. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-21.md`. Verification passed with targeted navigation tests, lint, production build, and full Vitest.
 - Added repeatable onboarding UI evidence for the extracted AddCardSheet and ProfileAccessBoundary states. The new `/evidence/onboarding` fixture route renders signed-in manual entry, post-Plaid matching, auth entry, email verification, and profile setup states with deterministic data, and `npm run evidence:onboarding` captures the matrix into `artifacts/onboarding-ui-YYYY-MM-DD/`. The first evidence pass surfaced auth/profile sheet right-edge clipping, so the auth sheets now cap against the viewport and social sign-in rows shrink cleanly. Updated `docs/ONBOARDING_UI_EVIDENCE.md`, `docs/WALLET_DECOMPOSITION.md`, and `docs/DAILY_WORK_LOG_2026-07-20.md`. Verification passed with targeted boundary tests, lint, full Vitest, production build, local production evidence capture, Vercel production deploy, homepage smoke, onboarding evidence route smoke, and Whole Foods recommendation smoke.
 - Continued the `WalletPrototype.tsx` decomposition by extracting auth/profile overlay composition into `components/profile/ProfileAccessBoundary.tsx`. The boundary now renders profile entry, email auth/verification, and profile setup sheets while `WalletPrototype.tsx` keeps auth gates, email draft state, provider sign-in callbacks, profile setup completion, and wallet navigation rules. Added focused helper coverage in `components/profile/ProfileAccessBoundary.test.ts`. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-19.md`. Verification passed with targeted profile/add-card tests, lint, full Vitest, production build, Vercel production deploy, homepage smoke, and Whole Foods recommendation smoke.
 - Continued the `WalletPrototype.tsx` decomposition by extracting add-card modal rendering into `components/card-reader/AddCardSheet.tsx`. The component now renders Plaid connect, post-Plaid matching, anonymous mock scan, manual card entry, preview, save/error, and success states while `WalletPrototype.tsx` keeps auth gates, anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes. Added focused helper coverage in `components/card-reader/AddCardSheet.test.ts`. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-18.md`. Verification passed with targeted add-card tests, lint, full Vitest, production build, Vercel production deploy, homepage smoke, and Whole Foods recommendation smoke.
@@ -76,7 +77,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Deterministic card-match hints in the Plaid matching UI.
 
 ## Active Gaps
-- The Use Now screen, Use Now merchant recommendation hook, wallet navigation hook, add-card presentation hook, AddCardSheet, profile access boundary, Connected Accounts, post-Plaid match-card, shared match-suggestion component, Plaid match suggestion hook, persisted Plaid data hook, local transaction recommendation selector, and Plaid wallet action hook boundaries are in place, but `WalletPrototype.tsx` still owns auth workflow gates and final selected-card outcomes from several mutation callbacks.
+- The Use Now screen, Use Now merchant recommendation hook, wallet navigation hook, selected-card outcome hook, add-card presentation hook, AddCardSheet, profile access boundary, Connected Accounts, post-Plaid match-card, shared match-suggestion component, Plaid match suggestion hook, persisted Plaid data hook, local transaction recommendation selector, and Plaid wallet action hook boundaries are in place, but `WalletPrototype.tsx` still owns auth workflow gates and anonymous demo-card creation.
 - Add Card and profile/auth fixture evidence now covers five onboarding states in `artifacts/onboarding-ui-2026-07-20/`; live signed-in Plaid/auth evidence is still separate.
 - Extension popup render evidence now covers five priority merchants with seeded production responses, but full installed-extension smoke still needs a compatible browser harness or manual `chrome://extensions` pass because local Google Chrome CLI automation rejects unpacked extension loading.
 - The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, supports direct Use Now demo links, and has a repeatable production screenshot matrix documented in `docs/USE_NOW_EVIDENCE.md`.
@@ -90,7 +91,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Extract final selected-card outcomes from Plaid/manual-card mutation callbacks now that onboarding visual baselines exist.
+1. Add a browser-driven signed-in Plaid/auth smoke or extend the fixture evidence harness to cover selection outcomes after manual-card save, Plaid match save, and account removal.
 2. Add a true installed-extension smoke path using a browser that permits unpacked extension loading, then verify at least three live merchant tabs through the background refresh flow and popup.
 3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.

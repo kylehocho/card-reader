@@ -48,6 +48,6 @@
 
 ## Current Sprint
 - Complete true installed-extension screenshot/video evidence after the Use Now production screenshot matrix and the 2026-07-06 popup render-contract evidence.
-- Continue splitting `WalletPrototype.tsx` into smaller behavior-owned pieces. The add-card presentation state was extracted on 2026-07-17, add-card sheet rendering moved into `AddCardSheet.tsx` on 2026-07-18, auth/profile sheet composition moved into `ProfileAccessBoundary.tsx` on 2026-07-19, and fixture-backed onboarding UI evidence was captured on 2026-07-20. Next candidate is extracting final selected-card mutation outcomes.
+- Continue splitting `WalletPrototype.tsx` into smaller behavior-owned pieces. The add-card presentation state was extracted on 2026-07-17, add-card sheet rendering moved into `AddCardSheet.tsx` on 2026-07-18, auth/profile sheet composition moved into `ProfileAccessBoundary.tsx` on 2026-07-19, fixture-backed onboarding UI evidence was captured on 2026-07-20, and selected-card mutation outcomes moved into the wallet navigation boundary on 2026-07-21. Next candidate is signed-in Plaid/auth smoke coverage around those onboarding outcomes.
 - Keep extension privacy/security guardrails intact as new merchants are added.
 - Keep docs current after each material decision.

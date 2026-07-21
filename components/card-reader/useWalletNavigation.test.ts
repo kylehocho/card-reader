@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildWalletStackItems,
   resolveSelectedWalletCard,
+  selectedWalletCardIdAfterConnectedAccountRemoval,
   shiftWalletPageIndex,
+  walletCardIdForConnectedAccount,
 } from './useWalletNavigation';
 
 const cards = [
@@ -71,5 +73,42 @@ describe('wallet navigation helpers', () => {
     expect(buildWalletStackItems({ visibleCards: [], selectedId: 'missing', isEmptyWallet: true })).toEqual([
       { id: 'add-card', issuer: 'Wallet', name: 'Add Card', last4: 'New' },
     ]);
+  });
+
+  it('formats connected account ids as wallet card ids', () => {
+    expect(walletCardIdForConnectedAccount({ accountId: 'acct_123' })).toBe('plaid-acct_123');
+  });
+
+  it('keeps the current selected card when a different connected account is removed', () => {
+    expect(
+      selectedWalletCardIdAfterConnectedAccountRemoval({
+        currentSelectedId: 'plaid-acct_selected',
+        fallbackSelectedId: 'amex-gold',
+        remainingAccounts: [{ accountId: 'acct_next' }],
+        removedAccount: { accountId: 'acct_removed' },
+      }),
+    ).toBe('plaid-acct_selected');
+  });
+
+  it('moves selection to the next connected account when the selected account is removed', () => {
+    expect(
+      selectedWalletCardIdAfterConnectedAccountRemoval({
+        currentSelectedId: 'plaid-acct_removed',
+        fallbackSelectedId: 'amex-gold',
+        remainingAccounts: [{ accountId: 'acct_next' }],
+        removedAccount: { accountId: 'acct_removed' },
+      }),
+    ).toBe('plaid-acct_next');
+  });
+
+  it('falls back to the seed selection when the last selected connected account is removed', () => {
+    expect(
+      selectedWalletCardIdAfterConnectedAccountRemoval({
+        currentSelectedId: 'plaid-acct_removed',
+        fallbackSelectedId: 'amex-gold',
+        remainingAccounts: [],
+        removedAccount: { accountId: 'acct_removed' },
+      }),
+    ).toBe('amex-gold');
   });
 });

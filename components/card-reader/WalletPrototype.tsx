@@ -13,7 +13,7 @@ import {
 import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
-import { useWalletNavigation, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
+import { useWalletNavigation, useWalletSelectionOutcomes, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
 import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
@@ -960,6 +960,22 @@ export default function WalletPrototype() {
     isEmptyWallet: isEmptyUserWallet,
     visibleCards,
   });
+  const {
+    handleCardMatchSaved,
+    handleConnectedAccountRemoved,
+    handleManualCardAdded,
+    handlePlaidAccountsLinked,
+  } = useWalletSelectionOutcomes<PlaidConnectedAccount>({
+    fallbackSelectedId: seedCards[0].id,
+    selectedId,
+    selectCard: selectWalletCard,
+    setManualCardStatus: (status) => setManualCardStatus(status),
+    setScanStep,
+    setScreen,
+    setSelectedId,
+    setWalletPageIndex,
+    showSuccessThenClose,
+  });
 
   const {
     accountPendingRemoval,
@@ -989,29 +1005,10 @@ export default function WalletPrototype() {
     setAuthFlow,
     setPlaidError,
     setPlaidStatus,
-    onManualCardAdded: (account) => {
-      selectWalletCard(`plaid-${account.accountId}`);
-      showSuccessThenClose(() => {
-        setScreen('wallet');
-        setManualCardStatus('idle');
-      });
-    },
-    onPlaidAccountsLinked: (accounts) => {
-      const firstAddedAccount = accounts[0];
-      if (firstAddedAccount) {
-        setSelectedId(`plaid-${firstAddedAccount.accountId}`);
-      }
-      setWalletPageIndex(0);
-      setScanStep('match');
-    },
-    onCardMatchSaved: (account) => {
-      setSelectedId(`plaid-${account.accountId}`);
-    },
-    onConnectedAccountRemoved: (account, nextAccounts) => {
-      if (selectedId === `plaid-${account.accountId}`) {
-        setSelectedId(nextAccounts[0] ? `plaid-${nextAccounts[0].accountId}` : seedCards[0].id);
-      }
-    },
+    onManualCardAdded: handleManualCardAdded,
+    onPlaidAccountsLinked: handlePlaidAccountsLinked,
+    onCardMatchSaved: handleCardMatchSaved,
+    onConnectedAccountRemoved: handleConnectedAccountRemoved,
   });
 
   useEffect(() => {

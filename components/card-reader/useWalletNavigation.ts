@@ -14,6 +14,10 @@ type WalletCardLike = {
   last4: string;
 };
 
+type ConnectedAccountLike = {
+  accountId: string;
+};
+
 export type AddCardStackItem = {
   id: 'add-card';
   issuer: 'Wallet';
@@ -56,6 +60,102 @@ export function buildWalletStackItems<Card extends WalletCardLike>({
   if (isEmptyWallet) return [addCard];
 
   return [...visibleCards.filter((card) => card.id !== selectedId), addCard];
+}
+
+export function walletCardIdForConnectedAccount(account: ConnectedAccountLike) {
+  return `plaid-${account.accountId}`;
+}
+
+export function selectedWalletCardIdAfterConnectedAccountRemoval<Account extends ConnectedAccountLike>({
+  currentSelectedId,
+  fallbackSelectedId,
+  remainingAccounts,
+  removedAccount,
+}: {
+  currentSelectedId: string;
+  fallbackSelectedId: string;
+  remainingAccounts: Account[];
+  removedAccount: Account;
+}) {
+  if (currentSelectedId !== walletCardIdForConnectedAccount(removedAccount)) return currentSelectedId;
+
+  const nextAccount = remainingAccounts[0];
+  return nextAccount ? walletCardIdForConnectedAccount(nextAccount) : fallbackSelectedId;
+}
+
+export function useWalletSelectionOutcomes<Account extends ConnectedAccountLike>({
+  fallbackSelectedId,
+  selectedId,
+  selectCard,
+  setManualCardStatus,
+  setScanStep,
+  setScreen,
+  setSelectedId,
+  setWalletPageIndex,
+  showSuccessThenClose,
+}: {
+  fallbackSelectedId: string;
+  selectedId: string;
+  selectCard: (cardId: string) => void;
+  setManualCardStatus: (status: 'idle') => void;
+  setScanStep: (step: 'match') => void;
+  setScreen: (screen: Screen) => void;
+  setSelectedId: (cardId: string) => void;
+  setWalletPageIndex: (index: number) => void;
+  showSuccessThenClose: (afterClose: () => void) => void;
+}) {
+  const handleManualCardAdded = useCallback(
+    (account: Account) => {
+      selectCard(walletCardIdForConnectedAccount(account));
+      showSuccessThenClose(() => {
+        setScreen('wallet');
+        setManualCardStatus('idle');
+      });
+    },
+    [selectCard, setManualCardStatus, setScreen, showSuccessThenClose],
+  );
+
+  const handlePlaidAccountsLinked = useCallback(
+    (accounts: Account[]) => {
+      const firstAddedAccount = accounts[0];
+      if (firstAddedAccount) {
+        setSelectedId(walletCardIdForConnectedAccount(firstAddedAccount));
+      }
+      setWalletPageIndex(0);
+      setScanStep('match');
+    },
+    [setScanStep, setSelectedId, setWalletPageIndex],
+  );
+
+  const handleCardMatchSaved = useCallback(
+    (account: Account) => {
+      setSelectedId(walletCardIdForConnectedAccount(account));
+    },
+    [setSelectedId],
+  );
+
+  const handleConnectedAccountRemoved = useCallback(
+    (account: Account, remainingAccounts: Account[]) => {
+      const nextSelectedId = selectedWalletCardIdAfterConnectedAccountRemoval({
+        currentSelectedId: selectedId,
+        fallbackSelectedId,
+        remainingAccounts,
+        removedAccount: account,
+      });
+
+      if (nextSelectedId !== selectedId) {
+        setSelectedId(nextSelectedId);
+      }
+    },
+    [fallbackSelectedId, selectedId, setSelectedId],
+  );
+
+  return {
+    handleCardMatchSaved,
+    handleConnectedAccountRemoved,
+    handleManualCardAdded,
+    handlePlaidAccountsLinked,
+  };
 }
 
 export function useWalletNavigation<Card extends WalletCardLike>({
