@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildWalletSelectionOutcomeSummary,
   buildWalletStackItems,
   resolveSelectedWalletCard,
   selectedWalletCardIdAfterConnectedAccountRemoval,
@@ -110,5 +111,44 @@ describe('wallet navigation helpers', () => {
         removedAccount: { accountId: 'acct_removed' },
       }),
     ).toBe('amex-gold');
+  });
+
+  it('summarizes signed-in onboarding selection outcomes for evidence fixtures', () => {
+    expect(
+      buildWalletSelectionOutcomeSummary({
+        fallbackSelectedId: 'amex-gold',
+        manualAccount: { accountId: 'manual_amex_gold' },
+        matchedAccount: { accountId: 'acct_amex_gold' },
+        plaidLinkedAccounts: [{ accountId: 'acct_amex_gold' }, { accountId: 'acct_reserve' }],
+        remainingAccountsAfterRemoval: [{ accountId: 'acct_reserve' }],
+        removedAccount: { accountId: 'acct_amex_gold' },
+        selectedId: 'plaid-acct_amex_gold',
+      }),
+    ).toEqual([
+      {
+        id: 'manual-card-added',
+        label: 'Manual card saved',
+        selectedId: 'plaid-manual_amex_gold',
+        screen: 'wallet',
+        manualCardStatus: 'idle',
+      },
+      {
+        id: 'plaid-accounts-linked',
+        label: 'Plaid accounts linked',
+        selectedId: 'plaid-acct_amex_gold',
+        walletPageIndex: 0,
+        scanStep: 'match',
+      },
+      {
+        id: 'card-match-saved',
+        label: 'Card match saved',
+        selectedId: 'plaid-acct_amex_gold',
+      },
+      {
+        id: 'connected-account-removed',
+        label: 'Connected account removed',
+        selectedId: 'plaid-acct_reserve',
+      },
+    ]);
   });
 });

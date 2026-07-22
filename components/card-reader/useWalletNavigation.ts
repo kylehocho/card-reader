@@ -18,6 +18,16 @@ type ConnectedAccountLike = {
   accountId: string;
 };
 
+export type WalletSelectionOutcomeSummary = {
+  id: 'manual-card-added' | 'plaid-accounts-linked' | 'card-match-saved' | 'connected-account-removed';
+  label: string;
+  selectedId: string;
+  screen?: Screen;
+  walletPageIndex?: number;
+  scanStep?: 'match';
+  manualCardStatus?: 'idle';
+};
+
 export type AddCardStackItem = {
   id: 'add-card';
   issuer: 'Wallet';
@@ -81,6 +91,58 @@ export function selectedWalletCardIdAfterConnectedAccountRemoval<Account extends
 
   const nextAccount = remainingAccounts[0];
   return nextAccount ? walletCardIdForConnectedAccount(nextAccount) : fallbackSelectedId;
+}
+
+export function buildWalletSelectionOutcomeSummary<Account extends ConnectedAccountLike>({
+  fallbackSelectedId,
+  manualAccount,
+  matchedAccount,
+  plaidLinkedAccounts,
+  remainingAccountsAfterRemoval,
+  removedAccount,
+  selectedId,
+}: {
+  fallbackSelectedId: string;
+  manualAccount: Account;
+  matchedAccount: Account;
+  plaidLinkedAccounts: Account[];
+  remainingAccountsAfterRemoval: Account[];
+  removedAccount: Account;
+  selectedId: string;
+}): WalletSelectionOutcomeSummary[] {
+  const firstPlaidAccount = plaidLinkedAccounts[0];
+
+  return [
+    {
+      id: 'manual-card-added',
+      label: 'Manual card saved',
+      selectedId: walletCardIdForConnectedAccount(manualAccount),
+      screen: 'wallet',
+      manualCardStatus: 'idle',
+    },
+    {
+      id: 'plaid-accounts-linked',
+      label: 'Plaid accounts linked',
+      selectedId: firstPlaidAccount ? walletCardIdForConnectedAccount(firstPlaidAccount) : selectedId,
+      walletPageIndex: 0,
+      scanStep: 'match',
+    },
+    {
+      id: 'card-match-saved',
+      label: 'Card match saved',
+      selectedId: walletCardIdForConnectedAccount(matchedAccount),
+    },
+    {
+      id: 'connected-account-removed',
+      label: 'Connected account removed',
+      selectedId: selectedWalletCardIdAfterConnectedAccountRemoval({
+        currentSelectedId: selectedId,
+        fallbackSelectedId,
+        remainingAccounts: remainingAccountsAfterRemoval,
+        removedAccount,
+      }),
+    },
+  ];
 }
 
 export function useWalletSelectionOutcomes<Account extends ConnectedAccountLike>({
