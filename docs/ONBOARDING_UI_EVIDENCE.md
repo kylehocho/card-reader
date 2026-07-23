@@ -1,6 +1,6 @@
 # Onboarding UI Evidence
 
-Last updated: 2026-07-22
+Last updated: 2026-07-23
 
 ## Intent
 The add-card and profile access boundaries are now extracted from `WalletPrototype.tsx`, but future state and callback extractions still need a visual baseline. This evidence route and capture command make the core onboarding overlays reproducible without requiring live Supabase auth, Plaid Link, or manual browser setup.
@@ -39,6 +39,24 @@ EVIDENCE_VIEWPORT=500,980 npm run evidence:onboarding
 
 The command requires a local Chrome/Chromium-compatible browser. Set `CHROME_PATH` if the default browser candidates do not match the machine.
 
+## Browser Contract Smoke
+```bash
+npm run smoke:onboarding
+```
+
+The smoke command runs Chrome headless against `/evidence/onboarding`, lets the production app bundle render, dumps the DOM, and asserts the signed-in fixture contract for:
+- manual card entry;
+- post-Plaid card-product matching;
+- wallet selection outcomes after manual-card save, Plaid Link success, card-match save, and connected-account removal.
+
+By default it checks production at `https://card-reader-xi.vercel.app`. Useful overrides:
+```bash
+APP_BASE_URL=http://localhost:3010 npm run smoke:onboarding
+SMOKE_DOM_DIR=artifacts/onboarding-smoke-dom npm run smoke:onboarding
+```
+
+The command is intentionally a lightweight browser smoke, not a replacement for future live Supabase/Plaid automation. It prevents UI copy, routing, or fixture drift from breaking the signed-in onboarding outcome baseline while keeping the daily verification path repeatable.
+
 ## 2026-07-20 Evidence Set
 Captured against a local production build at `http://localhost:3010` with a `500,980` viewport.
 
@@ -60,6 +78,18 @@ Artifacts:
 - `artifacts/onboarding-ui-2026-07-22/email-verify.png`
 - `artifacts/onboarding-ui-2026-07-22/profile-setup.png`
 
+## 2026-07-23 Contract Smoke
+Captured against production with Chrome headless:
+
+```bash
+npm run smoke:onboarding
+```
+
+Validated states:
+- `manual-card` rendered manual card entry with Amex Gold fixture copy, last four `3007`, and the `Add card` action.
+- `plaid-match` rendered the post-Plaid match step with the Amex Gold account, suggested match, and card-product selector.
+- `selection-outcomes` rendered the four signed-in selection outcomes and expected selected card ids.
+
 ## Implementation Notes
 - The evidence page intentionally does not call Supabase, Plaid, or recommendation APIs.
 - The Add Card states pass fixture card products, a pending Plaid account, and a match suggestion into the real component props.
@@ -76,4 +106,4 @@ Touched components:
 - `components/auth/ProfileSetupFlow.tsx`
 
 ## Next Best Action
-Add browser-driven signed-in Plaid/auth smoke coverage that exercises the live Supabase/Plaid workflow against these fixture-backed outcome expectations.
+Add live signed-in Supabase/Plaid smoke coverage that creates or seeds a disposable user, exercises manual-card save or Plaid match flows, and compares the resulting wallet state against these fixture-backed outcome expectations.

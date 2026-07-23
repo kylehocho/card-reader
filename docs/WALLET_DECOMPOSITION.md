@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-22
+Last updated: 2026-07-23
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -16,7 +16,7 @@ Last updated: 2026-07-22
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning auth gates, anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
-- `/evidence/onboarding` renders deterministic Add Card, profile/auth, and signed-in wallet selection outcome fixture states for visual baseline captures. The current evidence matrix is documented in `docs/ONBOARDING_UI_EVIDENCE.md`.
+- `/evidence/onboarding` renders deterministic Add Card, profile/auth, and signed-in wallet selection outcome fixture states for visual baseline captures. `npm run smoke:onboarding` runs Chrome against the signed-in fixture states and asserts the rendered manual-card, Plaid-match, and selection-outcome contracts. The current evidence matrix is documented in `docs/ONBOARDING_UI_EVIDENCE.md`.
 - `useWalletNavigation.ts` owns the top-level wallet navigation state that is independent from persistence: selected card id, current screen, wallet page index, stack expansion, selected-card fallback, page shifting, reset-to-wallet behavior, the non-selected card stack plus add-card action, and selected-card outcomes after Plaid/manual-card mutations.
 - `transactionRecommendations.ts` owns the local fallback selector for missed-value transaction recommendations. `WalletPrototype.tsx` still chooses between API-backed wallet analysis and the local fallback, but category inference, reward multiplier lookup, best-card comparison, recommendation formatting, and recommendation de-duplication are now testable without rendering the full wallet shell.
 - `types.ts` contains the shared wallet view types needed by multiple card-reader components, starting with `PlaidConnectedAccount` and transaction display rows.
@@ -44,6 +44,7 @@ The pure helpers exported by `useWalletNavigation.ts` keep the behavior testable
 - `walletCardIdForConnectedAccount()` preserves the `plaid-${accountId}` id convention used by connected accounts in the wallet carousel.
 - `selectedWalletCardIdAfterConnectedAccountRemoval()` keeps selection stable when another account is removed, moves to the first remaining connected account when the selected account is removed, and falls back to the seed selected card id when no connected accounts remain.
 - `buildWalletSelectionOutcomeSummary()` projects the manual-card save, Plaid Link success, card-match save, and connected-account removal outcomes into a deterministic evidence matrix used by `/evidence/onboarding?state=selection-outcomes`.
+- `scripts/smoke-onboarding-contract.mjs` checks that the browser-rendered signed-in fixture states still expose the expected manual entry, Plaid match, and selection outcome text before heavier live auth/Plaid automation exists.
 
 ## Wallet Selection Outcome Contract
 `useWalletSelectionOutcomes()` accepts:
@@ -213,6 +214,7 @@ The shared matching UI accepts:
 
 ## Verification
 - `npm test -- components/card-reader/useWalletNavigation.test.ts`
+- `npm run smoke:onboarding`
 - `APP_BASE_URL=http://localhost:3010 EVIDENCE_DATE=2026-07-22 npm run evidence:onboarding`
 - `npm test -- components/profile/ProfileAccessBoundary.test.ts components/card-reader/AddCardSheet.test.ts components/card-reader/useAddCardPresentation.test.ts`
 - `APP_BASE_URL=http://localhost:3010 EVIDENCE_DATE=2026-07-20 npm run evidence:onboarding`
@@ -231,6 +233,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Add browser-driven signed-in Plaid/auth smoke coverage that exercises the live Supabase/Plaid workflow against the fixture-backed onboarding outcome contract.
+1. Add live signed-in Supabase/Plaid smoke coverage that exercises manual-card save or Plaid match persistence against the fixture-backed onboarding outcome contract.
 2. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.
 3. Extract the remaining anonymous demo-card creation path if the Add Card boundary needs complete behavior ownership.
