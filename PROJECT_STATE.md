@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 ## Current Goal
 Build the fastest credible MVP of Card Reader: a smart wallet that lets users connect or manually add cards, understands a focused catalog of high-value cards, and recommends the best card/benefit action in real time across web and mobile surfaces.
@@ -14,6 +14,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Mock data: 10 mock Plaid accounts, 10 account-card matches, 31 mock transactions
 
 ## Recently Completed
+- Added live signed-in manual-card onboarding smoke coverage. `npm run smoke:signed-in-manual-card` now creates a disposable confirmed Supabase user, signs in, saves an Amex Gold manual card through production/local API, verifies wallet analysis sees one linked and matched account, verifies manual-only transaction sync returns zero items, verifies authenticated Whole Foods recommendation selects the owned Amex Gold card, and deletes the smoke user. Updated `docs/ONBOARDING_UI_EVIDENCE.md` and `docs/DAILY_WORK_LOG_2026-07-24.md`. Implementation checks passed with lint, Vitest, and production build; first production smoke execution is blocked by the stale local Supabase service-role credential returning `401 Invalid API key`.
 - Added a browser-driven onboarding contract smoke for the signed-in fixture states. `npm run smoke:onboarding` now launches Chrome against `/evidence/onboarding` for manual-card entry, post-Plaid matching, and selection outcomes, then asserts the rendered DOM contract and selected wallet-card ids. Updated `docs/ONBOARDING_UI_EVIDENCE.md`, `docs/WALLET_DECOMPOSITION.md`, and `docs/DAILY_WORK_LOG_2026-07-23.md`. Verification passed against production at `https://card-reader-xi.vercel.app`.
 - Extended onboarding evidence coverage to signed-in wallet selection outcomes. `buildWalletSelectionOutcomeSummary()` now projects manual-card save, Plaid Link success, card-match save, and connected-account removal outcomes for deterministic fixture evidence, `/evidence/onboarding?state=selection-outcomes` renders the matrix, and `npm run evidence:onboarding` captures it with the rest of the onboarding baseline. Updated `docs/ONBOARDING_UI_EVIDENCE.md`, `docs/WALLET_DECOMPOSITION.md`, and `docs/DAILY_WORK_LOG_2026-07-22.md`. Verification passed with targeted navigation tests, lint, production build, full Vitest, local production onboarding evidence capture, and visual inspection of the selection-outcomes artifact.
 - Extracted final selected-card mutation outcomes from `WalletPrototype.tsx` into the wallet navigation boundary. `useWalletSelectionOutcomes()` now centralizes post-manual-card, Plaid-link, match-save, and connected-account-removal card selection transitions while `usePlaidWalletActions.ts` keeps persistence and mutation status ownership. Added pure helper coverage for connected-account card ids and removal fallback behavior. Updated `docs/WALLET_DECOMPOSITION.md` and `docs/DAILY_WORK_LOG_2026-07-21.md`. Verification passed with targeted navigation tests, lint, production build, and full Vitest.
@@ -80,7 +81,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 
 ## Active Gaps
 - The Use Now screen, Use Now merchant recommendation hook, wallet navigation hook, selected-card outcome hook, add-card presentation hook, AddCardSheet, profile access boundary, Connected Accounts, post-Plaid match-card, shared match-suggestion component, Plaid match suggestion hook, persisted Plaid data hook, local transaction recommendation selector, and Plaid wallet action hook boundaries are in place, but `WalletPrototype.tsx` still owns auth workflow gates and anonymous demo-card creation.
-- Add Card, profile/auth, and selection-outcome fixture evidence now covers six onboarding states in `artifacts/onboarding-ui-2026-07-22/`; `npm run smoke:onboarding` browser-checks the signed-in fixture states against production, but live signed-in Plaid/auth evidence is still separate.
+- Add Card, profile/auth, and selection-outcome fixture evidence now covers six onboarding states in `artifacts/onboarding-ui-2026-07-22/`; `npm run smoke:onboarding` browser-checks the signed-in fixture states against production, and `npm run smoke:signed-in-manual-card` is in place for live authenticated manual-card persistence, wallet analysis, manual-safe sync, and recommendation scoping once the local Supabase service-role credential is refreshed. Live signed-in Plaid Link/exchange evidence is still separate.
 - Extension popup render evidence now covers five priority merchants with seeded production responses, but full installed-extension smoke still needs a compatible browser harness or manual `chrome://extensions` pass because local Google Chrome CLI automation rejects unpacked extension loading.
 - The in-app demo path now shares `/api/recommend-card` with the extension, has automated best-card coverage across the priority merchant matrix, supports direct Use Now demo links, and has a repeatable production screenshot matrix documented in `docs/USE_NOW_EVIDENCE.md`.
 - Manual card entry is now production-smoked at both the signed-in API lifecycle and browser UI evidence levels, but it does not import transaction history.
@@ -93,7 +94,7 @@ Build the fastest credible MVP of Card Reader: a smart wallet that lets users co
 - Admin tools are not built.
 
 ## Next Best Actions
-1. Add live signed-in Supabase/Plaid smoke coverage that exercises manual-card save or Plaid match flows against the fixture-backed onboarding outcome contract.
+1. Refresh the local Supabase service-role credential and rerun `npm run smoke:signed-in-manual-card`; after that passes, extend live signed-in smoke coverage to Plaid sandbox exchange and card-product match persistence.
 2. Add a true installed-extension smoke path using a browser that permits unpacked extension loading, then verify at least three live merchant tabs through the background refresh flow and popup.
 3. Add signed-in extension smoke coverage for `/extension/connect` plus expired-session behavior.
 4. Add a browser-driven signed-in Plaid + extension recommendation smoke against production and query `/api/recommendation-events` for evidence.
