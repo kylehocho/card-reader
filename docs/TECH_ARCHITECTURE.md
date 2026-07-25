@@ -18,6 +18,7 @@
 - `app/api/recommend-card`: merchant context recommendation API.
 - `app/api/wallet/analysis`: authenticated wallet analysis API for linked accounts.
 - `app/api/wallet/manual-cards`: authenticated no-Plaid card entry API that creates a manual account and card-product match.
+- `app/api/wallet/card-matches`: authenticated Plaid account-to-card-product match API used by onboarding and Connected Accounts.
 - `components/card-reader/WalletPrototype.tsx`: mobile-first wallet client; signed-in analysis panels consume `/api/wallet/analysis`.
 - `lib/recommendation/use-now-route-state.ts`: shareable Use Now query-state parser for demo and smoke routes.
 - `extension/`: browser extension MVP.
@@ -27,7 +28,7 @@
 2. User links Plaid account.
 3. Server exchanges Plaid public token and stores encrypted access token.
 4. Server saves Plaid accounts and transactions.
-5. User maps Plaid account to `card_products`, optionally accepting a deterministic match hint.
+5. User maps Plaid account to `card_products` through the authenticated card-match API, optionally accepting a deterministic match hint.
 6. Users without Plaid can manually add a catalog-backed card, which creates a synthetic manual account and `account_card_matches` row.
 7. Analysis engine combines card product rules + account matches + transactions.
 8. `GET /api/wallet/analysis` exposes wallet trackers, welcome bonuses, alerts, and recommendations for authenticated clients.
@@ -44,7 +45,9 @@
 - Recommendation intelligence tables live in `supabase/merchant-intelligence.sql`: `merchant_catalog`, `merchant_offer_rules`, `card_reward_rules`, and `recommendation_events`.
 
 ## Card Match Hints
-The client scores linked Plaid account names and institution names against the loaded card catalog. Alias matches and product-token overlap can produce a suggestion, but the app does not write the match automatically. If the user accepts the suggestion, the saved row uses `match_status = suggested` and stores the computed confidence. Manual dropdown saves continue to use `match_status = manual`.
+The client scores linked Plaid account names and institution names against the loaded card catalog. Alias matches and product-token overlap can produce a suggestion, but the app does not write the match automatically. If the user accepts the suggestion, `POST /api/wallet/card-matches` saves the row with `match_status = suggested` and stores the computed confidence. Manual dropdown saves use the same route with `match_status = manual`.
+
+`POST /api/wallet/card-matches` requires a Supabase bearer token. It validates `plaidAccountId` and `cardProductId`, verifies that the Plaid account belongs to the authenticated user, rejects non-credit-card accounts, verifies the target `card_products` row, clamps match confidence to `0..1`, and upserts `account_card_matches` on `user_id,plaid_account_id`. The browser receives the saved match and product metadata for optimistic UI projection, while ownership and catalog checks remain server-side.
 
 ## Recommendation API Shape
 `POST /api/recommend-card` is the unauthenticated merchant-context endpoint used by the browser extension MVP.

@@ -44,6 +44,16 @@ type ManualCardResponse = {
   error?: string;
 };
 
+type CardMatchResponse = {
+  match?: {
+    card_product_id: string;
+    match_status: string;
+    match_confidence: number;
+  };
+  product?: Pick<CardProductRow, 'id' | 'issuer' | 'name'>;
+  error?: string;
+};
+
 type PlaidHandler = {
   open: () => void;
   exit: () => void;
@@ -303,40 +313,50 @@ export function usePlaidWalletActions({
         return;
       }
 
-      const supabase = getBrowserSupabaseClient();
-      if (!supabase) return;
-
       setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saving' }));
       setPlaidError(null);
 
-      const selectedProduct = cardProducts.find((product) => product.id === cardProductId) ?? null;
-      const { error } = await supabase.from('account_card_matches').upsert(
-        {
-          user_id: user.id,
-          plaid_account_id: account.dbId,
-          card_product_id: cardProductId,
-          match_status: source,
-          match_confidence: confidence,
-        },
-        { onConflict: 'user_id,plaid_account_id' },
-      );
+      try {
+        const { accessToken } = await getAccessTokenOrThrow('Sign in again before saving this card match.');
+        const response = await fetch('/api/wallet/card-matches', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + accessToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            plaidAccountId: account.dbId,
+            cardProductId,
+            matchStatus: source,
+            matchConfidence: confidence,
+          }),
+        });
+        const payload = (await response.json().catch(() => ({}))) as CardMatchResponse;
 
-      if (error) {
-        console.error('Unable to save card match', error);
+        if (!response.ok || !payload.match) {
+          throw new Error(payload.error ?? 'Unable to save card match.');
+        }
+
+        const selectedProduct = payload.product ?? cardProducts.find((product) => product.id === cardProductId) ?? null;
+        const savedSource = payload.match.match_status === 'suggested' ? 'suggested' : 'manual';
+        const nextAccounts = applyCardProductMatch(plaidAccounts, account, payload.match.card_product_id, selectedProduct, savedSource);
+        syncPlaidAccountsToWallet(nextAccounts);
+        setPendingLinkedAccounts((currentAccounts) =>
+          applyCardProductMatch(currentAccounts, account, payload.match?.card_product_id ?? cardProductId, selectedProduct, savedSource),
+        );
+        setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
+        setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saved' }));
+        void loadWalletAnalysis();
+        onCardMatchSaved(account);
+      } catch (error) {
+        if (error instanceof Error && error.message === 'Sign in again before saving this card match.') {
+          setAuthFlow('entry');
+        }
         setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'error' }));
-        setPlaidError(error.message);
-        return;
+        setPlaidError(error instanceof Error ? error.message : 'Unable to save card match.');
       }
-
-      const nextAccounts = applyCardProductMatch(plaidAccounts, account, cardProductId, selectedProduct, source);
-      syncPlaidAccountsToWallet(nextAccounts);
-      setPendingLinkedAccounts((currentAccounts) => applyCardProductMatch(currentAccounts, account, cardProductId, selectedProduct, source));
-      setEditingMatchAccountIds((current) => current.filter((accountId) => accountId !== account.accountId));
-      setMatchStatusByAccount((current) => ({ ...current, [account.accountId]: 'saved' }));
-      void loadWalletAnalysis();
-      onCardMatchSaved(account);
     },
-    [cardProducts, loadWalletAnalysis, onCardMatchSaved, plaidAccounts, setPlaidError, syncPlaidAccountsToWallet, user],
+    [cardProducts, loadWalletAnalysis, onCardMatchSaved, plaidAccounts, setAuthFlow, setPlaidError, syncPlaidAccountsToWallet, user],
   );
 
   const requestRemoveConnectedAccount = useCallback((account: PlaidConnectedAccount) => {

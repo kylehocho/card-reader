@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-23
+Last updated: 2026-07-25
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -12,7 +12,7 @@ Last updated: 2026-07-23
 - `PendingPlaidMatchCard.tsx` renders each newly linked Plaid account during onboarding, including the account summary, shared suggestion card, card-product selector, save status, and helper text. `WalletPrototype.tsx` still owns the pending account list, card products, suggestion map, and `updateCardMatch()` persistence path.
 - `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
-- `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
+- `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning auth gates, anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
@@ -125,7 +125,7 @@ The action hook accepts:
 It owns:
 - manual-card save status and error propagation through the shared Plaid error surface;
 - pending Plaid Link account rows shown during onboarding;
-- per-account match save status and edit-state cleanup;
+- per-account match save status and edit-state cleanup through `POST /api/wallet/card-matches`;
 - per-account removal status and confirmation-sheet cleanup;
 - transaction-sync status.
 
@@ -197,6 +197,7 @@ The shared matching UI accepts:
 - Persisted account projection falls back to `Plaid Sandbox`, mask `0000`, subtype `account`, and null match metadata when optional relations are absent.
 - Plaid Link exchange projection filters out checking, savings, loan, and other non-credit-card accounts before the onboarding match step.
 - Manual card saves and Plaid Link success still refresh persisted Plaid data and wallet analysis after optimistic account projection.
+- Card-product match saves now route through an authenticated app API instead of a browser Supabase table write; the API verifies account ownership, credit-card account type, and card-product existence before upserting the match.
 - Removing a selected connected account falls back to the next connected account when available, otherwise the seed selected card id.
 - Local transaction recommendations still surface for unmatched persisted accounts as long as a catalog card can beat the 1x baseline.
 - Pending, refund, and already-optimal transactions do not create local missed-value recommendations.
@@ -225,6 +226,7 @@ The shared matching UI accepts:
 - `npm test -- components/card-reader/useWalletNavigation.test.ts components/card-reader/useMerchantRecommendation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useMerchantRecommendation.test.ts lib/recommendation/use-now-route-state.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts`
+- `npm test -- app/api/wallet/card-matches/route.test.ts components/card-reader/usePlaidWalletActions.test.ts app/api/wallet/manual-cards/route.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts components/card-reader/usePersistedPlaidData.test.ts components/card-reader/usePlaidAccountMatching.test.ts`
 - `npm test -- components/card-reader/transactionRecommendations.test.ts`
 - `npm test -- components/card-reader/usePersistedPlaidData.test.ts`
@@ -233,6 +235,6 @@ The shared matching UI accepts:
 - `npm run build`
 
 ## Next Extraction Candidates
-1. Add live signed-in Supabase/Plaid smoke coverage that exercises manual-card save or Plaid match persistence against the fixture-backed onboarding outcome contract.
+1. Extend live signed-in smoke coverage to Plaid sandbox exchange and `POST /api/wallet/card-matches` persistence once the local Supabase service-role credential is refreshed.
 2. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.
 3. Extract the remaining anonymous demo-card creation path if the Add Card boundary needs complete behavior ownership.

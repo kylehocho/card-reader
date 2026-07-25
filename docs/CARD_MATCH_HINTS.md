@@ -1,6 +1,6 @@
 # Card Match Hints
 
-Last updated: 2026-06-29
+Last updated: 2026-07-25
 
 ## Intent
 Plaid account names are often close to the underlying product name. Card Reader should use that signal to reduce manual matching friction without silently writing an uncertain match.
@@ -11,14 +11,16 @@ Plaid account names are often close to the underlying product name. Card Reader 
 - Generic token overlap covers product names when an explicit alias is not present.
 - Issuer signal helps confidence but cannot create a suggestion by itself.
 - The UI shows a suggested match in the post-Link match sheet and Connected Accounts.
-- Choosing `Use` saves the match with `match_status = suggested` and the computed confidence.
-- Dropdown saves remain manual with `match_status = manual` and `match_confidence = 1`.
+- Choosing `Use` saves the match through `POST /api/wallet/card-matches` with `match_status = suggested` and the computed confidence.
+- Dropdown saves use the same authenticated route with `match_status = manual` and `match_confidence = 1`.
 
 ## Guardrails
 - No automatic database write occurs from a hint.
+- The browser no longer writes `account_card_matches` directly. The server route verifies the Supabase bearer token, checks that the Plaid account belongs to the authenticated user, rejects non-credit-card accounts, and validates the selected card product before upserting the match.
 - Issuer-only signals are ignored, so an account named only `Credit Card` from American Express does not guess Gold or Platinum.
 - Hints are hidden if the account is already matched to the suggested product.
 
 ## Verification
 - `lib/cards/card-match-hints.test.ts` covers alias matches, issuer-only non-matches, and token-overlap fallback.
+- `app/api/wallet/card-matches/route.test.ts` covers auth, required ids, account ownership, credit-card-only matching, product lookup, suggested match persistence, and status/confidence normalization.
 - The full suite includes route, analysis, mapper, and hint coverage through `npm test`.
