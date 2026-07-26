@@ -1,6 +1,6 @@
 # Card Match Hints
 
-Last updated: 2026-07-25
+Last updated: 2026-07-26
 
 ## Intent
 Plaid account names are often close to the underlying product name. Card Reader should use that signal to reduce manual matching friction without silently writing an uncertain match.
@@ -23,4 +23,5 @@ Plaid account names are often close to the underlying product name. Card Reader 
 ## Verification
 - `lib/cards/card-match-hints.test.ts` covers alias matches, issuer-only non-matches, and token-overlap fallback.
 - `app/api/wallet/card-matches/route.test.ts` covers auth, required ids, account ownership, credit-card-only matching, product lookup, suggested match persistence, and status/confidence normalization.
+- `npm run smoke:signed-in-plaid-card-match` covers the intended production contract for a disposable signed-in user: Plaid sandbox exchange, imported account match through `POST /api/wallet/card-matches`, transaction sync, and wallet-analysis visibility. The first 2026-07-26 production attempt is blocked by the known stale local Supabase service-role credential.
 - The full suite includes route, analysis, mapper, and hint coverage through `npm test`.
