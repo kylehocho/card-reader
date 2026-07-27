@@ -20,8 +20,18 @@ The app is moving from local JSON rules toward Supabase-backed card and merchant
 
 ## Verification
 - `npx vitest run app/api/merchant-intelligence/route.test.ts`
+- `npm test`
 - `npm run lint`
 - `npm run build`
+- `npx vercel --prod --yes`
+- `curl -sS -o /tmp/card-reader-home.html -w '%{http_code} %{url_effective}\n' https://card-reader-xi.vercel.app`
+- `curl -sS https://card-reader-xi.vercel.app/api/merchant-intelligence | jq '{available, benefitResearchAvailable, groups, tables}'`
+
+## Production Smoke Result
+- Production deployment: `https://card-reader-14z4xjw7m-kylehocho-5599s-projects.vercel.app`
+- Production alias: `https://card-reader-xi.vercel.app`
+- Homepage alias smoke returned HTTP 200.
+- `GET /api/merchant-intelligence` returned `available=true`, `benefitResearchAvailable=true`, `groups.baseRecommendation.totalRows=64`, `groups.benefitResearch.totalRows=0`, and no missing tables.
 
 ## Risks
 - Production still depends on the Supabase merchant-intelligence migration actually being applied before grouped readiness can show available data.
