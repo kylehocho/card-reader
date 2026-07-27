@@ -37,6 +37,10 @@ describe('GET /api/merchant-intelligence', () => {
         merchant_catalog: { count: 14, error: null },
         merchant_offer_rules: { count: 4, error: null },
         card_reward_rules: { count: 50, error: null },
+        card_benefit_rules: { count: 0, error: null },
+        issuer_offer_sources: { count: 0, error: null },
+        benefit_research_runs: { count: 0, error: null },
+        benefit_research_findings: { count: 0, error: null },
       }),
     );
 
@@ -46,10 +50,29 @@ describe('GET /api/merchant-intelligence', () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       available: true,
+      benefitResearchAvailable: true,
+      groups: {
+        baseRecommendation: {
+          available: true,
+          expectedTables: ['merchant_catalog', 'merchant_offer_rules', 'card_reward_rules'],
+          missingTables: [],
+          totalRows: 68,
+        },
+        benefitResearch: {
+          available: true,
+          expectedTables: ['card_benefit_rules', 'issuer_offer_sources', 'benefit_research_runs', 'benefit_research_findings'],
+          missingTables: [],
+          totalRows: 0,
+        },
+      },
       tables: {
         merchantCatalog: { available: true, count: 14 },
         merchantOfferRules: { available: true, count: 4 },
         cardRewardRules: { available: true, count: 50 },
+        cardBenefitRules: { available: true, count: 0 },
+        issuerOfferSources: { available: true, count: 0 },
+        benefitResearchRuns: { available: true, count: 0 },
+        benefitResearchFindings: { available: true, count: 0 },
       },
     });
   });
@@ -60,6 +83,10 @@ describe('GET /api/merchant-intelligence', () => {
         merchant_catalog: { count: null, error: { code: '42P01', message: 'relation "merchant_catalog" does not exist' } },
         merchant_offer_rules: { count: null, error: { code: '42P01', message: 'relation "merchant_offer_rules" does not exist' } },
         card_reward_rules: { count: null, error: { code: '42P01', message: 'relation "card_reward_rules" does not exist' } },
+        card_benefit_rules: { count: null, error: { code: '42P01', message: 'relation "card_benefit_rules" does not exist' } },
+        issuer_offer_sources: { count: null, error: { code: '42P01', message: 'relation "issuer_offer_sources" does not exist' } },
+        benefit_research_runs: { count: null, error: { code: '42P01', message: 'relation "benefit_research_runs" does not exist' } },
+        benefit_research_findings: { count: null, error: { code: '42P01', message: 'relation "benefit_research_findings" does not exist' } },
       }),
     );
 
@@ -69,10 +96,29 @@ describe('GET /api/merchant-intelligence', () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       available: false,
+      benefitResearchAvailable: false,
+      groups: {
+        baseRecommendation: {
+          available: false,
+          expectedTables: ['merchant_catalog', 'merchant_offer_rules', 'card_reward_rules'],
+          missingTables: ['merchant_catalog', 'merchant_offer_rules', 'card_reward_rules'],
+          totalRows: 0,
+        },
+        benefitResearch: {
+          available: false,
+          expectedTables: ['card_benefit_rules', 'issuer_offer_sources', 'benefit_research_runs', 'benefit_research_findings'],
+          missingTables: ['card_benefit_rules', 'issuer_offer_sources', 'benefit_research_runs', 'benefit_research_findings'],
+          totalRows: 0,
+        },
+      },
       tables: {
         merchantCatalog: { available: false, count: 0 },
         merchantOfferRules: { available: false, count: 0 },
         cardRewardRules: { available: false, count: 0 },
+        cardBenefitRules: { available: false, count: 0 },
+        issuerOfferSources: { available: false, count: 0 },
+        benefitResearchRuns: { available: false, count: 0 },
+        benefitResearchFindings: { available: false, count: 0 },
       },
     });
   });

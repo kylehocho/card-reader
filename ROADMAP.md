@@ -27,9 +27,10 @@
 - Lounge access lookup by airport/terminal.
 
 ## Phase 3 - Offer Intelligence
-- Issuer offer ingestion abstraction.
+- Notion-first Credit Card Benefits Intelligence Agent for issuer benefits, merchant offers, signup bonuses, and rotating categories. Initial cron/docs/schema-review slice shipped 2026-07-26.
+- Issuer offer ingestion abstraction after reviewed Notion records exist.
 - Merchant normalization table.
-- Offer eligibility matcher.
+- Offer eligibility matcher backed by reviewed Supabase rules.
 - Extension notifications for merchant-specific offers.
 - Admin review workflow for new/expired offers.
 
@@ -50,4 +51,6 @@
 - Complete true installed-extension screenshot/video evidence after the Use Now production screenshot matrix and the 2026-07-06 popup render-contract evidence.
 - Continue splitting `WalletPrototype.tsx` into smaller behavior-owned pieces. The add-card presentation state was extracted on 2026-07-17, add-card sheet rendering moved into `AddCardSheet.tsx` on 2026-07-18, auth/profile sheet composition moved into `ProfileAccessBoundary.tsx` on 2026-07-19, fixture-backed onboarding UI evidence was captured on 2026-07-20, selected-card mutation outcomes moved into the wallet navigation boundary on 2026-07-21, selection-outcome evidence was added on 2026-07-22, browser-rendered signed-in fixture contract smoke coverage was added on 2026-07-23, live signed-in manual-card persistence smoke tooling was added on 2026-07-24, Plaid card-match persistence moved behind an authenticated app API on 2026-07-25, and signed-in Plaid exchange/card-match smoke tooling was added on 2026-07-26. Next candidate is refreshing the local Supabase service-role credential, rerunning both signed-in smoke commands, then adding browser-driven signed-in Plaid onboarding evidence against production.
 - Keep extension privacy/security guardrails intact as new merchants are added.
+- Keep the benefits intelligence lane Notion-first until reviewed records and promotion tooling are ready for Supabase.
+- Use the grouped `/api/merchant-intelligence` readiness response to verify base recommendation tables separately from benefits research staging tables before importer work.
 - Keep docs current after each material decision.

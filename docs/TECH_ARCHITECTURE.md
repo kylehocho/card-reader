@@ -42,7 +42,7 @@
 - `plaid_transactions`: transaction history for analysis.
 - `card_products`: card catalog, rewards, and benefits JSON.
 - `account_card_matches`: per-user account-to-card-product mapping.
-- Recommendation intelligence tables live in `supabase/merchant-intelligence.sql`: `merchant_catalog`, `merchant_offer_rules`, `card_reward_rules`, and `recommendation_events`.
+- Recommendation intelligence tables live in `supabase/merchant-intelligence.sql`: `merchant_catalog`, `merchant_offer_rules`, `card_reward_rules`, `card_benefit_rules`, `issuer_offer_sources`, `benefit_research_runs`, `benefit_research_findings`, and `recommendation_events`.
 
 ## Card Match Hints
 The client scores linked Plaid account names and institution names against the loaded card catalog. Alias matches and product-token overlap can produce a suggestion, but the app does not write the match automatically. If the user accepts the suggestion, `POST /api/wallet/card-matches` saves the row with `match_status = suggested` and stores the computed confidence. Manual dropdown saves use the same route with `match_status = manual`.
@@ -66,7 +66,7 @@ The endpoint now normalizes merchant context against `data/merchant-catalog.json
 
 The in-app Use Now demo path stores its five priority merchant contexts in `lib/recommendation/use-now-demo-merchants.ts`. `WalletPrototype` uses those labels for demo chips and sends the richer context for exact demo searches, while `lib/recommendation/merchant-context.test.ts` verifies the intended best-card outputs for Whole Foods, Patagonia, Delta, Amazon, and Chipotle. Demo chips and the wallet CTA now use the same opener, which updates the URL to a shareable route such as `/?screen=use-now&merchant=Whole%20Foods`; the parser for those links lives in `lib/recommendation/use-now-route-state.ts` with Vitest coverage.
 
-`npm run seed:merchant-intelligence` mirrors the JSON merchant catalog, merchant offer hints, and top-priority card reward rules into Supabase. `GET /api/merchant-intelligence` exposes a server-side availability/count check for those backend tables. Recommendation execution still uses the local JSON fallback until the Supabase-backed scorer is wired and tested.
+`npm run seed:merchant-intelligence` mirrors the JSON merchant catalog, merchant offer hints, and top-priority card reward rules into Supabase. `GET /api/merchant-intelligence` exposes a server-side availability/count check for those backend tables and separates the response into base recommendation readiness and benefit research staging readiness, including expected tables, missing tables, and total rows for each group. Recommendation execution still uses the local JSON fallback until the Supabase-backed scorer is wired and tested.
 
 If the request includes a Supabase bearer token, the endpoint validates the session and replaces any client-supplied `cardProductIds` with the authenticated user's matched `account_card_matches.card_product_id` values. Anonymous requests keep using the top-10 demo catalog for public extension smoke and shareable API demos.
 
@@ -117,6 +117,7 @@ Merchant recommendation output:
 ## Scaling Path
 - Move card catalog editing into an admin dashboard.
 - Add background sync jobs for Plaid and offer refresh.
-- Move merchant normalization, offer rules, and card reward rules from JSON into Supabase using the `supabase/merchant-intelligence.sql` blueprint.
+- Run the Credit Card Benefits Intelligence Agent as a Notion-first research lane for issuer benefits, merchant offers, signup bonuses, and rotating categories before promoting reviewed records into Supabase.
+- Move merchant normalization, offer rules, card reward rules, and reviewed card benefit rules from JSON/Notion into Supabase using the `supabase/merchant-intelligence.sql` blueprint.
 - Add analytics/audit trail for recommendation decisions.
 - Add mobile clients consuming the same analysis API.

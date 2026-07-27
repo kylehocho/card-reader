@@ -11,7 +11,7 @@ The recommendation product should treat merchant detection as a thin signal coll
 - `lib/recommendation/use-now-route-state.ts` parses shareable Use Now route state so smoke checks can open a specific demo merchant directly.
 - `card_products` in Supabase stores card catalog rows for signed-in wallet analysis.
 - `merchant_catalog`, `merchant_offer_rules`, and `card_reward_rules` can now be seeded into Supabase with `npm run seed:merchant-intelligence`.
-- `GET /api/merchant-intelligence` returns backend availability/counts for the seeded merchant intelligence tables.
+- `GET /api/merchant-intelligence` returns backend availability/counts for the seeded merchant intelligence tables, grouped into base recommendation readiness and benefit research staging readiness.
 
 ## Recommendation Flow
 1. Extension or in-app Use Now sends context: merchant, URL, page title, category hint, and available card product IDs.
@@ -26,14 +26,28 @@ The recommendation product should treat merchant detection as a thin signal coll
 - `merchant_offer_rules`: issuer/card-specific merchant offers, enrollment requirements, expiry, geography, and confidence/source.
 - `card_reward_rules`: normalized reward multipliers by card, category, merchant, portal requirement, cap, and effective dates.
 - `card_benefit_rules`: normalized statement credits, access perks, protections, welcome bonuses, resets, and eligibility constraints.
+- `issuer_offer_sources`: official issuer/source registry for future refresh jobs.
+- `benefit_research_runs` and `benefit_research_findings`: Notion-backed research audit and parsed staging records before promotion.
 - `user_card_state`: per-user enrollment, benefit usage, welcome bonus progress, accepted account matches, and suppressed recommendations.
 
 ## Near-Term Build Order
 1. Keep expanding `merchant-catalog.json` and `use-now-demo-merchants.ts` together when the priority demo or extension smoke matrix changes.
 2. Seed merchant catalog, offer rules, and top-priority reward rules into Supabase with `npm run seed:merchant-intelligence`.
 3. Keep recommendation execution on the local JSON fallback until the Supabase scorer can be tested against the seeded rules.
-4. Add issuer offer ingestion later; until then, merchant offers should be explicitly labeled as catalog hints.
-5. Normalize `card_benefit_rules` and `user_card_state` after the reward-rule path is stable.
+4. Run the Credit Card Benefits Intelligence Agent as a Notion-first documentation lane before storing researched benefit/offer data in Supabase.
+5. Promote reviewed Notion records into `merchant_offer_rules`, `card_reward_rules`, and `card_benefit_rules` only after the import/admin workflow exists.
+6. Normalize `user_card_state` after the reviewed benefit-rule path is stable.
+
+## Benefits Research Agent
+The benefits research lane is documented in `docs/CARD_BENEFITS_RESEARCH_AGENT.md`. It runs on the same daily 9:00 PT cron schedule as the CTO bot, writes findings into a Notion page/sub-page structure first, and treats Supabase as the later app-serving destination after records are reviewed and parsed.
+
+## Status Endpoint
+`GET /api/merchant-intelligence` is an admin/debug readiness check for the merchant intelligence migration path. It preserves `available` for the base recommendation tables and `benefitResearchAvailable` for the Notion-backed staging tables, and also returns grouped summaries:
+
+- `groups.baseRecommendation`: `merchant_catalog`, `merchant_offer_rules`, and `card_reward_rules`.
+- `groups.benefitResearch`: `card_benefit_rules`, `issuer_offer_sources`, `benefit_research_runs`, and `benefit_research_findings`.
+
+Each group reports `expectedTables`, `missingTables`, and `totalRows`, which makes deployment smoke checks and future admin tooling able to distinguish "not migrated yet" from "migrated but empty."
 
 ## Use Now Demo Matrix
 - Whole Foods: grocery catalog match, best card `amex-gold`.
