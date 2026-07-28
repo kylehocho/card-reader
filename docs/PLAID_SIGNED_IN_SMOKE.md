@@ -8,6 +8,14 @@ The signed-in Plaid smoke verifies the production path a real user will take aft
 This complements `npm run smoke:signed-in-manual-card`, which covers the no-Plaid manual-card onboarding path.
 
 ## Command
+Run the shared dependency preflight before the live workflow smoke:
+
+```bash
+npm run smoke:signed-in-preflight
+```
+
+Then run the Plaid workflow smoke:
+
 ```bash
 npm run smoke:signed-in-plaid-card-match
 ```
@@ -32,6 +40,16 @@ Optional overrides:
 - `SMOKE_MATCH_CONFIDENCE`
 - `SMOKE_SYNC_DAYS`
 - `SMOKE_KEEP_USER=true`
+- `SMOKE_PREFLIGHT_SKIP_PLAID=true` for manual-card-only preflight checks
+
+## Dependency Preflight
+`npm run smoke:signed-in-preflight` checks the live dependencies without creating a smoke user or writing app records:
+- production homepage reachability at `APP_BASE_URL`
+- Supabase admin Auth access with `SUPABASE_SERVICE_ROLE_KEY`
+- Supabase public Auth access with the anon or publishable key
+- Plaid sandbox credential access through `categories/get`
+
+The command prints redacted JSON only. It does not print Supabase keys, Plaid secrets, bearer tokens, or token material. A service-role failure exits at `failedCheck: "supabaseAdmin"` with the retry hint to refresh `SUPABASE_SERVICE_ROLE_KEY` before running either signed-in smoke command.
 
 ## Covered Workflow
 1. Create a disposable confirmed Supabase user through the admin Auth API.
@@ -58,10 +76,12 @@ On success the script prints a JSON summary with:
 - cleanup status
 
 ## Current Blocker
-The first production attempt on 2026-07-26 failed before Plaid or app API calls because the local `SUPABASE_SERVICE_ROLE_KEY` returned `401 Invalid API key` from Supabase admin user creation. Refreshing the local service-role credential should unblock both signed-in smoke commands.
+The first production attempt on 2026-07-26 failed before Plaid or app API calls because the local `SUPABASE_SERVICE_ROLE_KEY` returned `401 Invalid API key` from Supabase admin user creation. The 2026-07-28 preflight command now surfaces this dependency directly before any write-path smoke runs. Refreshing the local service-role credential should unblock both signed-in smoke commands.
 
 ## Verification
+- `node --check scripts/smoke-signed-in-preflight.mjs`
 - `node --check scripts/smoke-signed-in-plaid-card-match.mjs`
 - `npx vitest run app/api/wallet/card-matches/route.test.ts app/api/plaid/exchange-token/route.test.ts app/api/plaid/sync-transactions/route.test.ts`
 - `npm run lint`
+- `npm run smoke:signed-in-preflight` should pass before running the write-path smoke commands. If it fails at `supabaseAdmin`, refresh the local service-role credential and rerun it.
 - `npm run smoke:signed-in-plaid-card-match` attempted against production and failed at Supabase admin user creation with the known local credential blocker.

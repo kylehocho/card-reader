@@ -12,6 +12,7 @@
     "evidence:extension-popup": "node scripts/capture-extension-popup-evidence.mjs",
     "evidence:use-now": "node scripts/capture-use-now-evidence.mjs",
     "smoke:onboarding": "node scripts/smoke-onboarding-contract.mjs",
+    "smoke:signed-in-preflight": "node scripts/smoke-signed-in-preflight.mjs",
     "smoke:signed-in-manual-card": "node scripts/smoke-signed-in-manual-card.mjs",
     "smoke:signed-in-plaid-card-match": "node scripts/smoke-signed-in-plaid-card-match.mjs",
     "seed:merchant-intelligence": "node scripts/seed-merchant-intelligence.mjs",

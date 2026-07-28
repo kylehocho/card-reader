@@ -58,13 +58,27 @@ SMOKE_DOM_DIR=artifacts/onboarding-smoke-dom npm run smoke:onboarding
 The command is intentionally a lightweight browser smoke, not a replacement for future live Supabase/Plaid automation. It prevents UI copy, routing, or fixture drift from breaking the signed-in onboarding outcome baseline while keeping the daily verification path repeatable.
 
 ## Signed-In Manual Card Smoke
+Run the dependency preflight first:
+
+```bash
+npm run smoke:signed-in-preflight
+```
+
+For a manual-card-only credential check that skips Plaid:
+
+```bash
+SMOKE_PREFLIGHT_SKIP_PLAID=true npm run smoke:signed-in-preflight
+```
+
+Then run the live manual-card workflow:
+
 ```bash
 npm run smoke:signed-in-manual-card
 ```
 
 The signed-in smoke creates a disposable confirmed Supabase user, signs in with the public auth API, saves an Amex Gold manual card through `POST /api/wallet/manual-cards`, verifies `GET /api/wallet/analysis` sees exactly one linked and matched account, verifies manual-only `POST /api/plaid/sync-transactions` returns a zero-item result without touching Plaid credentials, and verifies authenticated `POST /api/recommend-card` recommends that owned card for Whole Foods.
 
-By default it runs against production at `https://card-reader-xi.vercel.app` and loads Supabase credentials from `.env.local`, `.env`, or `.env.vercel.production.local` when present. Useful overrides:
+By default both commands run against production at `https://card-reader-xi.vercel.app` and load Supabase credentials from `.env.local`, `.env`, or `.env.vercel.production.local` when present. The preflight also validates Plaid sandbox credentials unless `SMOKE_PREFLIGHT_SKIP_PLAID=true` is set. Useful overrides:
 ```bash
 APP_BASE_URL=http://localhost:3010 npm run smoke:signed-in-manual-card
 SMOKE_CARD_PRODUCT_ID=amex-gold SMOKE_CARD_LAST4=3007 npm run smoke:signed-in-manual-card
@@ -123,6 +137,8 @@ Expected live signed-in behavior:
 
 Initial production execution reached Supabase admin user creation but returned `401 Invalid API key` from the local service-role credential. The script deleted no user because creation failed before any smoke user existed. Refresh the local `SUPABASE_SERVICE_ROLE_KEY` or export a valid key, then rerun the command to capture the first passing production result.
 
+The 2026-07-28 preflight addition checks this blocker directly through Supabase admin Auth before the manual-card or Plaid smoke scripts create users or write app data.
+
 ## Implementation Notes
 - The evidence page intentionally does not call Supabase, Plaid, or recommendation APIs.
 - The Add Card states pass fixture card products, a pending Plaid account, and a match suggestion into the real component props.
@@ -139,4 +155,4 @@ Touched components:
 - `components/auth/ProfileSetupFlow.tsx`
 
 ## Next Best Action
-Refresh the local Supabase service-role credential and rerun `npm run smoke:signed-in-manual-card`; after that passes, extend the live signed-in smoke path to Plaid sandbox Link/exchange plus card-product match persistence.
+Refresh the local Supabase service-role credential, rerun `npm run smoke:signed-in-preflight`, then run `npm run smoke:signed-in-manual-card` and `npm run smoke:signed-in-plaid-card-match` against production.
