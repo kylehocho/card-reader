@@ -8,6 +8,8 @@ import path from "node:path";
 const states = [
   { slug: "manual-card", label: "Signed-in manual card entry" },
   { slug: "plaid-match", label: "Post-Plaid product matching" },
+  { slug: "plaid-no-credit", label: "Plaid no-credit-card recovery" },
+  { slug: "plaid-duplicate", label: "Plaid duplicate-card recovery" },
   { slug: "selection-outcomes", label: "Signed-in selection outcomes" },
   { slug: "auth-entry", label: "Profile auth entry" },
   { slug: "email-verify", label: "Email verification" },

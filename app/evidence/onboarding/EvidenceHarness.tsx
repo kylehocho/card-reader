@@ -13,6 +13,8 @@ import { useMemo } from 'react';
 type EvidenceState =
   | 'manual-card'
   | 'plaid-match'
+  | 'plaid-no-credit'
+  | 'plaid-duplicate'
   | 'selection-outcomes'
   | 'auth-entry'
   | 'email-verify'
@@ -22,7 +24,16 @@ type EvidenceHarnessProps = {
   state: string;
 };
 
-const states: EvidenceState[] = ['manual-card', 'plaid-match', 'selection-outcomes', 'auth-entry', 'email-verify', 'profile-setup'];
+const states: EvidenceState[] = [
+  'manual-card',
+  'plaid-match',
+  'plaid-no-credit',
+  'plaid-duplicate',
+  'selection-outcomes',
+  'auth-entry',
+  'email-verify',
+  'profile-setup',
+];
 
 const cardProducts = [
   {
@@ -104,7 +115,25 @@ function authFlowForState(state: EvidenceState): AuthFlow {
 function scanStepForState(state: EvidenceState): ScanStep | null {
   if (state === 'manual-card') return 'manual';
   if (state === 'plaid-match') return 'match';
+  if (state === 'plaid-no-credit' || state === 'plaid-duplicate') return 'plaid';
   return null;
+}
+
+function plaidErrorForState(state: EvidenceState) {
+  if (state === 'plaid-no-credit') {
+    return 'No credit card accounts were found for this Plaid connection. Connect a credit card account to import it into Card Reader.';
+  }
+
+  if (state === 'plaid-duplicate') {
+    return 'This Plaid credit card connection is already linked.';
+  }
+
+  return null;
+}
+
+function plaidAccountsForState(state: EvidenceState) {
+  if (state === 'plaid-no-credit') return [];
+  return [pendingAccount];
 }
 
 async function noopPromise() {}
@@ -113,6 +142,8 @@ export default function EvidenceHarness({ state: stateParam }: EvidenceHarnessPr
   const state = normalizeState(stateParam);
   const scanStep = scanStepForState(state);
   const authFlow = authFlowForState(state);
+  const plaidError = plaidErrorForState(state);
+  const evidencePlaidAccounts = plaidAccountsForState(state);
   const matchSuggestionByAccountId = useMemo(
     () => new Map<string, CardProductSuggestion | null>([[pendingAccount.accountId, matchSuggestion]]),
     [],
@@ -205,9 +236,9 @@ export default function EvidenceHarness({ state: stateParam }: EvidenceHarnessPr
           matchStatusByAccount={matchStatusByAccount}
           matchSuggestionByAccountId={matchSuggestionByAccountId}
           pendingLinkedAccounts={[pendingAccount]}
-          plaidAccounts={[pendingAccount]}
-          plaidError={null}
-          plaidStatus={state === 'plaid-match' ? 'connected' : 'idle'}
+          plaidAccounts={evidencePlaidAccounts}
+          plaidError={plaidError}
+          plaidStatus={state === 'plaid-match' ? 'connected' : plaidError ? 'error' : 'idle'}
           previewGradient="from-[#f3d59f] via-[#cb9d62] to-[#704624]"
           scanStep={scanStep}
           selectedManualCardProduct={cardProducts[0]}

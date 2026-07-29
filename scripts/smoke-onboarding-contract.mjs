@@ -31,6 +31,16 @@ const states = [
     mustContain: ["Match your card", "American Express Gold Card", "Suggested match", "Matched card product"],
   },
   {
+    slug: "plaid-no-credit",
+    label: "Plaid no-credit-card recovery",
+    mustContain: ["Connect with Plaid", "No credit card accounts found", "Try another issuer or enter manually"],
+  },
+  {
+    slug: "plaid-duplicate",
+    label: "Plaid duplicate-card recovery",
+    mustContain: ["Connect with Plaid", "Card already linked", "Review connected accounts"],
+  },
+  {
     slug: "selection-outcomes",
     label: "Signed-in selection outcomes",
     mustContain: [

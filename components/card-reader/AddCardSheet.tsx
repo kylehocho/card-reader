@@ -78,6 +78,34 @@ export function canSubmitManualCard({
   return Boolean(effectiveManualCardProductId) && cardProductCount > 0 && last4.length === 4;
 }
 
+export function plaidErrorRecovery(error: string | null) {
+  if (!error) return null;
+
+  const normalizedError = error.toLowerCase();
+
+  if (normalizedError.includes('no credit card accounts')) {
+    return {
+      title: 'No credit card accounts found',
+      detail: 'Pick an issuer login that includes a credit card, or add the card manually if Plaid does not expose it.',
+      action: 'Try another issuer or enter manually',
+    };
+  }
+
+  if (normalizedError.includes('already linked')) {
+    return {
+      title: 'Card already linked',
+      detail: 'This connection matches an active card in your wallet, so Card Reader kept the existing secure Plaid item.',
+      action: 'Review connected accounts',
+    };
+  }
+
+  return {
+    title: 'Plaid connection needs attention',
+    detail: 'Retry the connection. If it keeps failing, use manual entry so recommendations can still use this card.',
+    action: 'Retry or enter manually',
+  };
+}
+
 export default function AddCardSheet({
   cardProducts,
   closeAddCardSheet,
@@ -114,6 +142,7 @@ export default function AddCardSheet({
     last4: draftCard.last4,
     manualCardStatus,
   });
+  const plaidRecovery = plaidErrorRecovery(plaidError);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/78 p-4 backdrop-blur-md">
@@ -216,8 +245,16 @@ export default function AddCardSheet({
             )}
 
             {plaidError && (
-              <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3 py-2 text-sm leading-5 text-rose-50/90">
-                {plaidError}
+              <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3 py-3 text-sm leading-5 text-rose-50/90">
+                {plaidRecovery ? (
+                  <>
+                    <p className="font-semibold text-rose-50">{plaidRecovery.title}</p>
+                    <p className="mt-1 text-rose-50/78">{plaidRecovery.detail}</p>
+                    <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em] text-rose-50/58">{plaidRecovery.action}</p>
+                  </>
+                ) : (
+                  plaidError
+                )}
               </div>
             )}
 
@@ -268,8 +305,16 @@ export default function AddCardSheet({
             )}
 
             {plaidError && (
-              <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3 py-2 text-sm leading-5 text-rose-50/90">
-                {plaidError}
+              <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3 py-3 text-sm leading-5 text-rose-50/90">
+                {plaidRecovery ? (
+                  <>
+                    <p className="font-semibold text-rose-50">{plaidRecovery.title}</p>
+                    <p className="mt-1 text-rose-50/78">{plaidRecovery.detail}</p>
+                    <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em] text-rose-50/58">{plaidRecovery.action}</p>
+                  </>
+                ) : (
+                  plaidError
+                )}
               </div>
             )}
 

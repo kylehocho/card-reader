@@ -1,6 +1,6 @@
 # Onboarding UI Evidence
 
-Last updated: 2026-07-24
+Last updated: 2026-07-29
 
 ## Intent
 The add-card and profile access boundaries are now extracted from `WalletPrototype.tsx`, but future state and callback extractions still need a visual baseline. This evidence route and capture command make the core onboarding overlays reproducible without requiring live Supabase auth, Plaid Link, or manual browser setup.
@@ -11,6 +11,8 @@ The add-card and profile access boundaries are now extracted from `WalletPrototy
 - Supported states:
   - `manual-card` - signed-in manual card entry with a selected top-priority catalog product.
   - `plaid-match` - post-Plaid card-product matching with a suggested Amex Gold match.
+  - `plaid-no-credit` - Plaid exchange recovery state when the linked item has no credit-card accounts.
+  - `plaid-duplicate` - Plaid exchange recovery state when the linked credit card is already active in the wallet.
   - `selection-outcomes` - signed-in selection outcomes after manual-card save, Plaid Link success, card-match save, and connected-account removal.
   - `auth-entry` - profile sign-in entry sheet.
   - `email-verify` - email verification sheet.
@@ -47,6 +49,8 @@ npm run smoke:onboarding
 The smoke command runs Chrome headless against `/evidence/onboarding`, lets the production app bundle render, dumps the DOM, and asserts the signed-in fixture contract for:
 - manual card entry;
 - post-Plaid card-product matching;
+- Plaid no-credit-card recovery guidance;
+- Plaid duplicate-card recovery guidance;
 - wallet selection outcomes after manual-card save, Plaid Link success, card-match save, and connected-account removal.
 
 By default it checks production at `https://card-reader-xi.vercel.app`. Useful overrides:
@@ -139,6 +143,21 @@ Initial production execution reached Supabase admin user creation but returned `
 
 The 2026-07-28 preflight addition checks this blocker directly through Supabase admin Auth before the manual-card or Plaid smoke scripts create users or write app data.
 
+## 2026-07-29 Plaid Recovery Evidence
+Added two production-safe fixture states and smoke assertions for Plaid exchange failures that happen after Link returns:
+
+- `plaid-no-credit` renders the no-credit-card import recovery copy from `POST /api/plaid/exchange-token` and guides the user to retry with a credit-card issuer or use manual entry.
+- `plaid-duplicate` renders the duplicate active-card recovery copy and guides the user to review connected accounts instead of relinking the same card.
+
+The Add Card sheet now maps raw Plaid exchange errors through `plaidErrorRecovery()` before rendering them, so the onboarding modal gives a clear title, explanation, and next action while preserving the route-level error contract.
+
+Verification commands:
+
+```bash
+npx vitest run components/card-reader/AddCardSheet.test.ts
+npm run smoke:onboarding
+```
+
 ## Implementation Notes
 - The evidence page intentionally does not call Supabase, Plaid, or recommendation APIs.
 - The Add Card states pass fixture card products, a pending Plaid account, and a match suggestion into the real component props.
@@ -155,4 +174,4 @@ Touched components:
 - `components/auth/ProfileSetupFlow.tsx`
 
 ## Next Best Action
-Refresh the local Supabase service-role credential, rerun `npm run smoke:signed-in-preflight`, then run `npm run smoke:signed-in-manual-card` and `npm run smoke:signed-in-plaid-card-match` against production.
+Refresh the local Supabase service-role credential, rerun `npm run smoke:signed-in-preflight`, then run `npm run smoke:signed-in-manual-card` and `npm run smoke:signed-in-plaid-card-match` against production. Keep `npm run smoke:onboarding` in the daily production verification path so signed-in manual, Plaid match, Plaid recovery, and selection-outcome fixtures do not drift while live credentials are blocked.
