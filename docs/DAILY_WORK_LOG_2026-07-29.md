@@ -29,7 +29,15 @@ Signed-in Plaid onboarding is still the top app priority, but live write-path sm
 - `npm run build`
 
 ## Production Smoke Result
-- Planned after checks pass: Vercel production deploy, homepage smoke, `npm run smoke:onboarding` against the production alias, and direct HTTP checks for both new evidence fixture URLs.
+- Deployed commit `fbda564` to Vercel production.
+- Deployment URL: `https://card-reader-hr5mmx349-kylehocho-5599s-projects.vercel.app`
+- Production alias: `https://card-reader-xi.vercel.app`
+- Deployment id: `dpl_AmP6cxPXbZuv4EBuMRUPFw1D2QPA`
+- Homepage smoke returned HTTP 200.
+- Direct production checks confirmed:
+  - `/evidence/onboarding?state=plaid-no-credit` renders `No credit card accounts found` and `Try another issuer or enter manually`.
+  - `/evidence/onboarding?state=plaid-duplicate` renders `Card already linked` and `Review connected accounts`.
+- `SMOKE_TIMEOUT_MS=5000 npm run smoke:onboarding` passed against the production alias and checked manual-card, Plaid match, both Plaid recovery states, and selection outcomes.
 
 ## Risks
 - Live signed-in manual-card and Plaid write-path smoke remain blocked until the local `SUPABASE_SERVICE_ROLE_KEY` is refreshed.
