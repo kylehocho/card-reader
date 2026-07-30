@@ -22,12 +22,21 @@ Signed-in Plaid onboarding remains the top priority, but live signed-in smoke is
 
 ## Verification
 - `npx vitest run components/card-reader/useDemoWalletCards.test.ts`
+- `npx vitest run components/card-reader/useDemoWalletCards.test.ts app/api/wallet/analysis/route.test.ts`
 - `npm run lint`
 - `npm run test`
 - `npm run build`
+- `npm run smoke:onboarding`
+- `SMOKE_TIMEOUT_MS=5000 npm run smoke:onboarding`
 
 ## Production Smoke Result
-- Pending production deployment from today's commit.
+- Deployed commit `0120baf` to Vercel production.
+- Deployment URL: `https://card-reader-qlvqcx747-kylehocho-5599s-projects.vercel.app`
+- Production alias: `https://card-reader-xi.vercel.app`
+- Deployment id: `dpl_2EJeQ9V42fnuvBDaQXTybBTtTakg`
+- Homepage smoke returned HTTP 200.
+- Direct production check confirmed `/evidence/onboarding?state=manual-card` renders the signed-in manual-card entry fixture.
+- `SMOKE_TIMEOUT_MS=5000 npm run smoke:onboarding` passed against the production alias and checked manual-card, Plaid match, both Plaid recovery states, and selection outcomes.
 
 ## Risks
 - Live signed-in manual-card and Plaid write-path smoke remain blocked until the local `SUPABASE_SERVICE_ROLE_KEY` is refreshed.
