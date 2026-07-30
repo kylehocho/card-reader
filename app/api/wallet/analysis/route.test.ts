@@ -44,6 +44,7 @@ function supabaseWithResults(resultsByTable: Record<string, QueryResult>) {
 const request = new Request('https://example.com/api/wallet/analysis', {
   headers: { authorization: 'Bearer test-token' },
 });
+const currentDate = new Date().toISOString().slice(0, 10);
 
 const productRow = {
   id: 'amex-gold',
@@ -119,7 +120,7 @@ describe('GET /api/wallet/analysis', () => {
               merchant_name: 'Resy',
               name: 'Resy dining',
               amount: 6,
-              date: '2026-06-29',
+              date: currentDate,
               category: ['Food and Drink', 'Restaurants'],
               personal_finance_category: null,
               pending: false,

@@ -12,6 +12,7 @@ import {
 } from '@/components/card-reader/usePersistedPlaidData';
 import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
+import { buildDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
 import { useWalletNavigation, useWalletSelectionOutcomes, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
 import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
@@ -1172,34 +1173,10 @@ export default function WalletPrototype() {
       return;
     }
 
-    const newCard: Card = {
-      id: `custom-${++customCardIdRef.current}`,
-      issuer: draftCard.issuer,
-      name: draftCard.name,
-      last4: draftCard.last4,
-      gradient: 'from-[#364054] via-[#18202d] to-[#070a0f]',
-      accent: '#f4f5f7',
-      pointsLabel: 'Rewards',
-      pointsValue: '18,240 pts',
-      recommendation: 'Newly added card — set your perks and value rules next.',
-      spendSummary: 'No spend tracking configured yet.',
-
-      categories: draftCard.isBusiness ? ['Business', 'Custom'] : ['Personal', 'Custom'],
-      multipliers: [{ id: 'custom-flat', category: 'gas', label: 'Custom category', multiplier: 'Set rate', detail: 'Map bonus categories after onboarding', icon: '⚙️' }],
-      concierges: [],
-      alerts: [draftCard.isBusiness ? 'Business card added to the wallet prototype' : 'New card added to the wallet prototype'],
-
-      rewardReset: 'Set custom reset timing',
-      annualFeeMonth: 'Not set',
-      monthlyCreditsUsed: 0,
-      monthlyCreditsTotal: 1,
-      annualFee: 0,
-      perkValueUsed: 0,
-      nextResetLabel: 'Configure after setup',
-      transactions: [{ id: 'c1', merchant: 'Awaiting connection', amount: '--', date: 'Now', category: 'Setup' }],
-      benefits: [{ id: 'custom-benefit', title: 'Starter perk slot', status: 'available', detail: 'Add real benefits in a later build', progress: 0 }],
-      isBusiness: draftCard.isBusiness,
-    };
+    const newCard: Card = buildDemoWalletCard({
+      draftCard,
+      sequence: ++customCardIdRef.current,
+    });
     setCards((prev) => [...prev, newCard]);
     selectWalletCard(newCard.id);
     showSuccessThenClose(() => {

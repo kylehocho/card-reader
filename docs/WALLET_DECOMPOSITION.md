@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-25
+Last updated: 2026-07-30
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -14,6 +14,7 @@ Last updated: 2026-07-25
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
+- `useDemoWalletCards.ts` owns the anonymous manual-card demo projection used when the app is running without a signed-in user-backed wallet. It turns the Add Card draft into a deterministic wallet card while the signed-in manual-card path remains in `usePlaidWalletActions.ts`.
 - `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning auth gates, anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
 - `/evidence/onboarding` renders deterministic Add Card, profile/auth, and signed-in wallet selection outcome fixture states for visual baseline captures. `npm run smoke:onboarding` runs Chrome against the signed-in fixture states and asserts the rendered manual-card, Plaid-match, and selection-outcome contracts. The current evidence matrix is documented in `docs/ONBOARDING_UI_EVIDENCE.md`.
@@ -151,13 +152,26 @@ The add-card presentation hook owns:
 - the anonymous manual issuer/name form;
 - last-four input, preview card, save/error states, and success copy.
 
-`WalletPrototype.tsx` still decides when a user is allowed into the sheet, which step to open first, how anonymous demo cards are created, how signed-in manual cards are saved, how Plaid Link is opened, and which app screen to show after success. This keeps auth, persistence, and navigation concerns outside the presentation hook/component pair.
+`WalletPrototype.tsx` still decides when a user is allowed into the sheet, which step to open first, when to append an anonymous demo card, how signed-in manual cards are saved, how Plaid Link is opened, and which app screen to show after success. This keeps auth, persistence, and navigation concerns outside the presentation hook/component pair.
 
 The pure helpers exported by the add-card boundary keep behavior testable without rendering the wallet shell:
 - `defaultManualCardDraft` preserves the existing anonymous demo defaults.
 - `normalizeManualCardLast4()` strips non-digits and caps the manual last-four input at four digits.
 - `addCardSheetTitle()` maps each add-card step to its modal title.
 - `canSubmitManualCard()` keeps signed-in manual saves disabled until the card catalog, selected product, and four-digit last-four are available while preserving anonymous demo-card entry.
+
+## Demo Wallet Card Contract
+The demo-card helper accepts:
+- the current anonymous manual-card draft;
+- a caller-owned sequence number.
+
+It returns:
+- a `custom-${sequence}` wallet card id;
+- the draft issuer, name, last four, and business flag;
+- the same placeholder rewards, setup transaction, starter benefit, and post-setup copy previously constructed inline;
+- sequence-scoped child ids for the custom multiplier, setup transaction, and starter benefit.
+
+This boundary is intentionally presentation-only. It does not save signed-in manual cards, touch Supabase, open Plaid Link, or decide navigation outcomes.
 
 ## Profile Access Contract
 The profile access boundary accepts:
@@ -202,6 +216,7 @@ The shared matching UI accepts:
 - Local transaction recommendations still surface for unmatched persisted accounts as long as a catalog card can beat the 1x baseline.
 - Pending, refund, and already-optimal transactions do not create local missed-value recommendations.
 - Manual card last-four input strips non-digits and caps at four characters before the draft reaches either the anonymous demo-card creator or the signed-in manual-card API path.
+- Anonymous demo-card projection uses sequence-scoped child ids, preventing duplicate multiplier, transaction, and starter-benefit ids when multiple custom demo cards are added in one session.
 - Add-card success transitions close the sheet after the same short delay for anonymous manual cards and signed-in manual-card saves.
 - Add-card sheet rendering remains behavior-neutral: the extracted component receives the existing Plaid/manual callbacks instead of creating its own persistence or navigation state.
 - Profile access rendering remains behavior-neutral: the extracted boundary receives existing auth callbacks and keeps wallet workflow gates in `WalletPrototype.tsx`.
@@ -223,6 +238,7 @@ The shared matching UI accepts:
 - `npm test -- components/card-reader/useAddCardPresentation.test.ts`
 - `npm test -- components/card-reader/useAddCardPresentation.test.ts components/card-reader/useWalletNavigation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useWalletNavigation.test.ts`
+- `npx vitest run components/card-reader/useDemoWalletCards.test.ts`
 - `npm test -- components/card-reader/useWalletNavigation.test.ts components/card-reader/useMerchantRecommendation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useMerchantRecommendation.test.ts lib/recommendation/use-now-route-state.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts`
@@ -237,4 +253,4 @@ The shared matching UI accepts:
 ## Next Extraction Candidates
 1. Extend live signed-in smoke coverage to Plaid sandbox exchange and `POST /api/wallet/card-matches` persistence once the local Supabase service-role credential is refreshed.
 2. Move shared wallet view types into smaller domain files if `types.ts` grows beyond account/card-reader view contracts.
-3. Extract the remaining anonymous demo-card creation path if the Add Card boundary needs complete behavior ownership.
+3. Extract more wallet home panel rendering once the signed-in Plaid evidence path is unblocked.
