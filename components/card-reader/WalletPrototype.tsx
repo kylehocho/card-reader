@@ -14,6 +14,7 @@ import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletAc
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
 import { buildDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
+import { useWalletAccessGates, type WalletProtectedDestination } from '@/components/card-reader/useWalletAccessGates';
 import { useWalletNavigation, useWalletSelectionOutcomes, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
 import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
 import ProfileHome from '@/components/profile/ProfileHome';
@@ -1096,21 +1097,23 @@ export default function WalletPrototype() {
     [conciergeCards],
   );
 
-  function openScanner() {
-    setWalletSelectionExpanded(false);
-    setShowProfileMenu(false);
-    if (authStatus === 'anonymous') {
-      setAuthFlow('entry');
-      return;
-    }
+  const { openProtectedDestination } = useWalletAccessGates({
+    authStatus,
+    profileStatus,
+    onAuthFlowChange: setAuthFlow,
+    onNavigate: (destination: Exclude<WalletProtectedDestination, 'add-card'>) => {
+      setScreen(destination);
+    },
+    onOpenAddCardSheet: () => openAddCardSheet('plaid'),
+    onPrepareNavigation: () => {
+      setWalletSelectionExpanded(false);
+      setShowProfileMenu(false);
+    },
+  });
 
-    if (profileStatus === 'missing') {
-      setAuthFlow('setup');
-      return;
-    }
-
-    openAddCardSheet('plaid');
-  }
+  const openScanner = useCallback(() => {
+    openProtectedDestination('add-card');
+  }, [openProtectedDestination]);
 
   function selectCard(cardId: string) {
     selectWalletCard(cardId);
@@ -1118,38 +1121,17 @@ export default function WalletPrototype() {
   }
 
   function openProfileEntry() {
+    setWalletSelectionExpanded(false);
     setShowProfileMenu(false);
     setAuthFlow('entry');
   }
 
   function openProfileScreen() {
-    setShowProfileMenu(false);
-    if (authStatus === 'anonymous') {
-      setAuthFlow('entry');
-      return;
-    }
-
-    if (profileStatus === 'missing') {
-      setAuthFlow('setup');
-      return;
-    }
-
-    setScreen('profile');
+    openProtectedDestination('profile');
   }
 
   function openConnectedAccountsScreen() {
-    setShowProfileMenu(false);
-    if (authStatus === 'anonymous') {
-      setAuthFlow('entry');
-      return;
-    }
-
-    if (profileStatus === 'missing') {
-      setAuthFlow('setup');
-      return;
-    }
-
-    setScreen('connected-accounts');
+    openProtectedDestination('connected-accounts');
   }
 
   async function handleSignOut() {

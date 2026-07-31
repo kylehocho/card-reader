@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-30
+Last updated: 2026-07-31
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -15,7 +15,8 @@ Last updated: 2026-07-30
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `useDemoWalletCards.ts` owns the anonymous manual-card demo projection used when the app is running without a signed-in user-backed wallet. It turns the Add Card draft into a deterministic wallet card while the signed-in manual-card path remains in `usePlaidWalletActions.ts`.
-- `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning auth gates, anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
+- `useWalletAccessGates.ts` owns the shared protected-destination gate for Add Card, Connected Accounts, and Profile. It routes anonymous/loading auth states to auth entry, profile-incomplete authenticated users to profile setup, and ready users to the requested wallet workflow after common menu/selection cleanup.
+- `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
 - `/evidence/onboarding` renders deterministic Add Card, profile/auth, and signed-in wallet selection outcome fixture states for visual baseline captures. `npm run smoke:onboarding` runs Chrome against the signed-in fixture states and asserts the rendered manual-card, Plaid-match, and selection-outcome contracts. The current evidence matrix is documented in `docs/ONBOARDING_UI_EVIDENCE.md`.
 - `useWalletNavigation.ts` owns the top-level wallet navigation state that is independent from persistence: selected card id, current screen, wallet page index, stack expansion, selected-card fallback, page shifting, reset-to-wallet behavior, the non-selected card stack plus add-card action, and selected-card outcomes after Plaid/manual-card mutations.
@@ -173,6 +174,23 @@ It returns:
 
 This boundary is intentionally presentation-only. It does not save signed-in manual cards, touch Supabase, open Plaid Link, or decide navigation outcomes.
 
+## Wallet Access Gate Contract
+The access gate hook accepts:
+- current auth status;
+- current profile setup status;
+- parent callbacks for auth-flow changes, protected screen navigation, Add Card sheet opening, and shared pre-navigation cleanup.
+
+It owns:
+- mapping anonymous and loading auth states to the auth entry sheet;
+- mapping authenticated users with missing profile setup to the profile setup flow;
+- allowing profile-ready signed-in users into Add Card, Connected Accounts, or Profile;
+- running the same menu/selection cleanup before each protected workflow.
+
+The pure helper exported by `useWalletAccessGates.ts` keeps the routing rule testable without rendering the wallet shell:
+- `resolveWalletAccessGate()` returns either the required auth flow or the allowed protected destination.
+
+This boundary does not save cards, open Plaid Link directly, fetch Supabase state, or decide post-mutation selected-card outcomes. Those responsibilities remain in `usePlaidWalletActions.ts`, `useAddCardPresentation.ts`, and `useWalletNavigation.ts`.
+
 ## Profile Access Contract
 The profile access boundary accepts:
 - current auth flow and auth status;
@@ -217,6 +235,7 @@ The shared matching UI accepts:
 - Pending, refund, and already-optimal transactions do not create local missed-value recommendations.
 - Manual card last-four input strips non-digits and caps at four characters before the draft reaches either the anonymous demo-card creator or the signed-in manual-card API path.
 - Anonymous demo-card projection uses sequence-scoped child ids, preventing duplicate multiplier, transaction, and starter-benefit ids when multiple custom demo cards are added in one session.
+- Protected wallet destinations share one auth/profile gate, preventing Add Card, Connected Accounts, and Profile from drifting into different entry/setup behavior.
 - Add-card success transitions close the sheet after the same short delay for anonymous manual cards and signed-in manual-card saves.
 - Add-card sheet rendering remains behavior-neutral: the extracted component receives the existing Plaid/manual callbacks instead of creating its own persistence or navigation state.
 - Profile access rendering remains behavior-neutral: the extracted boundary receives existing auth callbacks and keeps wallet workflow gates in `WalletPrototype.tsx`.
@@ -239,6 +258,7 @@ The shared matching UI accepts:
 - `npm test -- components/card-reader/useAddCardPresentation.test.ts components/card-reader/useWalletNavigation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useWalletNavigation.test.ts`
 - `npx vitest run components/card-reader/useDemoWalletCards.test.ts`
+- `npx vitest run components/card-reader/useWalletAccessGates.test.ts`
 - `npm test -- components/card-reader/useWalletNavigation.test.ts components/card-reader/useMerchantRecommendation.test.ts components/card-reader/usePlaidWalletActions.test.ts`
 - `npm test -- components/card-reader/useMerchantRecommendation.test.ts lib/recommendation/use-now-route-state.test.ts`
 - `npm test -- components/card-reader/usePlaidWalletActions.test.ts`
