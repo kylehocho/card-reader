@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -13,6 +13,7 @@ Last updated: 2026-07-31
 - `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
+- `usePlaidWalletCards.ts` owns Plaid connected-account projection into wallet card view models plus the anonymous/local Plaid fallback cache. It keeps credit-card-first display filtering, matched-product labels, currency formatting, recent transaction previews, and storage sanitization testable without rendering the wallet shell.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `useDemoWalletCards.ts` owns the anonymous manual-card demo projection used when the app is running without a signed-in user-backed wallet. It turns the Add Card draft into a deterministic wallet card while the signed-in manual-card path remains in `usePlaidWalletActions.ts`.
 - `useWalletAccessGates.ts` owns the shared protected-destination gate for Add Card, Connected Accounts, and Profile. It routes anonymous/loading auth states to auth entry, profile-incomplete authenticated users to profile setup, and ready users to the requested wallet workflow after common menu/selection cleanup.
@@ -136,6 +137,25 @@ The pure helpers exported by `usePlaidWalletActions.ts` keep workflow transforma
 - `applyCardProductMatch()` attaches selected card-product metadata to the matching connected-account view model.
 - `removeAccountFromList()` and `removeAccountStatus()` keep account removal and match-state cleanup deterministic.
 
+## Plaid Wallet Card Contract
+The Plaid wallet-card helper accepts:
+- the connected Plaid account view models owned by the wallet shell;
+- anonymous/local storage access through the browser `localStorage` boundary.
+
+It owns:
+- choosing credit-card accounts for wallet display before falling back to one non-credit account in anonymous/local mode;
+- projecting each connected account into the existing wallet-card display contract;
+- using matched card-product issuer/name labels when a user has accepted or seeded a match;
+- preserving recent transaction previews when available, otherwise generating the same setup transaction row;
+- reading, writing, and clearing the anonymous Plaid fallback cache under `card-reader.plaid-connections.v1`.
+
+The pure helpers exported by `usePlaidWalletCards.ts` keep linked-account display behavior testable without rendering the full wallet:
+- `getWalletDisplayAccounts()` enforces the credit-first display rule.
+- `buildPlaidWalletCard()` preserves the existing wallet card copy, balance formatting, matched/unmatched labels, and setup benefit metadata.
+- `readStoredPlaidConnection()`, `writeStoredPlaidConnection()`, and `clearStoredPlaidConnection()` isolate the local fallback cache and sanitize malformed stored account payloads.
+
+This boundary does not call Supabase, open Plaid Link, sync transactions, save card matches, or decide navigation after mutations. Those responsibilities remain in `usePersistedPlaidData.ts`, `usePlaidWalletActions.ts`, and `useWalletSelectionOutcomes()`.
+
 ## Add-Card Presentation Contract
 The add-card presentation hook owns:
 - whether the add-card sheet is visible;
@@ -236,6 +256,9 @@ The shared matching UI accepts:
 - Manual card last-four input strips non-digits and caps at four characters before the draft reaches either the anonymous demo-card creator or the signed-in manual-card API path.
 - Anonymous demo-card projection uses sequence-scoped child ids, preventing duplicate multiplier, transaction, and starter-benefit ids when multiple custom demo cards are added in one session.
 - Protected wallet destinations share one auth/profile gate, preventing Add Card, Connected Accounts, and Profile from drifting into different entry/setup behavior.
+- Anonymous Plaid fallback storage is cleared whenever Supabase is configured, preventing a signed-in/user-backed wallet from inheriting stale local connected-account cards.
+- Plaid wallet display continues to prefer credit-card accounts but still shows one fallback account in anonymous/local mode when no credit account exists.
+- Malformed local Plaid storage payloads are ignored instead of crashing wallet initialization.
 - Add-card success transitions close the sheet after the same short delay for anonymous manual cards and signed-in manual-card saves.
 - Add-card sheet rendering remains behavior-neutral: the extracted component receives the existing Plaid/manual callbacks instead of creating its own persistence or navigation state.
 - Profile access rendering remains behavior-neutral: the extracted boundary receives existing auth callbacks and keeps wallet workflow gates in `WalletPrototype.tsx`.

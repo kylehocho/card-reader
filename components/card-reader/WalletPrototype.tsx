@@ -14,6 +14,14 @@ import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletAc
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
 import { buildDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
+import {
+  buildPlaidWalletCard,
+  clearStoredPlaidConnection,
+  getWalletDisplayAccounts,
+  readStoredPlaidConnection,
+  type StoredPlaidConnection,
+  writeStoredPlaidConnection,
+} from '@/components/card-reader/usePlaidWalletCards';
 import { useWalletAccessGates, type WalletProtectedDestination } from '@/components/card-reader/useWalletAccessGates';
 import { useWalletNavigation, useWalletSelectionOutcomes, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
 import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
@@ -34,10 +42,6 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { MotionConfig, motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-type StoredPlaidConnection = {
-  accounts: PlaidConnectedAccount[];
-};
-
 const pageMeta = {
   benefits: { title: 'Benefits', icon: '✦' },
   multipliers: { title: 'Earn Rates', icon: '↗' },
@@ -45,8 +49,6 @@ const pageMeta = {
   progress: { title: 'Important Dates', icon: '◌' },
   recommendations: { title: 'Recommendations', icon: '→' },
 } as const;
-
-const PLAID_STORAGE_KEY = 'card-reader.plaid-connections.v1';
 
 type Benefit = BenefitView;
 
@@ -727,15 +729,6 @@ function loadPlaidLinkScript() {
   });
 }
 
-function formatCurrency(value: number | null) {
-  if (value === null) return 'Balance unavailable';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 function dedupeNotifications(items: NotificationItem[]) {
   const seen = new Set<string>();
 
@@ -747,63 +740,6 @@ function dedupeNotifications(items: NotificationItem[]) {
   });
 }
 
-function readStoredPlaidConnection(): StoredPlaidConnection | null {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const rawConnection = window.localStorage.getItem(PLAID_STORAGE_KEY);
-    if (!rawConnection) return null;
-
-    const parsedConnection = JSON.parse(rawConnection) as Partial<StoredPlaidConnection>;
-    if (!Array.isArray(parsedConnection.accounts)) return null;
-
-    return {
-      accounts: parsedConnection.accounts.filter((account) => typeof account.accountId === 'string' && typeof account.name === 'string'),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function buildPlaidCard(account: PlaidConnectedAccount): Card {
-  const isCredit = account.type === 'credit' || account.subtype === 'credit card';
-  const mappedName = account.cardProductName ?? account.name;
-  const mappedIssuer = account.cardProductIssuer ?? account.institutionName;
-  const hasMappedProduct = Boolean(account.cardProductId);
-
-  return {
-    id: `plaid-${account.accountId}`,
-    issuer: mappedIssuer,
-    name: mappedName,
-    last4: account.mask,
-    gradient: isCredit ? 'from-[#394150] via-[#18202b] to-[#06080d]' : 'from-[#41505a] via-[#1a2730] to-[#070b0f]',
-    accent: '#f4f7fb',
-    pointsLabel: hasMappedProduct ? account.institutionName : isCredit ? 'Plaid sandbox liability' : 'Plaid sandbox account',
-    pointsValue: formatCurrency(account.currentBalance),
-    recommendation: hasMappedProduct
-      ? `${account.name} is matched to ${mappedName}. Next step is using transactions and benefits to recommend when to use it.`
-      : 'Connected through Plaid Sandbox. Match this account to a card product to unlock benefits and reward rules.',
-    spendSummary: account.limit ? `${formatCurrency(account.limit)} credit limit synced from Plaid.` : 'Sandbox account is connected and ready for benefit mapping.',
-    categories: [account.subtype || account.type, hasMappedProduct ? 'Matched card' : 'Needs match'],
-    multipliers: [{ id: `plaid-${account.accountId}-flat`, category: 'gas', label: hasMappedProduct ? 'Matched product' : 'No earn rates yet', multiplier: hasMappedProduct ? 'Rules' : '--', detail: hasMappedProduct ? 'Card product rules are attached to this account' : 'Match this Plaid account to a card product first', icon: '•' }],
-    concierges: [],
-    alerts: hasMappedProduct ? ['Sandbox connection active', `Matched to ${mappedName}`] : ['Sandbox connection active', 'Choose a card product match'],
-    rewardReset: hasMappedProduct ? 'Card product rules are attached. Transaction-aware recommendations come next.' : 'Plaid connection established. Rewards and perk calendars still need issuer rules.',
-    annualFeeMonth: 'Not synced',
-    monthlyCreditsUsed: 0,
-    monthlyCreditsTotal: 1,
-    annualFee: 0,
-    perkValueUsed: 0,
-    nextResetLabel: 'Awaiting benefit mapping',
-    transactions:
-      account.recentTransactions && account.recentTransactions.length > 0
-        ? account.recentTransactions.slice(0, 5)
-        : [{ id: `plaid-${account.accountId}-1`, merchant: account.institutionName, amount: formatCurrency(account.currentBalance), date: 'Synced now', category: account.subtype || account.type }],
-    benefits: [{ id: `plaid-${account.accountId}-benefit`, title: 'Plaid connection', status: 'available', detail: 'Sandbox account data is available to the app.', progress: 100 }],
-    isBusiness: false,
-  };
-}
-
 export default function WalletPrototype() {
   const { authStatus, profileStatus, authFlow, user, setAuthFlow, signInWithGoogle, signInWithApple, signInWithEmail, confirmEmail, completeProfileSetup, signOut } =
     useAuth();
@@ -813,10 +749,9 @@ export default function WalletPrototype() {
     const accounts = initialPlaidConnection?.accounts ?? [];
     if (accounts.length === 0) return seedCards;
 
-    const creditAccounts = accounts.filter((account) => account.type === 'credit' || account.subtype === 'credit card');
-    const accountsToAdd = creditAccounts.length > 0 ? creditAccounts : accounts.slice(0, 1);
+    const accountsToAdd = getWalletDisplayAccounts(accounts);
 
-    return [...seedCards, ...accountsToAdd.map(buildPlaidCard)];
+    return [...seedCards, ...accountsToAdd.map(buildPlaidWalletCard)];
   });
   const [notifications] = useState(seedNotifications);
   const [recommendations] = useState(seedRecommendations);
@@ -860,27 +795,21 @@ export default function WalletPrototype() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (usesSupabase) {
-      window.localStorage.removeItem(PLAID_STORAGE_KEY);
+      clearStoredPlaidConnection();
       return;
     }
 
-    if (plaidAccounts.length > 0) {
-      window.localStorage.setItem(PLAID_STORAGE_KEY, JSON.stringify({ accounts: plaidAccounts }));
-      return;
-    }
-
-    window.localStorage.removeItem(PLAID_STORAGE_KEY);
+    writeStoredPlaidConnection(plaidAccounts);
   }, [plaidAccounts, usesSupabase]);
 
   const syncPlaidAccountsToWallet = useCallback((accounts: PlaidConnectedAccount[]) => {
-    const creditAccounts = accounts.filter((account) => account.type === 'credit' || account.subtype === 'credit card');
-    const accountsToAdd = creditAccounts.length > 0 ? creditAccounts : accounts.slice(0, 1);
+    const accountsToAdd = getWalletDisplayAccounts(accounts);
     const isUserBackedWallet = usesSupabase && authStatus === 'authenticated' && profileStatus === 'ready';
 
     setPlaidAccounts(accounts);
     setCards((currentCards) => {
       const nonPlaidCards = currentCards.filter((card) => !card.id.startsWith('plaid-'));
-      return isUserBackedWallet ? accountsToAdd.map(buildPlaidCard) : [...nonPlaidCards, ...accountsToAdd.map(buildPlaidCard)];
+      return isUserBackedWallet ? accountsToAdd.map(buildPlaidWalletCard) : [...nonPlaidCards, ...accountsToAdd.map(buildPlaidWalletCard)];
     });
   }, [authStatus, profileStatus, usesSupabase]);
 
