@@ -27,9 +27,14 @@ Signed-in onboarding and Plaid sync remain the top priority, but live write-path
 - `npm run smoke:signed-in-preflight` *(still blocked at the known stale local Supabase service-role credential)*
 
 ## Production Smoke Result
-- The shorter onboarding contract smoke passed against `https://card-reader-xi.vercel.app` and checked signed-in manual-card entry, post-Plaid product matching, both Plaid recovery states, and selection outcomes.
 - The default onboarding smoke command hung locally before producing output; the prior documented `SMOKE_TIMEOUT_MS=5000` run completed cleanly.
-- Production deployment and alias smoke will be recorded after the committed slice is deployed.
+- Deployed commit `55db718` to Vercel production.
+- Deployment URL: `https://card-reader-jz6pqkg8x-kylehocho-5599s-projects.vercel.app`
+- Production alias: `https://card-reader-xi.vercel.app`
+- Deployment id: `dpl_Ebiyfpgkga69r6w7oQrPtb3r1VD5`
+- Homepage smoke returned HTTP 200.
+- Direct production check confirmed `/evidence/onboarding?state=manual-card` returns HTTP 200.
+- `SMOKE_TIMEOUT_MS=5000 npm run smoke:onboarding` passed against the production alias after deploy and checked signed-in manual-card entry, post-Plaid product matching, both Plaid recovery states, and selection outcomes.
 
 ## Risks
 - Live signed-in manual-card and Plaid write-path smokes remain blocked until the local `SUPABASE_SERVICE_ROLE_KEY` is refreshed.
