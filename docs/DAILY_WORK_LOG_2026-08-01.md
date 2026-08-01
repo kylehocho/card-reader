@@ -28,10 +28,10 @@ Signed-in onboarding and Plaid sync remain the top priority, but live write-path
 
 ## Production Smoke Result
 - The default onboarding smoke command hung locally before producing output; the prior documented `SMOKE_TIMEOUT_MS=5000` run completed cleanly.
-- Deployed commit `55db718` to Vercel production.
-- Deployment URL: `https://card-reader-jz6pqkg8x-kylehocho-5599s-projects.vercel.app`
+- Deployed final `main` state through commit `5961624` to Vercel production.
+- Deployment URL: `https://card-reader-iw5agrwef-kylehocho-5599s-projects.vercel.app`
 - Production alias: `https://card-reader-xi.vercel.app`
-- Deployment id: `dpl_Ebiyfpgkga69r6w7oQrPtb3r1VD5`
+- Deployment id: `dpl_4MvMSj6i9Yy8PgCdXuEAqRaPwmcX`
 - Homepage smoke returned HTTP 200.
 - Direct production check confirmed `/evidence/onboarding?state=manual-card` returns HTTP 200.
 - `SMOKE_TIMEOUT_MS=5000 npm run smoke:onboarding` passed against the production alias after deploy and checked signed-in manual-card entry, post-Plaid product matching, both Plaid recovery states, and selection outcomes.
