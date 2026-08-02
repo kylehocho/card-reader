@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -15,7 +15,7 @@ Last updated: 2026-08-01
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
 - `usePlaidWalletCards.ts` owns Plaid connected-account projection into wallet card view models plus the anonymous/local Plaid fallback cache. It keeps credit-card-first display filtering, matched-product labels, currency formatting, recent transaction previews, and storage sanitization testable without rendering the wallet shell.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
-- `useDemoWalletCards.ts` owns the anonymous manual-card demo projection used when the app is running without a signed-in user-backed wallet. It turns the Add Card draft into a deterministic wallet card while the signed-in manual-card path remains in `usePlaidWalletActions.ts`.
+- `useDemoWalletCards.ts` owns the anonymous manual-card demo projection and append result used when the app is running without a signed-in user-backed wallet. It turns the Add Card draft into a deterministic wallet card and returns the appended card list plus selected wallet-card id while the signed-in manual-card path remains in `usePlaidWalletActions.ts`.
 - `useWalletAccessGates.ts` owns the shared protected-destination gate for Add Card, Connected Accounts, and Profile. It routes anonymous/loading auth states to auth entry, profile-incomplete authenticated users to profile setup, and ready users to the requested wallet workflow after common menu/selection cleanup.
 - `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
@@ -184,15 +184,17 @@ The pure helpers exported by the add-card boundary keep behavior testable withou
 ## Demo Wallet Card Contract
 The demo-card helper accepts:
 - the current anonymous manual-card draft;
-- a caller-owned sequence number.
+- a caller-owned sequence number;
+- the current wallet card list when the caller needs the append result.
 
 It returns:
 - a `custom-${sequence}` wallet card id;
 - the draft issuer, name, last four, and business flag;
 - the same placeholder rewards, setup transaction, starter benefit, and post-setup copy previously constructed inline;
 - sequence-scoped child ids for the custom multiplier, setup transaction, and starter benefit.
+- the appended wallet-card list and selected wallet-card id through `appendDemoWalletCard()`.
 
-This boundary is intentionally presentation-only. It does not save signed-in manual cards, touch Supabase, open Plaid Link, or decide navigation outcomes.
+This boundary is intentionally presentation-only. It does not save signed-in manual cards, touch Supabase, open Plaid Link, or run the success-close navigation transition. `WalletPrototype.tsx` still owns the signed-in versus anonymous branch and calls the success transition after selecting the returned demo-card id.
 
 ## Wallet Access Gate Contract
 The access gate hook accepts:

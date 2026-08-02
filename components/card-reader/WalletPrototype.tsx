@@ -12,7 +12,7 @@ import {
 } from '@/components/card-reader/usePersistedPlaidData';
 import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletActions';
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
-import { buildDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
+import { appendDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
 import {
   buildPlaidWalletCard,
@@ -1084,12 +1084,13 @@ export default function WalletPrototype() {
       return;
     }
 
-    const newCard: Card = buildDemoWalletCard({
+    const result = appendDemoWalletCard<Card>({
+      cards,
       draftCard,
       sequence: ++customCardIdRef.current,
     });
-    setCards((prev) => [...prev, newCard]);
-    selectWalletCard(newCard.id);
+    setCards(result.cards);
+    selectWalletCard(result.selectedId);
     showSuccessThenClose(() => {
       setScreen('wallet');
     });

@@ -2,6 +2,10 @@
 
 import type { ManualCardDraft } from '@/components/card-reader/useAddCardPresentation';
 
+type DemoWalletCardLike = {
+  id: string;
+};
+
 export function buildDemoWalletCard({
   draftCard,
   sequence,
@@ -43,5 +47,23 @@ export function buildDemoWalletCard({
     transactions: [{ id: `custom-${sequence}-setup`, merchant: 'Awaiting connection', amount: '--', date: 'Now', category: 'Setup' }],
     benefits: [{ id: `custom-${sequence}-benefit`, title: 'Starter perk slot', status: 'available' as const, detail: 'Add real benefits in a later build', progress: 0 }],
     isBusiness: draftCard.isBusiness,
+  };
+}
+
+export function appendDemoWalletCard<Card extends DemoWalletCardLike>({
+  cards,
+  draftCard,
+  sequence,
+}: {
+  cards: Card[];
+  draftCard: ManualCardDraft;
+  sequence: number;
+}) {
+  const card = buildDemoWalletCard({ draftCard, sequence });
+
+  return {
+    card,
+    cards: [...cards, card],
+    selectedId: card.id,
   };
 }
