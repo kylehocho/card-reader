@@ -14,6 +14,7 @@ import { usePlaidWalletActions } from '@/components/card-reader/usePlaidWalletAc
 import { useAddCardPresentation } from '@/components/card-reader/useAddCardPresentation';
 import { appendDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
+import { useWalletAnalysis } from '@/components/card-reader/useWalletAnalysis';
 import {
   buildPlaidWalletCard,
   clearStoredPlaidConnection,
@@ -27,7 +28,6 @@ import { useWalletNavigation, useWalletSelectionOutcomes, walletPages, type Scre
 import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
-import type { WalletAnalysis } from '@/lib/benefits/types';
 import {
   alertFromAnalysis,
   benefitFromTracker,
@@ -93,11 +93,6 @@ type ConciergeAccess = {
 type TransactionRecommendation = TransactionRecommendationView;
 
 type WelcomeBonus = WelcomeBonusView;
-
-type WalletAnalysisResponse = {
-  analysis?: WalletAnalysis;
-  error?: string;
-};
 
 type Card = {
   id: string;
@@ -764,9 +759,6 @@ export default function WalletPrototype() {
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<CategoryKey>('groceries');
 
   const [plaidAccounts, setPlaidAccounts] = useState<PlaidConnectedAccount[]>(() => initialPlaidConnection?.accounts ?? []);
-  const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
-  const [walletAnalysisStatus, setWalletAnalysisStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const [walletAnalysisError, setWalletAnalysisError] = useState<string | null>(null);
   const customCardIdRef = useRef(0);
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -813,42 +805,13 @@ export default function WalletPrototype() {
     });
   }, [authStatus, profileStatus, usesSupabase]);
 
-  const loadWalletAnalysis = useCallback(async () => {
-    if (!usesSupabase || authStatus !== 'authenticated' || profileStatus !== 'ready') {
-      setWalletAnalysis(null);
-      setWalletAnalysisStatus('idle');
-      setWalletAnalysisError(null);
-      return;
-    }
-
-    const supabase = getBrowserSupabaseClient();
-    if (!supabase) return;
-
-    setWalletAnalysisStatus('loading');
-    setWalletAnalysisError(null);
-
-    try {
-      const { data } = await supabase.auth.getSession();
-      const accessToken = data.session?.access_token;
-      if (!accessToken) throw new Error('Sign in again to refresh wallet analysis.');
-
-      const response = await fetch('/api/wallet/analysis', {
-        headers: { Authorization: 'Bearer ' + accessToken },
-      });
-      const payload = (await response.json()) as WalletAnalysisResponse;
-
-      if (!response.ok || !payload.analysis) {
-        throw new Error(payload.error ?? 'Unable to load wallet analysis.');
-      }
-
-      setWalletAnalysis(payload.analysis);
-      setWalletAnalysisStatus('ready');
-    } catch (error) {
-      setWalletAnalysis(null);
-      setWalletAnalysisStatus('error');
-      setWalletAnalysisError(error instanceof Error ? error.message : 'Unable to load wallet analysis.');
-    }
-  }, [authStatus, profileStatus, usesSupabase]);
+  const {
+    walletAnalysis,
+    walletAnalysisStatus,
+    walletAnalysisError,
+    loadWalletAnalysis,
+    resetWalletAnalysis,
+  } = useWalletAnalysis({ usesSupabase, authStatus, profileStatus });
 
   const {
     cardProducts,
@@ -941,14 +904,6 @@ export default function WalletPrototype() {
     onCardMatchSaved: handleCardMatchSaved,
     onConnectedAccountRemoved: handleConnectedAccountRemoved,
   });
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void loadWalletAnalysis();
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [loadWalletAnalysis]);
 
   const {
     featuredMerchant,
@@ -1069,9 +1024,7 @@ export default function WalletPrototype() {
     setPlaidAccounts([]);
     setPendingLinkedAccounts([]);
     setPlaidTransactions([]);
-    setWalletAnalysis(null);
-    setWalletAnalysisStatus('idle');
-    setWalletAnalysisError(null);
+    resetWalletAnalysis();
     setPlaidStatus('idle');
     setPlaidError(null);
     setShowProfileMenu(false);

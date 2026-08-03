@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -14,6 +14,7 @@ Last updated: 2026-08-02
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
 - `usePlaidWalletCards.ts` owns Plaid connected-account projection into wallet card view models plus the anonymous/local Plaid fallback cache. It keeps credit-card-first display filtering, matched-product labels, currency formatting, recent transaction previews, and storage sanitization testable without rendering the wallet shell.
+- `useWalletAnalysis.ts` owns signed-in wallet-analysis loading. It keeps the Supabase/auth/profile-ready gate, status/error state, session-token lookup, `/api/wallet/analysis` fetch, deferred initial refresh, and reset cleanup outside the wallet shell while `WalletPrototype.tsx` still projects the analysis response into the current wallet UI sections.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
 - `useDemoWalletCards.ts` owns the anonymous manual-card demo projection and append result used when the app is running without a signed-in user-backed wallet. It turns the Add Card draft into a deterministic wallet card and returns the appended card list plus selected wallet-card id while the signed-in manual-card path remains in `usePlaidWalletActions.ts`.
 - `useWalletAccessGates.ts` owns the shared protected-destination gate for Add Card, Connected Accounts, and Profile. It routes anonymous/loading auth states to auth entry, profile-incomplete authenticated users to profile setup, and ready users to the requested wallet workflow after common menu/selection cleanup.
@@ -155,6 +156,27 @@ The pure helpers exported by `usePlaidWalletCards.ts` keep linked-account displa
 - `readStoredPlaidConnection()`, `writeStoredPlaidConnection()`, and `clearStoredPlaidConnection()` isolate the local fallback cache and sanitize malformed stored account payloads.
 
 This boundary does not call Supabase, open Plaid Link, sync transactions, save card matches, or decide navigation after mutations. Those responsibilities remain in `usePersistedPlaidData.ts`, `usePlaidWalletActions.ts`, and `useWalletSelectionOutcomes()`.
+
+## Wallet Analysis Load Contract
+The wallet-analysis hook accepts:
+- whether the app has a browser Supabase client;
+- the current auth status;
+- the current profile setup status.
+
+It owns:
+- deciding whether wallet analysis should load;
+- clearing analysis state when the wallet is anonymous, loading, local-only, or profile-incomplete;
+- retrieving the current Supabase session access token;
+- calling authenticated `GET /api/wallet/analysis`;
+- exposing `idle`, `loading`, `ready`, and `error` states;
+- preserving the existing deferred initial load through a zero-delay browser timeout;
+- resetting analysis state during sign-out cleanup.
+
+The pure helpers exported by `useWalletAnalysis.ts` keep the load gate and error fallback testable without rendering the full wallet shell:
+- `shouldLoadWalletAnalysis()` only allows Supabase-backed authenticated ready profiles.
+- `walletAnalysisErrorMessage()` preserves thrown `Error` messages and keeps unknown failures user-safe.
+
+This boundary does not decide which card is selected, how trackers are rendered, or how missed-value recommendations are chosen. `WalletPrototype.tsx` still projects the returned analysis into displayed benefits, welcome bonuses, alerts, and transaction recommendation rows.
 
 ## Add-Card Presentation Contract
 The add-card presentation hook owns:
