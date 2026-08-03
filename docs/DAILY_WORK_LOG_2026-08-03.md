@@ -27,6 +27,12 @@ Onboarding and Plaid sync remain the highest product priority, but the live sign
 - `npm run smoke:signed-in-preflight` *(still blocked at the known stale local Supabase service-role credential)*
 
 ## Production Smoke Result
+- Deployed final `main` state through commit `bf2383a` to Vercel production.
+- Deployment URL: `https://card-reader-2hejgozs1-kylehocho-5599s-projects.vercel.app`
+- Production alias: `https://card-reader-xi.vercel.app`
+- Deployment id: `dpl_7tbYmSEFMaumhjZrp9QsxNQpv6Ry`
+- Homepage smoke returned HTTP 200.
+- Direct production check confirmed `/evidence/onboarding?state=manual-card` returns HTTP 200.
 - The production onboarding contract smoke passed against `https://card-reader-xi.vercel.app`.
 - Checked signed-in manual-card entry, post-Plaid product matching, Plaid no-credit-card recovery, Plaid duplicate-card recovery, and signed-in selection outcomes.
 - The signed-in preflight still fails at `supabaseAdmin` with `401 Invalid API key`, confirming the same local service-role blocker before write-path smokes.
