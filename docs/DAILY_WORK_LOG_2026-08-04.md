@@ -28,9 +28,7 @@ Onboarding and Plaid sync remain the top priority, but the live signed-in write-
 
 ## Production Smoke Result
 - Deployed final `main` state to Vercel production.
-- Deployment URL: `https://card-reader-clawo0n28-kylehocho-5599s-projects.vercel.app`
 - Production alias: `https://card-reader-xi.vercel.app`
-- Deployment id: `dpl_H1MwSLf1WcbPNg6y27ZfC6cB8epG`
 - Homepage smoke returned HTTP 200.
 - Direct production check confirmed `/evidence/onboarding?state=manual-card` returns HTTP 200.
 - The production onboarding contract smoke passed against `https://card-reader-xi.vercel.app`.
