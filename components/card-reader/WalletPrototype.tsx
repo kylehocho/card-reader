@@ -3,7 +3,7 @@
 import { useAuth } from '@/components/auth/AuthProvider';
 import AddCardSheet from '@/components/card-reader/AddCardSheet';
 import ConnectedAccountsScreen from '@/components/card-reader/ConnectedAccountsScreen';
-import { dedupeTransactionRecommendations, deriveLocalTransactionRecommendations, readableRewardCategory } from '@/components/card-reader/transactionRecommendations';
+import { readableRewardCategory } from '@/components/card-reader/transactionRecommendations';
 import UseNowScreen from '@/components/card-reader/UseNowScreen';
 import type { PlaidConnectedAccount, Transaction } from '@/components/card-reader/types';
 import { usePlaidAccountMatching } from '@/components/card-reader/usePlaidAccountMatching';
@@ -15,6 +15,7 @@ import { useAddCardPresentation } from '@/components/card-reader/useAddCardPrese
 import { appendDemoWalletCard } from '@/components/card-reader/useDemoWalletCards';
 import { useMerchantRecommendation, type MerchantResult } from '@/components/card-reader/useMerchantRecommendation';
 import { useWalletAnalysis } from '@/components/card-reader/useWalletAnalysis';
+import { useWalletAnalysisViews } from '@/components/card-reader/useWalletAnalysisViews';
 import {
   buildPlaidWalletCard,
   clearStoredPlaidConnection,
@@ -29,12 +30,7 @@ import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
 import {
-  alertFromAnalysis,
-  benefitFromTracker,
-  recommendationFromAnalysis,
-  welcomeBonusFromTracker,
   type BenefitView,
-  type TransactionRecommendationView,
   type WelcomeBonusView,
 } from '@/lib/benefits/wallet-analysis-view';
 import { useNowDemoMerchantNames } from '@/lib/recommendation/use-now-demo-merchants';
@@ -89,8 +85,6 @@ type ConciergeAccess = {
   detail: string;
   channel: string;
 };
-
-type TransactionRecommendation = TransactionRecommendationView;
 
 type WelcomeBonus = WelcomeBonusView;
 
@@ -924,26 +918,23 @@ export default function WalletPrototype() {
     () => plaidAccounts.find((account) => `plaid-${account.accountId}` === selectedId) ?? null,
     [plaidAccounts, selectedId],
   );
-  const selectedAnalysisTrackers = useMemo(
-    () => (selectedPlaidAccount?.cardProductId ? (walletAnalysis?.trackers ?? []).filter((tracker) => tracker.cardProductId === selectedPlaidAccount.cardProductId) : []),
-    [selectedPlaidAccount, walletAnalysis],
-  );
-  const welcomeBonuses = useMemo(() => {
-    if (!isUserBackedWallet) return seedWelcomeBonuses;
-    if (walletAnalysis) return walletAnalysis.welcomeBonuses.map(welcomeBonusFromTracker);
-
-    const linkedCardProductIds = new Set(plaidAccounts.map((account) => account.cardProductId).filter(Boolean));
-    return seedWelcomeBonuses.filter((bonus) => linkedCardProductIds.has(bonus.cardProductId));
-  }, [isUserBackedWallet, plaidAccounts, walletAnalysis]);
-  const displayedBenefits = useMemo(
-    () => (isUserBackedWallet && selectedAnalysisTrackers.length > 0 ? selectedAnalysisTrackers.map(benefitFromTracker) : selectedCard.benefits),
-    [isUserBackedWallet, selectedAnalysisTrackers, selectedCard.benefits],
-  );
-  const visibleNotifications = useMemo<NotificationItem[]>(() => {
-    if (!isUserBackedWallet) return notifications;
-
-    return (walletAnalysis?.alerts ?? []).map(alertFromAnalysis);
-  }, [isUserBackedWallet, notifications, walletAnalysis]);
+  const {
+    displayedBenefits,
+    expiringValueRecommendations,
+    featuredTransactionRecommendation,
+    visibleNotifications,
+    welcomeBonuses,
+  } = useWalletAnalysisViews({
+    isUserBackedWallet,
+    selectedCardBenefits: selectedCard.benefits,
+    selectedPlaidAccount,
+    walletAnalysis,
+    plaidAccounts,
+    plaidTransactions,
+    cardProducts,
+    fallbackWelcomeBonuses: seedWelcomeBonuses,
+    fallbackNotifications: notifications,
+  });
   const filteredRecommendations = useMemo<RecommendationItem[]>(() => [], []);
   const selectedRecommendation = useMemo(
     () => filteredRecommendations.find((r) => r.id === selectedRecommendationId) ?? filteredRecommendations[0],
@@ -956,17 +947,7 @@ export default function WalletPrototype() {
     [cardProducts, effectiveManualCardProductId],
   );
 
-  const analysisTransactionRecommendations = useMemo(
-    () => (walletAnalysis?.recommendations ?? []).map(recommendationFromAnalysis),
-    [walletAnalysis],
-  );
-  const localTransactionRecommendations = useMemo<TransactionRecommendation[]>(() => {
-    return deriveLocalTransactionRecommendations({ plaidTransactions, cardProducts, plaidAccounts });
-  }, [cardProducts, plaidAccounts, plaidTransactions]);
-  const transactionRecommendations = walletAnalysis ? analysisTransactionRecommendations : localTransactionRecommendations;
-  const expiringValueRecommendations = useMemo(() => dedupeTransactionRecommendations(transactionRecommendations).slice(0, 4), [transactionRecommendations]);
   const expiringValueAlerts = useMemo(() => dedupeNotifications(visibleNotifications).slice(0, 4), [visibleNotifications]);
-  const featuredTransactionRecommendation = transactionRecommendations[0] ?? null;
   const selectedCategoryGuide = useMemo(
     () => categoryGuides.find((guide) => guide.key === selectedCategoryKey) ?? categoryGuides[0],
     [selectedCategoryKey],
