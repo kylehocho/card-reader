@@ -4,8 +4,10 @@ import {
   buildPlaidWalletCard,
   clearStoredPlaidConnection,
   getWalletDisplayAccounts,
+  mergePlaidWalletCards,
   PLAID_STORAGE_KEY,
   readStoredPlaidConnection,
+  selectPlaidWalletAccount,
   writeStoredPlaidConnection,
 } from './usePlaidWalletCards';
 import type { PlaidConnectedAccount } from './types';
@@ -81,6 +83,39 @@ describe('Plaid wallet card helpers', () => {
       alerts: ['Sandbox connection active', 'Matched to Gold Card'],
     });
     expect(card.transactions).toEqual([{ id: 't1', merchant: 'Whole Foods', amount: '$42.00', date: 'Today', category: 'Groceries' }]);
+  });
+
+  it('resolves the Plaid account for a selected wallet card id', () => {
+    expect(selectPlaidWalletAccount([checkingAccount, creditAccount], 'plaid-credit-1')).toBe(creditAccount);
+    expect(selectPlaidWalletAccount([checkingAccount, creditAccount], 'amex-gold')).toBeNull();
+  });
+
+  it('replaces seed cards with Plaid wallet cards for user-backed wallets', () => {
+    const result = mergePlaidWalletCards({
+      accounts: [checkingAccount, creditAccount],
+      buildWalletCard: (account) => ({ id: `plaid-${account.accountId}`, label: account.name }),
+      currentCards: [{ id: 'amex-gold', label: 'Gold Card' }],
+      isUserBackedWallet: true,
+    });
+
+    expect(result).toEqual([{ id: 'plaid-credit-1', label: 'Plaid Credit' }]);
+  });
+
+  it('keeps existing non-Plaid cards when anonymous Plaid fallback accounts are merged', () => {
+    const result = mergePlaidWalletCards({
+      accounts: [checkingAccount],
+      buildWalletCard: (account) => ({ id: `plaid-${account.accountId}`, label: account.name }),
+      currentCards: [
+        { id: 'amex-gold', label: 'Gold Card' },
+        { id: 'plaid-old-account', label: 'Old account' },
+      ],
+      isUserBackedWallet: false,
+    });
+
+    expect(result).toEqual([
+      { id: 'amex-gold', label: 'Gold Card' },
+      { id: 'plaid-checking-1', label: 'Everyday Checking' },
+    ]);
   });
 
   it('sanitizes stored Plaid connections and removes bad payloads', () => {

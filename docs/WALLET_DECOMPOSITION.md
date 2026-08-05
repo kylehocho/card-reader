@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-08-04
+Last updated: 2026-08-05
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -14,6 +14,7 @@ Last updated: 2026-08-04
 - `usePersistedPlaidData.ts` owns signed-in Supabase hydration for card products, persisted Plaid credit-card accounts, recent transaction rows, and the row-to-view-model projection used by the wallet. It returns the same state and refresh callback the action hook consumes, so Plaid Link, manual card add, transaction sync, match persistence, and removal flows continue to call one reload path.
 - `usePlaidWalletActions.ts` owns the signed-in Plaid/manual-card mutation workflows: manual card saves, Plaid Link token creation/exchange, pending linked accounts, card-match save state, connected-account removal, and transaction sync status. The hook calls authenticated app routes for manual-card save, card-match save, account removal, and transaction sync, then takes parent callbacks for wallet card projection and post-mutation UI outcomes so persistence and navigation remain separated.
 - `usePlaidWalletCards.ts` owns Plaid connected-account projection into wallet card view models plus the anonymous/local Plaid fallback cache. It keeps credit-card-first display filtering, matched-product labels, currency formatting, recent transaction previews, and storage sanitization testable without rendering the wallet shell.
+- `usePlaidWalletCards.ts` also owns the Plaid wallet-card sync policy used by the shell. Signed-in/user-backed wallets replace seed cards with linked Plaid cards, while anonymous/local wallets keep non-Plaid seed/demo cards and replace only stale Plaid fallback cards.
 - `useWalletAnalysis.ts` owns signed-in wallet-analysis loading. It keeps the Supabase/auth/profile-ready gate, status/error state, session-token lookup, `/api/wallet/analysis` fetch, deferred initial refresh, and reset cleanup outside the wallet shell.
 - `useWalletAnalysisViews.ts` owns wallet-analysis view projection. It keeps selected tracker filtering, signed-in versus anonymous welcome bonus selection, selected-card benefit projection, analysis alert projection, API-backed missed-value recommendation mapping, local fallback recommendation derivation, de-duplication, and featured recommendation selection testable without rendering the wallet shell.
 - `useAddCardPresentation.ts` owns the add-card sheet presentation state: sheet visibility, current scan/manual/Plaid/match/success step, manual card draft values, manual card-product selector state, last-four sanitization, and the shared success-then-close transition. Persistence, wallet card creation, Plaid Link, and navigation callbacks stay in `WalletPrototype.tsx` and `usePlaidWalletActions.ts`.
@@ -154,6 +155,8 @@ It owns:
 The pure helpers exported by `usePlaidWalletCards.ts` keep linked-account display behavior testable without rendering the full wallet:
 - `getWalletDisplayAccounts()` enforces the credit-first display rule.
 - `buildPlaidWalletCard()` preserves the existing wallet card copy, balance formatting, matched/unmatched labels, and setup benefit metadata.
+- `mergePlaidWalletCards()` applies the signed-in versus anonymous merge policy for refreshed Plaid account state.
+- `selectPlaidWalletAccount()` resolves a selected `plaid-${accountId}` wallet card id back to its connected-account row.
 - `readStoredPlaidConnection()`, `writeStoredPlaidConnection()`, and `clearStoredPlaidConnection()` isolate the local fallback cache and sanitize malformed stored account payloads.
 
 This boundary does not call Supabase, open Plaid Link, sync transactions, save card matches, or decide navigation after mutations. Those responsibilities remain in `usePersistedPlaidData.ts`, `usePlaidWalletActions.ts`, and `useWalletSelectionOutcomes()`.

@@ -20,7 +20,9 @@ import {
   buildPlaidWalletCard,
   clearStoredPlaidConnection,
   getWalletDisplayAccounts,
+  mergePlaidWalletCards,
   readStoredPlaidConnection,
+  selectPlaidWalletAccount,
   type StoredPlaidConnection,
   writeStoredPlaidConnection,
 } from '@/components/card-reader/usePlaidWalletCards';
@@ -789,14 +791,17 @@ export default function WalletPrototype() {
   }, [plaidAccounts, usesSupabase]);
 
   const syncPlaidAccountsToWallet = useCallback((accounts: PlaidConnectedAccount[]) => {
-    const accountsToAdd = getWalletDisplayAccounts(accounts);
     const isUserBackedWallet = usesSupabase && authStatus === 'authenticated' && profileStatus === 'ready';
 
     setPlaidAccounts(accounts);
-    setCards((currentCards) => {
-      const nonPlaidCards = currentCards.filter((card) => !card.id.startsWith('plaid-'));
-      return isUserBackedWallet ? accountsToAdd.map(buildPlaidWalletCard) : [...nonPlaidCards, ...accountsToAdd.map(buildPlaidWalletCard)];
-    });
+    setCards((currentCards) =>
+      mergePlaidWalletCards({
+        accounts,
+        buildWalletCard: buildPlaidWalletCard,
+        currentCards,
+        isUserBackedWallet,
+      }),
+    );
   }, [authStatus, profileStatus, usesSupabase]);
 
   const {
@@ -915,7 +920,7 @@ export default function WalletPrototype() {
     setWalletSelectionExpanded,
   });
   const selectedPlaidAccount = useMemo(
-    () => plaidAccounts.find((account) => `plaid-${account.accountId}` === selectedId) ?? null,
+    () => selectPlaidWalletAccount(plaidAccounts, selectedId),
     [plaidAccounts, selectedId],
   );
   const {

@@ -22,6 +22,29 @@ export function getWalletDisplayAccounts(accounts: PlaidConnectedAccount[]) {
   return creditAccounts.length > 0 ? creditAccounts : accounts.slice(0, 1);
 }
 
+export function selectPlaidWalletAccount(accounts: PlaidConnectedAccount[], walletCardId: string) {
+  return accounts.find((account) => `plaid-${account.accountId}` === walletCardId) ?? null;
+}
+
+export function mergePlaidWalletCards<TWalletCard extends { id: string }>({
+  accounts,
+  buildWalletCard,
+  currentCards,
+  isUserBackedWallet,
+}: {
+  accounts: PlaidConnectedAccount[];
+  buildWalletCard: (account: PlaidConnectedAccount) => TWalletCard;
+  currentCards: TWalletCard[];
+  isUserBackedWallet: boolean;
+}) {
+  const accountCards = getWalletDisplayAccounts(accounts).map(buildWalletCard);
+
+  if (isUserBackedWallet) return accountCards;
+
+  const nonPlaidCards = currentCards.filter((card) => !card.id.startsWith('plaid-'));
+  return [...nonPlaidCards, ...accountCards];
+}
+
 export function readStoredPlaidConnection(): StoredPlaidConnection | null {
   if (typeof window === 'undefined') return null;
 
