@@ -23,10 +23,17 @@ Onboarding and Plaid sync remain the top priority, but live signed-in write-path
 - `npm run lint`
 - `npm run test`
 - `npm run build`
+- `APP_BASE_URL=https://card-reader-xi.vercel.app SMOKE_TIMEOUT_MS=15000 npm run smoke:onboarding`
+- `npm run smoke:signed-in-preflight` *(still blocked at the known stale local Supabase service-role credential)*
 
 ## Production Smoke Result
-- Production deploy pending after commit/push.
-- No API contract or route behavior changed in this slice.
+- Deployed final `main` state to Vercel production.
+- Production alias: `https://card-reader-xi.vercel.app`
+- Deployment URL: `https://card-reader-pkq6egugr-kylehocho-5599s-projects.vercel.app`
+- Homepage smoke returned HTTP 200.
+- Direct production check confirmed `/evidence/onboarding?state=manual-card` returns HTTP 200.
+- The production onboarding contract smoke passed against `https://card-reader-xi.vercel.app`.
+- The signed-in preflight still fails at `supabaseAdmin` with `401 Invalid API key`, confirming the same local service-role blocker before write-path smokes.
 
 ## Risks
 - Notification settings still reset on remount/sign-out because there is no persisted profile-preferences API yet.
