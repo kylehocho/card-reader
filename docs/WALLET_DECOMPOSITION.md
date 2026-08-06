@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-08-05
+Last updated: 2026-08-06
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -22,6 +22,7 @@ Last updated: 2026-08-05
 - `useWalletAccessGates.ts` owns the shared protected-destination gate for Add Card, Connected Accounts, and Profile. It routes anonymous/loading auth states to auth entry, profile-incomplete authenticated users to profile setup, and ready users to the requested wallet workflow after common menu/selection cleanup.
 - `AddCardSheet.tsx` renders the add-card modal for Plaid connect, post-Plaid matching, anonymous mock scan, and manual card entry. `WalletPrototype.tsx` now passes state and callbacks into the sheet instead of owning the full modal JSX, while still owning anonymous demo-card creation, signed-in manual-card persistence, Plaid Link wiring, and navigation outcomes.
 - `ProfileAccessBoundary.tsx` renders the profile entry, email verification, and profile setup overlays as one access boundary. `WalletPrototype.tsx` still owns auth/profile state and sign-in callbacks, but no longer composes each auth sheet inline.
+- `NotificationSettingsScreen.tsx` renders the profile notification preferences page. `useNotificationSettings.ts` owns the default settings, display row order, and toggle reducer while `WalletPrototype.tsx` only routes into and out of the screen.
 - `/evidence/onboarding` renders deterministic Add Card, profile/auth, and signed-in wallet selection outcome fixture states for visual baseline captures. `npm run smoke:onboarding` runs Chrome against the signed-in fixture states and asserts the rendered manual-card, Plaid-match, and selection-outcome contracts. The current evidence matrix is documented in `docs/ONBOARDING_UI_EVIDENCE.md`.
 - `useWalletNavigation.ts` owns the top-level wallet navigation state that is independent from persistence: selected card id, current screen, wallet page index, stack expansion, selected-card fallback, page shifting, reset-to-wallet behavior, the non-selected card stack plus add-card action, and selected-card outcomes after Plaid/manual-card mutations.
 - `transactionRecommendations.ts` owns the local fallback selector for missed-value transaction recommendations. `WalletPrototype.tsx` still chooses between API-backed wallet analysis and the local fallback, but category inference, reward multiplier lookup, best-card comparison, recommendation formatting, and recommendation de-duplication are now testable without rendering the full wallet shell.
@@ -279,6 +280,23 @@ The pure helpers exported by `ProfileAccessBoundary.tsx` keep the small auth rou
 - `emailAuthMode()` maps the current auth flow to the email sheet's email/verify mode.
 - `emailAuthBackFlow()` keeps email back navigation returning from verification to email entry, and from email entry to the profile entry sheet.
 
+## Notification Settings Contract
+The notification settings boundary accepts:
+- a parent-owned back callback for returning to the wallet/profile flow.
+
+It owns:
+- rendering the profile Notifications screen with the existing iOS-style toggle rows;
+- the default prototype notification preferences;
+- the row display order for notification preferences;
+- toggling a single preference without mutating unrelated preferences.
+
+The pure helpers exported by `useNotificationSettings.ts` keep the behavior testable without rendering the wallet shell:
+- `defaultNotificationSettings` preserves the current prototype defaults: global notifications, payment due, and benefit-expiring alerts on; spend milestones off.
+- `notificationSettingRows` keeps the four visible rows in stable display order.
+- `toggleNotificationSetting()` flips one setting and returns a new settings object.
+
+This boundary is still local UI state only. It does not persist notification preferences to Supabase, request browser push permissions, or send alerts.
+
 ## Account Matching Contract
 The shared matching UI accepts:
 - a `PlaidConnectedAccount` view model;
@@ -307,6 +325,7 @@ The shared matching UI accepts:
 - Manual card last-four input strips non-digits and caps at four characters before the draft reaches either the anonymous demo-card creator or the signed-in manual-card API path.
 - Anonymous demo-card projection uses sequence-scoped child ids, preventing duplicate multiplier, transaction, and starter-benefit ids when multiple custom demo cards are added in one session.
 - Protected wallet destinations share one auth/profile gate, preventing Add Card, Connected Accounts, and Profile from drifting into different entry/setup behavior.
+- Notification settings are local prototype state and reset on remount/sign-out until a future persisted profile-preferences API exists.
 - Anonymous Plaid fallback storage is cleared whenever Supabase is configured, preventing a signed-in/user-backed wallet from inheriting stale local connected-account cards.
 - Plaid wallet display continues to prefer credit-card accounts but still shows one fallback account in anonymous/local mode when no credit account exists.
 - Malformed local Plaid storage payloads are ignored instead of crashing wallet initialization.
@@ -345,6 +364,7 @@ The shared matching UI accepts:
 - `npm test -- components/card-reader/usePersistedPlaidData.test.ts`
 - `npx vitest run components/card-reader/useWalletAnalysis.test.ts`
 - `npx vitest run components/card-reader/useWalletAnalysisViews.test.ts`
+- `npx vitest run components/profile/useNotificationSettings.test.ts`
 - `npm run lint`
 - `npm test`
 - `npm run build`

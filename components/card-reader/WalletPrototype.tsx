@@ -28,6 +28,7 @@ import {
 } from '@/components/card-reader/usePlaidWalletCards';
 import { useWalletAccessGates, type WalletProtectedDestination } from '@/components/card-reader/useWalletAccessGates';
 import { useWalletNavigation, useWalletSelectionOutcomes, walletPages, type Screen } from '@/components/card-reader/useWalletNavigation';
+import NotificationSettingsScreen from '@/components/profile/NotificationSettingsScreen';
 import ProfileAccessBoundary from '@/components/profile/ProfileAccessBoundary';
 import ProfileHome from '@/components/profile/ProfileHome';
 import ProfileMenu from '@/components/profile/ProfileMenu';
@@ -756,13 +757,6 @@ export default function WalletPrototype() {
 
   const [plaidAccounts, setPlaidAccounts] = useState<PlaidConnectedAccount[]>(() => initialPlaidConnection?.accounts ?? []);
   const customCardIdRef = useRef(0);
-
-  const [notificationSettings, setNotificationSettings] = useState({
-    allowNotifications: true,
-    paymentDue: true,
-    benefitExpiring: true,
-    spendMilestones: false,
-  });
 
   const {
     closeAddCardSheet,
@@ -1882,50 +1876,7 @@ export default function WalletPrototype() {
           )}
 
           {screen === 'notifications' && (
-            <section className="space-y-3" style={appleInfoFontStyle}>
-              <div className="mb-1 flex items-center justify-between px-1">
-                <button
-                  type="button"
-                  onClick={() => setScreen('wallet')}
-                  className="rounded-full bg-[#2c2c2e] px-3 py-1.5 text-sm font-medium text-white/88"
-                >
-                  Back
-                </button>
-                <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-white">Notifications</h2>
-                <div className="w-[56px]" />
-              </div>
-
-              <div className="overflow-hidden rounded-[26px] border border-white/12 bg-[rgba(118,118,128,0.24)] shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl">
-                {[
-                  ['Allow Notifications', 'allowNotifications'],
-                  ['Notify Me When Payment Is Due', 'paymentDue'],
-                  ['Benefit Expiring', 'benefitExpiring'],
-                  ['Spend Milestones', 'spendMilestones'],
-                ].map(([label, key], index, arr) => (
-                  <div key={key}>
-                    <div className="flex items-center justify-between px-4 py-3.5">
-                      <p className="text-[16px] tracking-[-0.01em] text-white">{label}</p>
-                      <button
-                        type="button"
-                        aria-pressed={notificationSettings[key as keyof typeof notificationSettings]}
-                        onClick={() =>
-                          setNotificationSettings((prev) => ({
-                            ...prev,
-                            [key]: !prev[key as keyof typeof prev],
-                          }))
-                        }
-                        className={`relative h-8 w-13 rounded-full p-1 transition ${notificationSettings[key as keyof typeof notificationSettings] ? 'bg-[#34c759]' : 'bg-white/15'}`}
-                      >
-                        <span
-                          className={`block h-6 w-6 rounded-full bg-white shadow transition ${notificationSettings[key as keyof typeof notificationSettings] ? 'translate-x-5' : 'translate-x-0'}`}
-                        />
-                      </button>
-                    </div>
-                    {index < arr.length - 1 && <div className="mx-4 h-px bg-white/12" />}
-                  </div>
-                ))}
-              </div>
-            </section>
+            <NotificationSettingsScreen onBack={() => setScreen('wallet')} />
           )}
 
           {screen === 'opportunities' && (
