@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-08-06
+Last updated: 2026-08-07
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -8,6 +8,7 @@ Last updated: 2026-08-06
 ## Current Boundaries
 - `UseNowScreen.tsx` renders the in-app merchant recommendation surface. `useMerchantRecommendation.ts` owns route parsing, demo merchant selection, `/api/recommend-card` loading state, live result projection, seeded fallback filtering, and full-screen Use Now deep-link URL updates.
 - `ConnectedAccountsScreen.tsx` renders the signed-in account-management page. Plaid transaction sync, match persistence, and account removal now route through `usePlaidWalletActions.ts`; selected-card outcomes from those mutations route through `useWalletSelectionOutcomes()`.
+- `ConnectedAccountRemovalSheet.tsx` renders the connected-account removal confirmation dialog. `WalletPrototype.tsx` now passes the pending account, removing state, cancel callback, and removal callback into the sheet while `usePlaidWalletActions.ts` keeps the destructive mutation and account-pending-removal state.
 - `AccountMatchSuggestionCard.tsx` renders suggested card-product matches and exports shared match-state labels/tones. It is used by both Connected Accounts and the post-Plaid onboarding match step.
 - `PendingPlaidMatchCard.tsx` renders each newly linked Plaid account during onboarding, including the account summary, shared suggestion card, card-product selector, save status, and helper text. `WalletPrototype.tsx` still owns the pending account list, card products, suggestion map, and `updateCardMatch()` persistence path.
 - `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
@@ -326,6 +327,7 @@ The shared matching UI accepts:
 - Anonymous demo-card projection uses sequence-scoped child ids, preventing duplicate multiplier, transaction, and starter-benefit ids when multiple custom demo cards are added in one session.
 - Protected wallet destinations share one auth/profile gate, preventing Add Card, Connected Accounts, and Profile from drifting into different entry/setup behavior.
 - Notification settings are local prototype state and reset on remount/sign-out until a future persisted profile-preferences API exists.
+- Connected-account removal confirmation rendering is behavior-neutral: the extracted sheet keeps the same account/card-product title fallback, disabled removing state, and cancel/remove callbacks.
 - Anonymous Plaid fallback storage is cleared whenever Supabase is configured, preventing a signed-in/user-backed wallet from inheriting stale local connected-account cards.
 - Plaid wallet display continues to prefer credit-card accounts but still shows one fallback account in anonymous/local mode when no credit account exists.
 - Malformed local Plaid storage payloads are ignored instead of crashing wallet initialization.
@@ -365,6 +367,7 @@ The shared matching UI accepts:
 - `npx vitest run components/card-reader/useWalletAnalysis.test.ts`
 - `npx vitest run components/card-reader/useWalletAnalysisViews.test.ts`
 - `npx vitest run components/profile/useNotificationSettings.test.ts`
+- `npx vitest run components/card-reader/ConnectedAccountRemovalSheet.test.ts`
 - `npm run lint`
 - `npm test`
 - `npm run build`
