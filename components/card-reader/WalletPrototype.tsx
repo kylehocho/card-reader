@@ -7,6 +7,7 @@ import ConnectedAccountsScreen from '@/components/card-reader/ConnectedAccountsS
 import { readableRewardCategory } from '@/components/card-reader/transactionRecommendations';
 import UseNowScreen from '@/components/card-reader/UseNowScreen';
 import type { PlaidConnectedAccount, Transaction } from '@/components/card-reader/types';
+import WalletStack from '@/components/card-reader/WalletStack';
 import { usePlaidAccountMatching } from '@/components/card-reader/usePlaidAccountMatching';
 import {
   usePersistedPlaidData,
@@ -1547,56 +1548,13 @@ export default function WalletPrototype() {
               </div>
               )}
 
-              <div className="relative z-10 mt-3 pb-2 pt-0">
-                <div className={`relative overflow-hidden rounded-[30px] transition-all duration-300 ${walletSelectionExpanded ? 'h-[430px]' : 'h-[250px]'}`}>
-                  {walletStackItems.map((card, index) => {
-                    const isAddCard = card.id === 'add-card';
-                    const top = walletSelectionExpanded ? 12 + index * 62 : 18 + index * 18;
-                    const scale = walletSelectionExpanded ? 1 : 1 - index * 0.024;
-                    const opacity = walletSelectionExpanded ? 1 : 1 - index * 0.05;
-                    const zIndex = walletSelectionExpanded ? walletStackItems.length - index : 20 - index;
-                    const cardClassName = isAddCard
-                      ? 'absolute inset-x-0 rounded-[30px] border border-dashed border-white/18 bg-[#8d949f]/24 px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_30px_rgba(0,0,0,0.16)]'
-                      : `absolute inset-x-0 rounded-[30px] bg-gradient-to-br ${(card as Card).gradient} px-5 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.22)]`;
-                    return (
-                      <motion.button
-                        key={card.id}
-                        layout
-                        type="button"
-                        onClick={() => {
-                          if (!walletSelectionExpanded) {
-                            setWalletSelectionExpanded(true);
-                            return;
-                          }
-                          if (isAddCard) {
-                            openScanner();
-                            return;
-                          }
-                          selectCard(card.id);
-                        }}
-                        whileTap={{ scale: walletSelectionExpanded ? 0.988 : scale - 0.012 }}
-                        className={cardClassName}
-                        style={{ top, zIndex }}
-                        animate={{
-                          scale,
-                          opacity,
-                          y: walletSelectionExpanded ? 0 : index * 1.5,
-                        }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-                      >
-                        {!isAddCard && <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />}
-                        <div className={`relative flex items-start justify-between ${isAddCard ? 'text-white/92' : 'text-white'}`}>
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">{card.issuer}</p>
-                            <p className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-white">{card.name}</p>
-                          </div>
-                          <p className="mt-1 text-xs text-white/74">{isAddCard ? 'Scan or enter' : `•••• ${card.last4}`}</p>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
+              <WalletStack
+                isExpanded={walletSelectionExpanded}
+                items={walletStackItems}
+                onExpand={() => setWalletSelectionExpanded(true)}
+                onOpenAddCard={openScanner}
+                onSelectCard={selectCard}
+              />
 
               {plaidAccounts.length > 0 && (
                 <div className="relative z-10 mt-3">

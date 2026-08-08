@@ -1,6 +1,6 @@
 # Wallet Decomposition
 
-Last updated: 2026-08-07
+Last updated: 2026-08-08
 
 ## Intent
 `components/card-reader/WalletPrototype.tsx` still owns the main smart-wallet workflow, including auth-aware wallet state, Plaid Link, transaction sync, card matching, manual card entry, and Use Now recommendations. The decomposition path is to move stable presentation and view contracts into small components while keeping behavior in the parent until each workflow has enough tests and evidence to justify moving state.
@@ -9,6 +9,7 @@ Last updated: 2026-08-07
 - `UseNowScreen.tsx` renders the in-app merchant recommendation surface. `useMerchantRecommendation.ts` owns route parsing, demo merchant selection, `/api/recommend-card` loading state, live result projection, seeded fallback filtering, and full-screen Use Now deep-link URL updates.
 - `ConnectedAccountsScreen.tsx` renders the signed-in account-management page. Plaid transaction sync, match persistence, and account removal now route through `usePlaidWalletActions.ts`; selected-card outcomes from those mutations route through `useWalletSelectionOutcomes()`.
 - `ConnectedAccountRemovalSheet.tsx` renders the connected-account removal confirmation dialog. `WalletPrototype.tsx` now passes the pending account, removing state, cancel callback, and removal callback into the sheet while `usePlaidWalletActions.ts` keeps the destructive mutation and account-pending-removal state.
+- `WalletStack.tsx` renders the expandable wallet card stack and Add Card stack action. `WalletPrototype.tsx` now passes the stack items, expanded state, card-selection callback, and Add Card callback into the focused renderer while `useWalletNavigation.ts` keeps selected-card state, stack item construction, and empty-wallet Add Card fallback behavior.
 - `AccountMatchSuggestionCard.tsx` renders suggested card-product matches and exports shared match-state labels/tones. It is used by both Connected Accounts and the post-Plaid onboarding match step.
 - `PendingPlaidMatchCard.tsx` renders each newly linked Plaid account during onboarding, including the account summary, shared suggestion card, card-product selector, save status, and helper text. `WalletPrototype.tsx` still owns the pending account list, card products, suggestion map, and `updateCardMatch()` persistence path.
 - `usePlaidAccountMatching.ts` derives the Plaid account-to-card-product suggestion map used by both matching surfaces. `WalletPrototype.tsx` still owns account state and match persistence, but no longer calls `suggestCardProductMatch()` inline.
@@ -53,6 +54,24 @@ The pure helpers exported by `useWalletNavigation.ts` keep the behavior testable
 - `selectedWalletCardIdAfterConnectedAccountRemoval()` keeps selection stable when another account is removed, moves to the first remaining connected account when the selected account is removed, and falls back to the seed selected card id when no connected accounts remain.
 - `buildWalletSelectionOutcomeSummary()` projects the manual-card save, Plaid Link success, card-match save, and connected-account removal outcomes into a deterministic evidence matrix used by `/evidence/onboarding?state=selection-outcomes`.
 - `scripts/smoke-onboarding-contract.mjs` checks that the browser-rendered signed-in fixture states still expose the expected manual entry, Plaid match, and selection outcome text before heavier live auth/Plaid automation exists.
+
+## Wallet Stack Contract
+The wallet stack component accepts:
+- the stack items from `useWalletNavigation()`;
+- whether the stack is expanded;
+- parent callbacks for expanding the stack, selecting a card, and opening Add Card.
+
+It owns:
+- the collapsed and expanded row placement;
+- tap animation scale for collapsed versus expanded states;
+- the visual distinction between real wallet cards and the Add Card action;
+- the behavior that collapsed stack taps expand first, expanded Add Card opens the Add Card flow, and expanded wallet-card taps select that card.
+
+The pure helpers exported by `WalletStack.tsx` keep this behavior testable without rendering the full wallet shell:
+- `walletStackItemLayout()` preserves the top/scale/opacity/z-index/y placement contract for both collapsed and expanded states.
+- `isAddCardStackItem()` isolates the Add Card action discriminator used by rendering and click routing.
+
+This boundary does not decide which cards belong in the stack, which card is selected, whether Add Card is allowed for the current auth/profile state, or how successful Plaid/manual mutations affect selection. Those responsibilities remain in `useWalletNavigation.ts`, `useWalletAccessGates.ts`, and `usePlaidWalletActions.ts`.
 
 ## Wallet Selection Outcome Contract
 `useWalletSelectionOutcomes()` accepts:
